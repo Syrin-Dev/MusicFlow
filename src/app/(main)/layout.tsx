@@ -6,6 +6,7 @@ import { AudioProvider } from '@/components/AudioProvider';
 import { Providers } from '@/components/Providers';
 import { ExpandedPlayer } from '@/components/ExpandedPlayer';
 import { Header } from '@/components/Header';
+import { MobileNav } from '@/components/MobileNav';
 
 export const metadata: Metadata = {
     title: 'StreamFlow - Premium Music Streaming',
@@ -32,12 +33,17 @@ export default function MainLayout({
             <body className="bg-[#0d0d0f] text-white h-screen overflow-hidden flex" suppressHydrationWarning>
                 <Providers>
                     <AudioProvider>
-                        <Sidebar />
-                        <main className="flex-1 ml-64 h-full overflow-y-auto relative hide-scrollbar custom-scrollbar pb-28">
+                        <div className="hidden md:block">
+                            <Sidebar />
+                        </div>
+
+                        <main className="flex-1 md:ml-64 ml-0 h-full overflow-y-auto relative hide-scrollbar custom-scrollbar pb-32 md:pb-28">
                             <Header />
                             {children}
                         </main>
+
                         <PlayerBar />
+                        <MobileNav />
                         <ExpandedPlayer />
                     </AudioProvider>
                 </Providers>

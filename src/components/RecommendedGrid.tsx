@@ -100,8 +100,8 @@ export function RecommendedGrid() {
         <section>
             <div className="flex items-center justify-between mb-6">
                 <div>
-                    <h3 className="text-2xl font-bold text-white">Recommended For You</h3>
-                    {!loading && <p className="text-xs text-gray-400 mt-1 capitalize">{recSource}</p>}
+                    <h3 className="text-xl md:text-2xl font-bold text-white">Recommended For You</h3>
+                    {!loading && <p className="hidden md:block text-xs text-gray-400 mt-1 capitalize">{recSource}</p>}
                 </div>
                 <div className="flex gap-2">
                     <button

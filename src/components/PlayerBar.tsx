@@ -74,7 +74,7 @@ export function PlayerBar() {
     }
 
     return (
-        <div className="fixed bottom-0 left-0 right-0 h-24 bg-[#0A0A0B]/70 backdrop-blur-xl border-t border-white/10 px-6 z-50 shadow-[0_-8px_32px_rgba(0,0,0,0.5)] supports-[backdrop-filter]:bg-[#0A0A0B]/70 transition-all duration-300">
+        <div className="fixed bottom-[68px] md:bottom-0 left-2 right-2 md:left-0 md:right-0 h-16 md:h-24 bg-[#0A0A0B]/90 md:bg-[#0A0A0B]/70 backdrop-blur-xl border border-white/10 md:border-t md:border-x-0 md:border-b-0 rounded-xl md:rounded-none px-4 md:px-6 z-50 shadow-lg md:shadow-[0_-8px_32px_rgba(0,0,0,0.5)] supports-[backdrop-filter]:bg-[#0A0A0B]/70 transition-all duration-300">
             <div className="flex items-center justify-between h-full max-w-screen-2xl mx-auto">
                 {/* Left - Track Info */}
                 <div className="flex items-center gap-4 w-[300px] min-w-[200px]">

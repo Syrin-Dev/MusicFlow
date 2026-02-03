@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import '../globals.css';
 import { Sidebar } from '@/components/Sidebar';
 import { PlayerBar } from '@/components/PlayerBar';
@@ -9,8 +9,17 @@ import { Header } from '@/components/Header';
 import { MobileNav } from '@/components/MobileNav';
 
 export const metadata: Metadata = {
-    title: 'StreamFlow - Premium Music Streaming',
-    description: 'Experience premium music streaming with StreamFlow',
+    title: 'Hievly - Premium Music Streaming',
+    description: 'Experience premium music streaming with Hievly',
+    manifest: '/manifest.json',
+};
+
+export const viewport: Viewport = {
+    themeColor: '#0A0A0B',
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
 };
 
 export default function MainLayout({
@@ -37,7 +46,7 @@ export default function MainLayout({
                             <Sidebar />
                         </div>
 
-                        <main className="flex-1 md:ml-64 ml-0 h-full overflow-y-auto relative hide-scrollbar custom-scrollbar pb-32 md:pb-28">
+                        <main className="flex-1 md:ml-64 ml-0 h-full overflow-y-auto relative hide-scrollbar custom-scrollbar pb-[calc(160px+env(safe-area-inset-bottom))] md:pb-28">
                             <Header />
                             {children}
                         </main>

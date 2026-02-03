@@ -1,39 +1,15 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Play, ChevronLeft, Clock, Heart, Shuffle, MoreHorizontal } from 'lucide-react';
+import { Play, ChevronLeft, Clock, Heart, Shuffle, User } from 'lucide-react';
 import { useAudio } from '@/components/AudioProvider';
-
-interface Track {
-    id: string;
-    title: string;
-    artist: string;
-    thumbnail: string;
-    duration?: string | number;
-}
 
 export default function LikedSongsPage() {
     const router = useRouter();
-    const { playTrack, currentTrack, isPlaying, addToQueue, likedSongs } = useAudio();
-    const [tracks, setTracks] = useState<Track[]>([]);
-    const [loading, setLoading] = useState(true);
+    const { playTrack, currentTrack, isPlaying, addToQueue, likedSongs, playPlaylist } = useAudio();
 
-    useEffect(() => {
-        // Use likedSongs from AudioProvider which are already synced or fetch fresh
-        fetch('/api/user/likes')
-            .then(res => res.json())
-            .then(data => {
-                if (Array.isArray(data)) {
-                    setTracks(data);
-                }
-                setLoading(false);
-            })
-            .catch(err => {
-                console.error(err);
-                setLoading(false);
-            });
-    }, []);
+    // Use likedSongs directly from context
+    const tracks = likedSongs;
 
     const playAll = (shuffle = false) => {
         if (!tracks.length) return;
@@ -43,8 +19,7 @@ export default function LikedSongsPage() {
             playQueue = playQueue.sort(() => Math.random() - 0.5);
         }
 
-        playTrack(playQueue[0]);
-        playQueue.slice(1).forEach(track => addToQueue(track));
+        playPlaylist(playQueue, 0);
     };
 
     const formatDuration = (seconds?: string | number) => {
@@ -56,14 +31,6 @@ export default function LikedSongsPage() {
         const remainingSeconds = sec % 60;
         return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
     };
-
-    if (loading) {
-        return (
-            <div className="flex-1 bg-[#0A0A0B] p-8 space-y-8">
-                <div className="h-64 rounded-3xl bg-white/5 animate-pulse"></div>
-            </div>
-        );
-    }
 
     return (
         <div className="flex-1 bg-[#0A0A0B] overflow-y-auto pb-32">
@@ -79,16 +46,43 @@ export default function LikedSongsPage() {
                 </div>
 
                 <div className="flex flex-col md:flex-row items-end md:items-end gap-8 z-10 w-full">
-                    {/* Cover Art */}
-                    <div className="w-52 h-52 md:w-64 md:h-64 rounded-2xl shadow-2xl shadow-violet-900/20 overflow-hidden flex-shrink-0 bg-gradient-to-br from-violet-600 to-fuchsia-600 flex items-center justify-center">
-                        <Heart size={80} className="text-white" fill="white" />
+                    {/* Cover Art - Dynamic Collage */}
+                    <div className="w-52 h-52 md:w-64 md:h-64 rounded-2xl shadow-2xl shadow-violet-900/20 overflow-hidden flex-shrink-0 bg-[#1A1A1E]">
+                        {tracks.length > 0 ? (
+                            <div className="grid grid-cols-2 grid-rows-2 w-full h-full">
+                                {tracks.slice(0, 4).map((track, i) => (
+                                    <div key={`${track.id}-${i}`} className="w-full h-full relative border-[0.5px] border-black/10">
+                                        <img
+                                            src={track.thumbnail}
+                                            alt=""
+                                            className="w-full h-full object-cover"
+                                            onError={(e) => {
+                                                (e.target as HTMLImageElement).style.display = 'none';
+                                                (e.target as HTMLElement).parentElement!.style.background = 'linear-gradient(to bottom right, #7c3aed, #db2777)';
+                                            }}
+                                        />
+                                    </div>
+                                ))}
+                                {/* Fill remaining slots if < 4 */}
+                                {Array.from({ length: Math.max(0, 4 - tracks.slice(0, 4).length) }).map((_, i) => (
+                                    <div key={`empty-${i}`} className="w-full h-full bg-gradient-to-br from-violet-600 to-fuchsia-600 opacity-80"></div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-violet-600 to-fuchsia-600">
+                                <Heart size={80} className="text-white" fill="white" />
+                            </div>
+                        )}
                     </div>
 
                     {/* Info */}
                     <div className="flex-1 mb-2 min-w-0">
                         <p className="text-sm font-bold uppercase tracking-widest text-white/60 mb-2">Playlist</p>
-                        <h1 className="text-4xl md:text-6xl font-bold text-white mb-4 truncate shadow-lg">Liked Songs</h1>
-                        <div className="flex items-center gap-2 text-sm text-slate-300">
+                        <h1 className="text-4xl md:text-6xl font-black text-white mb-4 truncate shadow-lg tracking-tight">Liked Songs</h1>
+                        <div className="flex items-center gap-2 text-sm text-slate-300 font-medium">
+                            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-[10px] font-bold text-white">
+                                <User size={12} />
+                            </div>
                             <span className="font-semibold text-white">You</span>
                             <span>•</span>
                             <span>{tracks.length} songs</span>
@@ -99,13 +93,13 @@ export default function LikedSongsPage() {
                     <div className="flex items-center gap-4 mb-2">
                         <button
                             onClick={() => playAll(false)}
-                            className="bg-[#8B5CF6] hover:bg-[#7be] text-white rounded-full p-4 shadow-xl hover:scale-105 transition-all"
+                            className="bg-[#8B5CF6] hover:bg-[#7c3aed] text-white rounded-full p-4 shadow-xl hover:scale-105 transition-all shadow-violet-900/40"
                         >
                             <Play size={28} fill="currentColor" className="ml-1" />
                         </button>
                         <button
                             onClick={() => playAll(true)}
-                            className="bg-white/10 hover:bg-white/20 text-white rounded-full p-4 backdrop-blur-md transition-all"
+                            className="bg-white/10 hover:bg-white/20 text-white rounded-full p-4 backdrop-blur-md transition-all border border-white/5"
                         >
                             <Shuffle size={24} />
                         </button>
@@ -124,7 +118,7 @@ export default function LikedSongsPage() {
                 {tracks.map((track, i) => (
                     <div
                         key={`${track.id}-${i}`}
-                        onClick={() => playTrack(track)}
+                        onClick={() => playPlaylist(tracks, i)}
                         className="group grid grid-cols-[auto_1fr_auto] gap-4 items-center px-4 py-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer border border-transparent hover:border-white/5"
                     >
                         <span className="w-8 text-center text-slate-500 group-hover:text-white font-medium">
@@ -137,7 +131,20 @@ export default function LikedSongsPage() {
 
                         <div className="flex items-center gap-4 min-w-0">
                             <div className="w-10 h-10 rounded overflow-hidden flex-shrink-0 bg-[#111]">
-                                <img src={track.thumbnail} alt="" className="w-full h-full object-cover" />
+                                <img
+                                    src={track.thumbnail}
+                                    alt=""
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                        const img = e.currentTarget;
+                                        if (img.src.includes('hqdefault')) {
+                                            img.src = `https://i.ytimg.com/vi/${track.id}/mqdefault.jpg`;
+                                        } else {
+                                            img.style.display = 'none';
+                                            img.parentElement!.style.backgroundColor = '#27272a';
+                                        }
+                                    }}
+                                />
                             </div>
                             <div className="min-w-0">
                                 <h4 className={`text-base font-medium truncate ${currentTrack?.id === track.id ? 'text-[#8B5CF6]' : 'text-white'}`}>
@@ -148,7 +155,7 @@ export default function LikedSongsPage() {
                         </div>
 
                         <div className="pr-4 text-sm text-slate-500 group-hover:text-white transition-colors">
-                            {formatDuration(track.duration)}
+                            {formatDuration((track as any).duration)}
                         </div>
                     </div>
                 ))}

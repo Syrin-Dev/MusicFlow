@@ -179,7 +179,7 @@ export default function GenrePage() {
                                 </div>
                             </div>
                             <h4 className="font-bold truncate text-white group-hover:underline decoration-white/30 text-sm">{pl.title}</h4>
-                            <p className="text-xs text-slate-400 truncate">Playlist • StreamFlow</p>
+                            <p className="text-xs text-slate-400 truncate">Playlist • Hievly</p>
                         </div>
                     ))}
                 </div>

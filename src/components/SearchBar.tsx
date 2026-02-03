@@ -61,22 +61,22 @@ export function SearchBar() {
     };
 
     return (
-        <div ref={wrapperRef} className="relative w-96 z-40">
+        <div ref={wrapperRef} className="relative w-full z-40 max-w-2xl">
             <form onSubmit={handleSearch} className="relative group">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-white transition-colors" size={20} />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 group-hover:text-white transition-colors z-10" size={20} />
                 <input
                     type="text"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     onFocus={() => query.length > 2 && setShowSuggestions(true)}
-                    placeholder="Search for songs, artists, albums..."
-                    className="w-full bg-white/5 border border-white/10 text-white pl-12 pr-10 py-3.5 rounded-full focus:outline-none focus:bg-white/10 focus:border-white/30 focus:ring-1 focus:ring-white/20 shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] backdrop-blur-2xl transition-all placeholder:text-slate-400/70 hover:bg-white/10 hover:border-white/20 hover:shadow-[0_8px_32px_0_rgba(139,92,246,0.1)]"
+                    placeholder="What do you want to listen to?"
+                    className="w-full bg-white/5 border border-white/5 text-white pl-12 pr-10 py-3 rounded-full focus:outline-none focus:bg-white/10 focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 shadow-lg shadow-black/20 backdrop-blur-xl transition-all placeholder:text-zinc-500 hover:bg-white/10 hover:border-white/10"
                 />
                 {query && (
                     <button
                         type="button"
                         onClick={() => { setQuery(''); setSuggestions([]); }}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                        className="absolute right-4 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-white/10 text-zinc-400 hover:text-white transition-colors"
                     >
                         <X size={16} />
                     </button>
@@ -85,15 +85,15 @@ export function SearchBar() {
 
             {/* Suggestions Dropdown */}
             {showSuggestions && suggestions.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-[#18181b] border border-white/10 rounded-2xl shadow-xl overflow-hidden py-2 backdrop-blur-xl bg-opacity-90">
+                <div className="absolute top-full left-0 right-0 mt-2 bg-[#18181b]/95 border border-white/10 rounded-2xl shadow-2xl overflow-hidden py-2 backdrop-blur-xl">
                     {suggestions.map((suggestion, index) => (
                         <button
                             key={index}
                             onClick={() => performSearch(suggestion)}
                             className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-white/5 transition-colors group"
                         >
-                            <Search size={16} className="text-gray-500 group-hover:text-white" />
-                            <span className="text-gray-300 group-hover:text-white">{suggestion}</span>
+                            <Search size={16} className="text-zinc-500 group-hover:text-white transition-colors" />
+                            <span className="text-zinc-300 group-hover:text-white font-medium transition-colors">{suggestion}</span>
                         </button>
                     ))}
                 </div>

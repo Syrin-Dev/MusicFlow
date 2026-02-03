@@ -3,8 +3,8 @@ import '../globals.css';
 import { Providers } from '@/components/Providers';
 
 export const metadata: Metadata = {
-    title: 'Login - StreamFlow',
-    description: 'Sign in to StreamFlow - Premium Music Streaming',
+    title: 'Login - Hievly',
+    description: 'Sign in to Hievly - Premium Music Streaming',
 };
 
 export default function AuthLayout({

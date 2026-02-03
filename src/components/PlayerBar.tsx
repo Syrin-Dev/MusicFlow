@@ -74,7 +74,7 @@ export function PlayerBar() {
     }
 
     return (
-        <div className="fixed bottom-[68px] md:bottom-0 left-2 right-2 md:left-0 md:right-0 h-16 md:h-24 bg-[#0A0A0B]/90 md:bg-[#0A0A0B]/70 backdrop-blur-xl border border-white/10 md:border-t md:border-x-0 md:border-b-0 rounded-xl md:rounded-none px-4 md:px-6 z-50 shadow-lg md:shadow-[0_-8px_32px_rgba(0,0,0,0.5)] supports-[backdrop-filter]:bg-[#0A0A0B]/70 transition-all duration-300">
+        <div className="fixed bottom-[calc(80px+env(safe-area-inset-bottom))] md:bottom-0 left-2 right-2 md:left-0 md:right-0 h-16 md:h-24 bg-[#0A0A0B]/90 md:bg-[#0A0A0B]/70 backdrop-blur-xl border border-white/10 md:border-t md:border-x-0 md:border-b-0 rounded-xl md:rounded-none px-4 md:px-6 z-50 shadow-lg md:shadow-[0_-8px_32px_rgba(0,0,0,0.5)] supports-[backdrop-filter]:bg-[#0A0A0B]/70 transition-all duration-300">
             <div className="flex items-center justify-between h-full max-w-screen-2xl mx-auto">
                 {/* Left - Track Info */}
                 <div className="flex items-center gap-4 w-[300px] min-w-[200px]">
@@ -102,7 +102,7 @@ export function PlayerBar() {
                     {/* Like button - heart */}
                     <button
                         onClick={() => toggleLike(currentTrack)}
-                        className={`p-2 transition-colors ${liked ? 'text-[#8B5CF6]' : 'text-gray-400 hover:text-[#8B5CF6]'}`}
+                        className={`p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors ${liked ? 'text-[#8B5CF6]' : 'text-white hover:text-[#8B5CF6]'}`}
                     >
                         <svg
                             className="w-5 h-5"
@@ -118,7 +118,7 @@ export function PlayerBar() {
                     {/* Expand button - arrow up */}
                     <button
                         onClick={togglePlayerExpansion}
-                        className="p-2 text-gray-400 hover:text-white transition-colors"
+                        className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
                         title="Expand player"
                     >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -134,7 +134,7 @@ export function PlayerBar() {
                         {/* Shuffle */}
                         <button
                             onClick={toggleShuffle}
-                            className={`p-2 transition-colors ${shuffle ? 'text-[#8B5CF6]' : 'text-gray-400 hover:text-white'}`}
+                            className={`p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors ${shuffle ? 'text-[#8B5CF6]' : 'text-white'}`}
                             title="Shuffle"
                         >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -145,10 +145,10 @@ export function PlayerBar() {
                         {/* Previous */}
                         <button
                             onClick={playPrevious}
-                            className="p-2 text-gray-400 hover:text-white transition-colors"
+                            className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
                             title="Previous"
                         >
-                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M6 6h2v12H6V6zm3.5 6l8.5 6V6l-8.5 6z" />
                             </svg>
                         </button>
@@ -156,17 +156,17 @@ export function PlayerBar() {
                         {/* Play/Pause */}
                         <button
                             onClick={togglePlay}
-                            className="w-12 h-12 rounded-full bg-white flex items-center justify-center hover:scale-105 transition-transform shadow-lg"
+                            className="w-14 h-14 rounded-full bg-white flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-xl shadow-white/10 ring-4 ring-white/5"
                             disabled={isLoading}
                         >
                             {isLoading ? (
-                                <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                                <div className="w-6 h-6 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
                             ) : isPlaying ? (
-                                <svg className="w-5 h-5 text-black" fill="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-6 h-6 text-black" fill="currentColor" viewBox="0 0 24 24">
                                     <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
                                 </svg>
                             ) : (
-                                <svg className="w-5 h-5 text-black ml-1" fill="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-7 h-7 text-black ml-1" fill="currentColor" viewBox="0 0 24 24">
                                     <path d="M8 5v14l11-7L8 5z" />
                                 </svg>
                             )}
@@ -175,10 +175,10 @@ export function PlayerBar() {
                         {/* Next */}
                         <button
                             onClick={playNext}
-                            className="p-2 text-gray-400 hover:text-white transition-colors"
+                            className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
                             title="Next"
                         >
-                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M6 18l8.5-6L6 6v12zm2 0V6l6.5 6L8 18zm8-12h2v12h-2V6z" />
                             </svg>
                         </button>
@@ -186,14 +186,14 @@ export function PlayerBar() {
                         {/* Repeat */}
                         <button
                             onClick={toggleRepeat}
-                            className={`p-2 transition-colors relative ${repeat !== 'off' ? 'text-[#8B5CF6]' : 'text-gray-400 hover:text-white'}`}
+                            className={`p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors relative ${repeat !== 'off' ? 'text-[#8B5CF6]' : 'text-white'}`}
                             title={repeat === 'one' ? 'Repeat One' : repeat === 'all' ? 'Repeat All' : 'Repeat Off'}
                         >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                             </svg>
                             {repeat === 'one' && (
-                                <span className="absolute -top-1 -right-1 text-[10px] font-bold text-[#8B5CF6]">1</span>
+                                <span className="absolute top-0 right-0 text-[10px] font-bold text-[#8B5CF6]">1</span>
                             )}
                         </button>
                     </div>
@@ -227,7 +227,7 @@ export function PlayerBar() {
                 {/* Right - Volume & Queue */}
                 <div className="flex items-center gap-4 w-[300px] justify-end">
                     {/* Queue */}
-                    <button className="p-2 text-gray-400 hover:text-white transition-colors" title="Queue">
+                    <button className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors" title="Queue">
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
                         </svg>
@@ -237,7 +237,7 @@ export function PlayerBar() {
                     <div className="flex items-center gap-2">
                         <button
                             onClick={() => setVolume(volume === 0 ? 100 : 0)}
-                            className="p-2 text-gray-400 hover:text-white transition-colors"
+                            className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
                         >
                             {volume === 0 ? (
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

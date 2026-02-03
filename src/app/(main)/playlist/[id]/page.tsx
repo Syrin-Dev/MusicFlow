@@ -36,10 +36,20 @@ export default function PlaylistPage() {
 
         fetch(`/api/playlist/${playlistId}`)
             .then(res => res.json())
-            .then(data => {
+            .then(async (data) => {
                 if (data.error) {
+                    // Fallback: Check if it's a local playlist (due to incorrect navigation/links)
+                    try {
+                        const localRes = await fetch(`/api/playlists/${playlistId}`);
+                        if (localRes.ok) {
+                            // It exists locally! Redirect.
+                            console.log("Redirecting to local playlist...");
+                            router.replace(`/library/playlist/${playlistId}`);
+                            return;
+                        }
+                    } catch (e) { /* ignore */ }
+
                     console.error("Playlist API Error:", data.error);
-                    // Just stop loading, playlist stays null implies "Not Found" UI
                 } else {
                     setPlaylist(data);
                 }
@@ -49,7 +59,7 @@ export default function PlaylistPage() {
                 console.error(err);
                 setLoading(false);
             });
-    }, [playlistId]);
+    }, [playlistId, router]);
 
     const playAll = () => {
         if (playlist?.tracks?.length) {

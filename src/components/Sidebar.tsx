@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
 import {
-    Home, Compass, Library, Heart, ListMusic, Pin, User, Sparkles
+    Home, Compass, Library, Heart, ListMusic, Pin, Sparkles
 } from 'lucide-react';
 
 export function Sidebar() {
@@ -16,112 +16,129 @@ export function Sidebar() {
 
     useEffect(() => {
         const fetchPlaylists = () => {
-            // Add timestamp to prevent caching
             fetch(`/api/playlists?t=${Date.now()}`)
                 .then(res => res.json())
                 .then(data => {
                     if (Array.isArray(data)) {
                         setPlaylists(data);
                     } else {
-                        // Silent fail or default empty array
                         setPlaylists([]);
                     }
                 })
                 .catch(console.error);
         };
 
-        // Fetch immediately and listen for changes
         fetchPlaylists();
         window.addEventListener('playlist-change', fetchPlaylists);
 
         return () => window.removeEventListener('playlist-change', fetchPlaylists);
-    }, []); // Removed session dependency to ensure it runs
+    }, []);
 
     const isActive = (path: string) => pathname === path;
 
-    const NavItem = ({ href, icon: Icon, label }: { href: string; icon: any; label: string }) => (
-        <Link
-            href={href}
-            className={`
-                flex items-center gap-3 px-4 py-3 rounded-2xl font-medium transition-all duration-200 border
-                ${isActive(href)
-                    ? 'bg-[#8B5CF6]/10 border-[#8B5CF6]/20 text-white shadow-[0_0_20px_rgba(139,92,246,0.1)]'
-                    : 'bg-transparent border-transparent text-slate-400 hover:bg-white/5 hover:text-white'
-                }
-            `}
-        >
-            <Icon size={22} className={isActive(href) ? 'text-[#8B5CF6]' : 'text-current'} />
-            {label}
-        </Link>
-    );
+    const NavItem = ({ href, icon: Icon, label }: { href: string; icon: any; label: string }) => {
+        const active = isActive(href);
+        return (
+            <Link
+                href={href}
+                className={`
+                    group flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-300 relative overflow-hidden
+                    ${active
+                        ? 'text-white'
+                        : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                    }
+                `}
+            >
+                {active && (
+                    <div className="absolute inset-0 bg-gradient-to-r from-violet-600/20 to-transparent border-l-2 border-violet-500" />
+                )}
+                <Icon size={20} className={`relative z-10 transition-colors ${active ? 'text-violet-400' : 'group-hover:text-violet-300'}`} />
+                <span className="relative z-10">{label}</span>
+            </Link>
+        );
+    };
 
     return (
-        <aside className="w-64 h-full flex flex-col p-6 bg-[#0A0A0B] border-r border-white/5 z-20 fixed left-0 top-0">
+        <aside className="w-64 h-full flex flex-col p-4 bg-black/80 backdrop-blur-xl border-r border-white/5 z-50 fixed left-0 top-0 shadow-2xl">
             {/* Logo */}
-            <div className="flex items-center gap-3 mb-10 px-2 flex-shrink-0">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-600 flex items-center justify-center text-white shadow-lg shadow-violet-500/30">
-                    <span className="font-bold text-lg">S</span>
+            <div className="flex items-center gap-3 px-2 mb-8 mt-2">
+                <div className="relative w-12 h-12 flex items-center justify-center overflow-hidden rounded-xl bg-white/5">
+                    <img
+                        src="/logo.png"
+                        alt="Hievly"
+                        className="w-full h-full object-contain scale-[3.2] transition-transform brightness-110 filter invert-[1] hue-rotate-[180deg]"
+                    />
                 </div>
-                <h1 className="text-xl font-bold tracking-tight text-white bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">
-                    StreamFlow
-                </h1>
+                <div>
+                    <h1 className="text-lg font-bold tracking-tight text-white">
+                        Hievly
+                    </h1>
+                    <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-semibold">Premium</p>
+                </div>
             </div>
 
             {/* Navigation */}
-            <nav className="flex-1 flex flex-col overflow-hidden">
-                <div className="space-y-2 flex-shrink-0">
+            <nav className="flex-1 flex flex-col overflow-hidden gap-6">
+                <div className="space-y-1">
+                    <p className="px-4 text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">Menu</p>
                     <NavItem href="/" icon={Home} label="Home" />
                     <NavItem href="/for-you" icon={Sparkles} label="For You" />
                     <NavItem href="/explore" icon={Compass} label="Explore" />
                     <NavItem href="/library" icon={Library} label="Library" />
                 </div>
 
-                {/* Playlist Section Header */}
-                <div className="flex-shrink-0 mt-6 mb-2 px-6">
-                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Your Collection</span>
-                </div>
+                <div className="flex-1 flex flex-col overflow-hidden">
+                    <div className="flex items-center justify-between px-4 mb-2">
+                        <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Your Collection</span>
+                        <ListMusic size={12} className="text-zinc-600" />
+                    </div>
 
-                {/* Playlist Scroll Area */}
-                <div className="flex-1 overflow-y-auto custom-scrollbar px-3 space-y-1">
-                    {/* Liked Songs - Pinned Effect */}
-                    <Link
-                        href="/library/liked"
-                        className={`
-                            flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group
-                            ${isActive('/library/liked') ? 'bg-white/10 text-white' : 'text-slate-400 hover:text-white hover:bg-white/5'}
-                        `}
-                    >
-                        <div className={`p-1.5 rounded-lg ${isActive('/library/liked') ? 'bg-[#8B5CF6]/20' : 'bg-white/5 group-hover:bg-white/10'}`}>
-                            <Heart size={16} className={`fill-current ${isActive('/library/liked') ? 'text-[#8B5CF6]' : 'text-slate-500 group-hover:text-white'}`} />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <p className={`text-sm font-medium truncate ${isActive('/library/liked') ? 'text-white' : ''}`}>Liked Songs</p>
-                            <div className="flex items-center gap-1.5">
-                                <Pin size={10} className="text-[#8B5CF6] rotate-45" />
-                                <span className="text-[10px] text-slate-500">Auto playlist</span>
-                            </div>
-                        </div>
-                    </Link>
-
-                    {/* User Playlists */}
-                    {playlists.map((playlist) => (
+                    {/* Playlist Scroll Area */}
+                    <div className="flex-1 overflow-y-auto custom-scrollbar space-y-1 pr-2">
+                        {/* Liked Songs - Pinned Effect */}
                         <Link
-                            key={playlist.id}
-                            href={`/playlist/${playlist.id}`}
+                            href="/library/liked"
                             className={`
-                                flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group
-                                ${isActive(`/playlist/${playlist.id}`) ? 'bg-white/10 text-white' : 'text-slate-400 hover:text-white hover:bg-white/5'}
+                                flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group relative
+                                ${isActive('/library/liked') ? 'bg-gradient-to-r from-violet-500/10 to-transparent' : 'hover:bg-white/5'}
                             `}
                         >
-                            <div className={`p-1.5 rounded-lg ${isActive(`/playlist/${playlist.id}`) ? 'bg-[#8B5CF6]/20' : 'bg-white/5 group-hover:bg-white/10'}`}>
-                                <ListMusic size={16} className={isActive(`/playlist/${playlist.id}`) ? 'text-[#8B5CF6]' : 'text-slate-500 group-hover:text-white'} />
+                            <div className={`
+                                w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-300
+                                ${isActive('/library/liked')
+                                    ? 'bg-gradient-to-br from-violet-500 to-fuchsia-600 shadow-lg shadow-violet-500/20 text-white'
+                                    : 'bg-zinc-800 text-zinc-400 group-hover:text-white group-hover:bg-zinc-700'}
+                            `}>
+                                <Heart size={14} fill="currentColor" />
                             </div>
                             <div className="flex-1 min-w-0">
-                                <p className={`text-sm font-medium truncate ${isActive(`/playlist/${playlist.id}`) ? 'text-white' : ''}`}>{playlist.name}</p>
-                                <p className="text-[10px] text-slate-500 truncate">By {userName.split(' ')[0]}</p>
+                                <p className={`text-sm font-medium truncate ${isActive('/library/liked') ? 'text-white' : 'text-zinc-400 group-hover:text-white'}`}>Liked Songs</p>
+                                <div className="flex items-center gap-1.5 mt-0.5">
+                                    <Pin size={10} className="text-violet-500 rotate-45" />
+                                    <span className="text-[10px] text-zinc-500 group-hover:text-zinc-400">Pinned</span>
+                                </div>
                             </div>
                         </Link>
-                    ))}
+
+                        {/* User Playlists */}
+                        {playlists.map((playlist) => (
+                            <Link
+                                key={playlist.id}
+                                href={`/library/playlist/${playlist.id}`}
+                                className={`
+                                    flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200 group
+                                    ${isActive(`/library/playlist/${playlist.id}`) ? 'text-white bg-white/5' : 'text-zinc-500 hover:text-white hover:bg-white/5'}
+                                `}
+                            >
+                                <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-white/5 flex items-center justify-center flex-shrink-0">
+                                    <ListMusic size={14} className={isActive(`/library/playlist/${playlist.id}`) ? 'text-violet-400' : 'text-zinc-600 group-hover:text-zinc-400'} />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium truncate">{playlist.name}</p>
+                                </div>
+                            </Link>
+                        ))}
+                    </div>
                 </div>
             </nav>
         </aside>

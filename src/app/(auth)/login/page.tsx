@@ -164,10 +164,14 @@ export default function LoginPage() {
 
                 <div className="relative z-10 p-12 max-w-xl">
                     <div className="flex items-center gap-3 mb-8">
-                        <div className="w-10 h-10 rounded-full bg-[#8B5CF6] flex items-center justify-center shadow-[0_0_30px_rgba(139,92,246,0.6)]">
-                            <MusicIcon />
+                        <div className="w-14 h-14 rounded-2xl bg-white/5 overflow-hidden flex items-center justify-center border border-white/10">
+                            <img
+                                src="/logo.png"
+                                alt="Hievly"
+                                className="w-full h-full object-contain scale-[3.2] filter invert-[1] hue-rotate-[180deg] brightness-110"
+                            />
                         </div>
-                        <span className="text-2xl font-bold tracking-tight">StreamFlow</span>
+                        <span className="text-2xl font-bold tracking-tight">Hievly</span>
                     </div>
                     <h2 className="text-5xl font-bold leading-tight mb-6">
                         Experience the future of{' '}
@@ -204,9 +208,9 @@ export default function LoginPage() {
                 />
 
                 <div className="w-full max-w-md space-y-8 relative z-10">
-                    <div className="text-center lg:text-left">
-                        <h1 className="text-3xl font-bold mb-2">Welcome Back</h1>
-                        <p className="text-gray-400">Please enter your details to sign in.</p>
+                    <div className="flex flex-col items-center mb-8">
+                        <span className="text-2xl font-bold tracking-tight">Hievly</span>
+                        <span className="text-xs text-zinc-400 tracking-[0.3em] uppercase font-medium">Premium</span>
                     </div>
 
                     {error && (

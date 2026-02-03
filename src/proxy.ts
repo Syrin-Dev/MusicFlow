@@ -22,7 +22,7 @@ export default async function proxy(request: NextRequest) {
     const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
 
     // Also check cookie for email login
-    const hasLocalAuth = request.cookies.get('streamflow_auth');
+    const hasLocalAuth = request.cookies.get('hievly_auth');
 
     if (!token && !hasLocalAuth) {
         // Redirect to login

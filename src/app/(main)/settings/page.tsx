@@ -96,8 +96,8 @@ export default function SettingsPage() {
         <button
             onClick={() => setActiveTab(id)}
             className={`flex items-center gap-3 w-full px-4 py-3.5 rounded-xl transition-all duration-200 text-left mb-2 group relative overflow-hidden ${activeTab === id
-                    ? 'bg-[#8B5CF6]/10 text-white shadow-[0_0_20px_rgba(139,92,246,0.1)] border border-[#8B5CF6]/20'
-                    : 'text-slate-400 hover:bg-white/5 hover:text-white border border-transparent'
+                ? 'bg-[#8B5CF6]/10 text-white shadow-[0_0_20px_rgba(139,92,246,0.1)] border border-[#8B5CF6]/20'
+                : 'text-slate-400 hover:bg-white/5 hover:text-white border border-transparent'
                 }`}
         >
             <div className={`
@@ -303,7 +303,7 @@ export default function SettingsPage() {
                                             <div className="inline-flex items-center gap-2 px-3 py-1 bg-violet-500/20 text-violet-200 rounded-full text-xs font-bold uppercase tracking-wider mb-4 border border-violet-500/30">
                                                 Current Plan
                                             </div>
-                                            <h2 className="text-3xl font-bold text-white mb-2">StreamFlow Premium</h2>
+                                            <h2 className="text-3xl font-bold text-white mb-2">Hievly Premium</h2>
                                             <p className="text-violet-200/80">Next billing date: <span className="text-white font-medium">March 2, 2026</span></p>
                                         </div>
                                         <div className="text-center md:text-right">

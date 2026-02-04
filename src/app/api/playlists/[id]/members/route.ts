@@ -1,17 +1,17 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { prisma } from '@/lib/prismadb';
 import { authOptions } from '@/lib/auth';
 
 export async function POST(
-    req: Request,
-    { params }: { params: { id: string } }
+    req: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
 ) {
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const { friendId, role = 'VIEWER' } = await req.json();
-    const playlistId = params.id;
+    const { id: playlistId } = await params;
 
     try {
         const user = await prisma.user.findUnique({ where: { email: session.user.email } });

@@ -39,7 +39,14 @@ export async function POST(
             return NextResponse.json({ error: 'Track data required' }, { status: 400 });
         }
 
-        // Add track (upsert to handle duplicates gracefully)
+        // 1. Ensure Track exists (Normalization)
+        await prisma.track.upsert({
+            where: { id: videoId },
+            update: { title, artist, thumbnail },
+            create: { id: videoId, title, artist, thumbnail }
+        });
+
+        // 2. Add track to playlist
         const track = await prisma.playlistTrack.upsert({
             where: {
                 playlistId_videoId: {
@@ -50,11 +57,19 @@ export async function POST(
             create: {
                 playlistId,
                 videoId,
-                title,
-                artist: artist || 'Unknown',
-                thumbnail: thumbnail || ''
+                trackId: videoId
             },
-            update: {} // No update needed, just ignore if exists
+            update: {}
+        });
+
+        // 3. Log Activity
+        await prisma.activity.create({
+            data: {
+                userId: user.id,
+                type: 'TRACK_PLAYED', // Could use a custom type but let's stick to these for now
+                trackId: videoId,
+                playlistId
+            }
         });
 
         // Update playlist thumbnail if first track

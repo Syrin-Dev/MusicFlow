@@ -23,7 +23,7 @@ export function RecommendedGrid() {
     // Track which query index we're on for variety
     const queryIndexRef = useRef(0);
 
-    const { playTrack, addToQueue, listeningHistory } = useAudio();
+    const { playTrack, addToQueue, listeningHistory, openConnect } = useAudio();
 
     const fetchRecommendations = useCallback(async (saveToHistory = false) => {
         // Use our new smart algorithm
@@ -148,12 +148,22 @@ export function RecommendedGrid() {
                                     onError={(e) => handleImageError(e, track)}
                                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 opacity-90 group-hover:opacity-100"
                                 />
-                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                                    <span className="w-12 h-12 rounded-full bg-[#8B5CF6] flex items-center justify-center text-white shadow-lg translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-3 backdrop-blur-[2px]">
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); handlePlayTrack(track, index); }}
+                                        className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white shadow-lg translate-y-4 group-hover:translate-y-0 transition-transform duration-300 hover:scale-110 active:scale-95"
+                                    >
                                         <svg className="w-6 h-6 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
                                             <path d="M8 5v14l11-7L8 5z" />
                                         </svg>
-                                    </span>
+                                    </button>
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); openConnect(track); }}
+                                        className="w-12 h-12 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white shadow-lg translate-y-4 group-hover:translate-y-0 transition-transform duration-300 delay-75 hover:bg-white/20 hover:scale-110 active:scale-95"
+                                        title="Share with friends"
+                                    >
+                                        <span className="material-icons-round text-xl">share</span>
+                                    </button>
                                 </div>
                             </div>
                             <h4 className="font-semibold text-sm truncate text-gray-100">{track.title}</h4>

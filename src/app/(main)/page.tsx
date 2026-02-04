@@ -14,7 +14,7 @@ import { useAudio } from '@/components/AudioProvider';
 function GenreFilteredView({ query }: { query: string }) {
   const [tracks, setTracks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const { playTrack, addToQueue } = useAudio();
+  const { playTrack, addToQueue, openConnect } = useAudio();
 
   useEffect(() => {
     const fetchGenreTracks = async () => {
@@ -36,61 +36,96 @@ function GenreFilteredView({ query }: { query: string }) {
     }
   };
 
+  const genreName = query.replace(' music', '').replace(' songs', '').replace(' podcast', '');
+
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 min-h-[50vh]">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold text-white mb-2 capitalize">{query.replace(' music', '')} Mix</h2>
-          <p className="text-zinc-400 text-sm">Top selections for your mood</p>
+    <div className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-700 min-h-[70vh]">
+      {/* Genre Header Section */}
+      <div className="relative p-10 md:p-16 rounded-[3rem] overflow-hidden group border border-white/5 bg-gradient-to-br from-white/5 to-transparent">
+        <div className="absolute inset-0 bg-primary/10 blur-[100px] -z-10 animate-pulse"></div>
+        <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-8">
+          <div className="space-y-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/20 border border-primary/20 text-primary text-[10px] font-black uppercase tracking-widest">
+              Curated Mix
+            </div>
+            <h2 className="text-5xl md:text-7xl font-black text-white tracking-tighter capitalize leading-none">
+              {genreName}
+            </h2>
+            <p className="text-zinc-400 text-lg max-w-md font-medium">
+              The best of {genreName} music, tailored to your listening habits and mood.
+            </p>
+            <div className="flex items-center gap-2 text-zinc-500 text-sm font-bold">
+              <span className="material-icons-round text-lg">audiotrack</span>
+              {tracks.length} Songs • 45 minutes of magic
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <button
+              onClick={handlePlayAll}
+              disabled={loading || tracks.length === 0}
+              className="px-10 py-5 bg-white text-black rounded-full font-black text-xl hover:scale-105 active:scale-95 transition-all shadow-2xl shadow-white/10 disabled:opacity-50 flex items-center gap-3"
+            >
+              <span className="material-icons-round text-3xl">play_arrow</span>
+              PLAY ALL
+            </button>
+            <button className="p-5 rounded-full bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all">
+              <span className="material-icons-round text-2xl">favorite_border</span>
+            </button>
+          </div>
         </div>
-        <button
-          onClick={handlePlayAll}
-          disabled={loading || tracks.length === 0}
-          className="px-6 py-2 bg-white text-black rounded-full font-bold hover:scale-105 transition-transform disabled:opacity-50"
-        >
-          Play All
-        </button>
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
-          {[...Array(10)].map((_, i) => (
-            <div key={i} className="animate-pulse">
-              <div className="aspect-square bg-white/5 rounded-xl mb-3"></div>
-              <div className="h-4 bg-white/5 rounded w-3/4 mb-2"></div>
-              <div className="h-3 bg-white/5 rounded w-1/2"></div>
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+          {[...Array(12)].map((_, i) => (
+            <div key={i} className="animate-pulse space-y-4">
+              <div className="aspect-square bg-white/5 rounded-3xl"></div>
+              <div className="h-5 bg-white/5 rounded-full w-3/4"></div>
+              <div className="h-4 bg-white/5 rounded-full w-1/2"></div>
             </div>
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-8">
           {tracks.map((track, i) => (
             <div
               key={i}
-              onClick={() => playTrack({
-                id: track.id,
-                title: track.title,
-                artist: track.artist,
-                thumbnail: track.thumbnail || `https://i.ytimg.com/vi/${track.id}/hqdefault.jpg`
-              })}
-              className="bg-white/5 p-4 rounded-2xl hover:bg-white/10 transition-all duration-300 cursor-pointer group hover:-translate-y-1 hover:shadow-xl hover:shadow-black/20"
+              className="group relative space-y-4"
             >
-              <div className="relative aspect-square mb-4 overflow-hidden rounded-xl bg-black/20 shadow-lg">
+              <div className="relative aspect-square overflow-hidden rounded-[2rem] bg-zinc-900 border border-white/5 shadow-xl transition-all duration-500 group-hover:-translate-y-2 group-hover:shadow-2xl group-hover:shadow-primary/20">
                 <img
                   src={track.thumbnail || `https://i.ytimg.com/vi/${track.id}/hqdefault.jpg`}
                   alt={track.title}
                   referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-90 group-hover:opacity-100"
                 />
-                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center gap-3 backdrop-blur-[2px]">
+                  <button
+                    onClick={() => playTrack(track)}
+                    className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white shadow-lg translate-y-4 group-hover:translate-y-0 transition-transform duration-300 hover:scale-110 active:scale-95"
+                  >
+                    <span className="material-icons-round text-3xl">play_arrow</span>
+                  </button>
+                  <button
+                    onClick={() => openConnect(track)}
+                    className="w-12 h-12 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white shadow-lg translate-y-4 group-hover:translate-y-0 transition-transform duration-300 delay-75 hover:bg-white/10"
+                  >
+                    <span className="material-icons-round">share</span>
+                  </button>
+                </div>
               </div>
-              <p className="font-bold text-white truncate text-lg">{track.title}</p>
-              <p className="text-sm text-zinc-400 truncate mt-1 group-hover:text-zinc-300">{track.artist}</p>
+              <div className="px-2">
+                <h4 className="font-bold text-white truncate text-base group-hover:text-primary transition-colors">{track.title}</h4>
+                <p className="text-xs text-zinc-500 truncate mt-1 font-medium">{track.artist}</p>
+              </div>
             </div>
           ))}
           {tracks.length === 0 && !loading && (
-            <div className="col-span-full text-center py-20 text-zinc-500">
-              No tracks found for this genre.
+            <div className="col-span-full text-center py-40 bg-white/5 rounded-[3rem] border border-dashed border-white/10">
+              <span className="material-icons-round text-5xl text-zinc-600 mb-4">search_off</span>
+              <p className="text-zinc-500 font-bold">No tracks found for this mood.</p>
+              <button onClick={() => window.location.reload()} className="text-primary mt-4 hover:underline">Try another genre</button>
             </div>
           )}
         </div>
@@ -98,6 +133,8 @@ function GenreFilteredView({ query }: { query: string }) {
     </div>
   );
 }
+
+import { FriendActivity } from '@/components/FriendActivity';
 
 export default function Home() {
   const [selectedGenre, setSelectedGenre] = useState('All');
@@ -110,11 +147,7 @@ export default function Home() {
 
   return (
     <>
-      {/* 
-        Adjusted top padding so content sits nicely below sticky header.
-        Removed huge spacing to avoid layout gaps.
-      */}
-      <div className="px-8 pb-32 space-y-10 pt-8 transition-all">
+      <div className="px-8 pb-32 space-y-12 pt-8 transition-all">
 
         {/* Genre Bubbles - Full width sticky bar */}
         <div className="-mx-8">
@@ -122,10 +155,12 @@ export default function Home() {
         </div>
 
         {selectedGenre === 'All' ? (
-          <div className="space-y-16 animate-in fade-in duration-700 delay-100">
+          <div className="space-y-20 animate-in fade-in duration-700 delay-100">
             <Hero />
-            <DailyMixes />
+
             <div className="space-y-24">
+              <DailyMixes />
+              <FriendActivity />
               <RecommendedGrid />
               <QuickPicks />
               <MusicVideos />

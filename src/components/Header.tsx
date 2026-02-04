@@ -59,7 +59,7 @@ export function Header() {
 
     return (
         <header className="sticky top-0 z-40 px-6 py-4 bg-black/40 backdrop-blur-xl border-b border-white/5 transition-all duration-300">
-            <div className="flex items-center justify-between max-w-7xl mx-auto w-full">
+            <div suppressHydrationWarning className="flex items-center justify-between max-w-7xl mx-auto w-full">
 
                 {/* Search Bar Container */}
                 <div className="flex-1 max-w-xl flex items-center gap-4">

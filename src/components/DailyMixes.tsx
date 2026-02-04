@@ -50,6 +50,11 @@ export function DailyMixes() {
 
     // State to hold the final personalized mix configurations
     const [personalizedMixes, setPersonalizedMixes] = useState<any[]>([]);
+    const [hasMounted, setHasMounted] = useState(false);
+
+    useEffect(() => {
+        setHasMounted(true);
+    }, []);
 
     // Previews for the UI (Images)
     const [previews, setPreviews] = useState<{ [key: string]: any[] }>({});
@@ -134,7 +139,7 @@ export function DailyMixes() {
         setLoadingMix(null);
     };
 
-    if (personalizedMixes.length === 0) return (
+    if (!hasMounted || personalizedMixes.length === 0) return (
         <div suppressHydrationWarning className="h-64 flex items-center justify-center animate-pulse">
             <div className="text-zinc-500">Curating your daily vibes...</div>
         </div>

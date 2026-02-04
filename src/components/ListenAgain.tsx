@@ -23,8 +23,10 @@ export function ListenAgain() {
     const { data: session } = useSession();
     const { playTrack, addToQueue, listeningHistory } = useAudio();
     const [localUser, setLocalUser] = useState<{ name?: string } | null>(null);
+    const [hasMounted, setHasMounted] = useState(false);
 
     useEffect(() => {
+        setHasMounted(true);
         if (typeof window !== 'undefined') {
             const stored = localStorage.getItem('hievly_user');
             if (stored) setLocalUser(JSON.parse(stored));
@@ -73,7 +75,7 @@ export function ListenAgain() {
                 </div>
                 <div className="flex-1">
                     <h3 className="text-2xl font-black text-white tracking-tight">Listen Again</h3>
-                    <p className="text-[10px] text-zinc-500 font-black uppercase tracking-[0.2em] mt-0.5">Your Sound • {userName}</p>
+                    <p className="text-[10px] text-zinc-500 font-black uppercase tracking-[0.2em] mt-0.5">Your Sound • {hasMounted ? userName : '...'}</p>
                 </div>
                 <button
                     onClick={() => { setLoading(true); fetchTracks(); }}

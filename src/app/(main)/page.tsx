@@ -147,7 +147,7 @@ export default function Home() {
 
   return (
     <>
-      <div className="px-8 pb-32 space-y-12 pt-8 transition-all">
+      <div suppressHydrationWarning className="px-8 pb-32 space-y-12 pt-8 transition-all">
 
         {/* Genre Bubbles - Full width sticky bar */}
         <div className="-mx-8">

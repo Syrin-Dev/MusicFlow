@@ -141,7 +141,7 @@ export function DailyMixes() {
 
     if (!hasMounted || personalizedMixes.length === 0) return (
         <div suppressHydrationWarning className="h-64 flex items-center justify-center animate-pulse">
-            <div className="text-zinc-500">Curating your daily vibes...</div>
+            <div className="w-12 h-12 rounded-full border-4 border-white/10 border-t-white/40 animate-spin"></div>
         </div>
     );
 

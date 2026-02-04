@@ -63,7 +63,7 @@ export function Sidebar() {
         <aside suppressHydrationWarning className="w-64 h-full flex flex-col p-4 bg-black/80 backdrop-blur-xl border-r border-white/5 z-50 fixed left-0 top-0 shadow-2xl">
             {/* Logo */}
             <div suppressHydrationWarning className="flex items-center gap-3 px-2 mb-8 mt-2">
-                <div className="relative w-12 h-12 flex items-center justify-center overflow-hidden rounded-xl bg-white/5">
+                <div suppressHydrationWarning className="relative w-12 h-12 flex items-center justify-center overflow-hidden rounded-xl bg-white/5">
                     <img
                         src="/logo.png"
                         alt="Hievly"
@@ -80,7 +80,7 @@ export function Sidebar() {
 
             {/* Navigation */}
             <nav className="flex-1 flex flex-col overflow-hidden gap-6">
-                <div className="space-y-1">
+                <div suppressHydrationWarning className="space-y-1">
                     <p className="px-4 text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">Menu</p>
                     <NavItem href="/" icon={Home} label="Home" />
                     <NavItem href="/for-you" icon={Sparkles} label="For You" />
@@ -89,7 +89,7 @@ export function Sidebar() {
                 </div>
 
                 <div className="flex-1 flex flex-col overflow-hidden">
-                    <div className="flex items-center justify-between px-4 mb-2">
+                    <div suppressHydrationWarning className="flex items-center justify-between px-4 mb-2">
                         <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Your Collection</span>
                         <ListMusic size={12} className="text-zinc-600" />
                     </div>

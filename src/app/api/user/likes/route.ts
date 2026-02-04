@@ -10,22 +10,40 @@ export async function GET() {
     }
 
     try {
-        const user = await prisma.user.findUnique({
+        const user = await (prisma as any).user.findUnique({
             where: { email: session.user.email },
             include: {
                 likedSongs: {
                     orderBy: { createdAt: 'desc' },
-                    include: { track: true }
+                    include: {
+                        track: true
+                    }
                 }
             }
         });
 
-        const mappedLikes = user?.likedSongs.map(l => ({
-            id: l.videoId,
-            title: l.track?.title || 'Unknown',
-            artist: l.track?.artist || 'Unknown',
-            thumbnail: l.track?.thumbnail || ''
-        })) || [];
+        // If some likes don't have trackId linked, we'll need to fetch those tracks too
+        const likesWithNoTrack = (user as any)?.likedSongs.filter((l: any) => !l.track) || [];
+        const videoIdsWithNoTrack = likesWithNoTrack.map((l: any) => l.videoId);
+
+        let additionalTracks = [];
+        if (videoIdsWithNoTrack.length > 0) {
+            additionalTracks = await (prisma as any).track.findMany({
+                where: { id: { in: videoIdsWithNoTrack } }
+            });
+        }
+
+        const trackMap = new Map(additionalTracks.map((t: any) => [t.id, t]));
+
+        const mappedLikes = (user as any)?.likedSongs.map((l: any) => {
+            const track = l.track || trackMap.get(l.videoId);
+            return {
+                id: l.videoId,
+                title: (track as any)?.title || 'Unknown',
+                artist: (track as any)?.artist || 'Unknown',
+                thumbnail: (track as any)?.thumbnail || `https://i.ytimg.com/vi/${l.videoId}/hqdefault.jpg`
+            };
+        }) || [];
 
         return NextResponse.json(mappedLikes);
     } catch (error) {
@@ -45,21 +63,21 @@ export async function POST(req: Request) {
     const { id, title, artist, thumbnail } = body;
 
     try {
-        const user = await prisma.user.findUnique({
+        const user = await (prisma as any).user.findUnique({
             where: { email: session.user.email }
         });
 
         if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
         // 1. Ensure Track exists
-        await prisma.track.upsert({
+        await (prisma as any).track.upsert({
             where: { id },
             update: { title, artist, thumbnail },
             create: { id, title, artist, thumbnail }
         });
 
         // 2. Check if already liked
-        const existingLike = await prisma.likedSong.findUnique({
+        const existingLike = await (prisma.likedSong as any).findUnique({
             where: {
                 userId_videoId: {
                     userId: user.id,
@@ -70,13 +88,13 @@ export async function POST(req: Request) {
 
         if (existingLike) {
             // Unlike
-            await prisma.likedSong.delete({
-                where: { id: existingLike.id }
+            await (prisma.likedSong as any).delete({
+                where: { id: (existingLike as any).id }
             });
             return NextResponse.json({ liked: false });
         } else {
             // Like
-            await prisma.likedSong.create({
+            await (prisma.likedSong as any).create({
                 data: {
                     userId: user.id,
                     videoId: id,
@@ -85,7 +103,7 @@ export async function POST(req: Request) {
             });
 
             // Log Activity
-            await prisma.activity.create({
+            await (prisma as any).activity.create({
                 data: {
                     userId: user.id,
                     type: 'LIKE',

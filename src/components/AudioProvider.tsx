@@ -484,6 +484,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
             {children}
             <div
                 id="youtube-player-portal"
+                suppressHydrationWarning
                 onClick={togglePlay}
                 className={`fixed inset-0 bg-black overflow-hidden transition-all duration-500 ${videoMode && isPlayerExpanded ? 'opacity-100 pointer-events-auto z-[60]' : 'opacity-0 pointer-events-none z-[-1]'}`}
                 style={{
@@ -491,9 +492,9 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
                     height: isVideoFullscreen ? '100%' : 'calc(100% - 112px)',
                 }}
             >
-                <div className="w-full h-full pointer-events-none flex items-center justify-center">
-                    <div className="w-full h-full scale-[1.35] transform-gpu">
-                        <div id="youtube-audio-player" className="w-full h-full" />
+                <div suppressHydrationWarning className="w-full h-full pointer-events-none flex items-center justify-center">
+                    <div suppressHydrationWarning className="w-full h-full scale-[1.35] transform-gpu">
+                        <div suppressHydrationWarning id="youtube-audio-player" className="w-full h-full" />
                     </div>
                 </div>
             </div>

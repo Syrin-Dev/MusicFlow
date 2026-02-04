@@ -82,7 +82,7 @@ export function PlayerBar() {
         // ... existing empty/hidden state logic
         if (!currentTrack) {
             return (
-                <div className="fixed bottom-0 left-0 right-0 h-24 bg-[#0a0a0a] border-t border-white/5 flex items-center justify-center z-50">
+                <div suppressHydrationWarning className="fixed bottom-0 left-0 right-0 h-24 bg-[#0a0a0a] border-t border-white/5 flex items-center justify-center z-50">
                     <p className="text-gray-500 text-sm">Select a song to play</p>
                 </div>
             );
@@ -91,7 +91,7 @@ export function PlayerBar() {
     }
 
     return (
-        <div className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-4 pointer-events-none">
+        <div suppressHydrationWarning className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-4 pointer-events-none">
             <div className="glassmorphism rounded-2xl p-3 flex items-center justify-between shadow-2xl pointer-events-auto border border-white/10 mx-auto max-w-screen-2xl">
                 {/* Left: Track Info */}
                 {/* ... existing left section ... */}

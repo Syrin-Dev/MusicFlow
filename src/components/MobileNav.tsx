@@ -17,7 +17,7 @@ export function MobileNav() {
     ];
 
     return (
-        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-[#0A0A0B] border-t border-white/5 z-40 pb-[env(safe-area-inset-bottom)]">
+        <div suppressHydrationWarning className="md:hidden fixed bottom-0 left-0 right-0 bg-[#0A0A0B] border-t border-white/5 z-40 pb-[env(safe-area-inset-bottom)]">
             <div className="flex justify-around items-center h-[80px]">
                 {navItems.map(({ href, icon: Icon, label }) => {
                     const active = isActive(href);

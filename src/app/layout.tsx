@@ -24,7 +24,7 @@ export default function RootLayout({
     return (
         <html lang="en" suppressHydrationWarning>
             <head>
-                <meta name="impact-site-verification" value="fdf98f23-909d-454c-af63-486b8614ec38" />
+                <meta name="impact-site-verification" content="fdf98f23-909d-454c-af63-486b8614ec38" />
                 <link
                     href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
                     rel="stylesheet"

@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useAudio } from '@/components/AudioProvider';
-import { UserPlus, Copy, Check } from 'lucide-react';
+import { UserPlus, Copy, Check, Play } from 'lucide-react';
 
 // Types
 interface Friend {
@@ -49,31 +49,65 @@ export default function MusicFlowConnect({ isOpen, onClose, initialTrack }: Musi
 
     // Fetch Friends and user info
     useEffect(() => {
-        if (isOpen && session) {
-            setIsLoading(true);
-            fetch('/api/user/friends')
-                .then(res => res.json())
-                .then(data => {
-                    if (Array.isArray(data)) setFriends(data);
-                })
-                .catch(err => console.error(err))
-                .finally(() => setIsLoading(false));
+        const fetchData = () => {
+            if (isOpen && session) {
+                fetch('/api/user/friends')
+                    .then(res => res.json())
+                    .then(data => {
+                        if (Array.isArray(data)) setFriends(data);
+                    })
+                    .catch(err => console.error(err));
 
-            fetch('/api/user/me')
-                .then(res => res.json())
-                .then(data => {
-                    if (data?.inviteCode) setMyInviteCode(data.inviteCode);
-                })
-                .catch(err => console.error(err));
+                if (!myInviteCode) {
+                    fetch('/api/user/me')
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data?.inviteCode) setMyInviteCode(data.inviteCode);
+                        })
+                        .catch(err => console.error(err));
+                }
+            }
+        };
+
+        fetchData();
+        const interval = setInterval(fetchData, 10000); // Polling friends status every 10s
+        return () => clearInterval(interval);
+    }, [isOpen, session, myInviteCode]);
+
+    // Fetch Messages when active friend changes
+    useEffect(() => {
+        let interval: any;
+
+        const fetchMessages = () => {
+            if (isOpen && activeFriend && view === 'chat') {
+                fetch(`/api/messages?friendId=${activeFriend.id}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (Array.isArray(data)) {
+                            setMessages(data);
+                        }
+                    })
+                    .catch(err => console.error("Chat Error:", err));
+            }
+        };
+
+        if (activeFriend && view === 'chat') {
+            fetchMessages();
+            interval = setInterval(fetchMessages, 3000); // Polling messages every 3s
         }
-    }, [isOpen, session]);
+
+        return () => {
+            if (interval) clearInterval(interval);
+        };
+    }, [isOpen, activeFriend, view]);
 
     // Handle initial track sharing
     useEffect(() => {
-        if (isOpen && initialTrack) {
-            setView('friends');
+        if (isOpen && initialTrack && activeFriend) {
+            // If we have an initial track and a friend selected, we stay in chat
+            // but we could auto-send or prepopulate
         }
-    }, [isOpen, initialTrack]);
+    }, [isOpen, initialTrack, activeFriend]);
 
     // Auto-scroll to bottom of chat
     useEffect(() => {
@@ -85,38 +119,53 @@ export default function MusicFlowConnect({ isOpen, onClose, initialTrack }: Musi
     const handleFriendSelect = (friend: Friend) => {
         setActiveFriend(friend);
         setView('chat');
-        // TODO: Load real messages
-        setMessages([
-            {
-                id: 'm1',
-                senderId: friend.id,
-                receiverId: 'me',
-                content: 'Chat functionality coming soon!',
-                createdAt: new Date()
-            }
-        ]);
+        setMessages([]); // Clear previous to show loading state if needed
     };
 
-    const sendMessage = () => {
-        // TODO: Implement real messaging via socket or polling
+    const sendMessage = async () => {
         if (!activeFriend || (!inputValue.trim() && !initialTrack)) return;
 
-        const newMessage: Message = {
-            id: Date.now().toString(),
-            senderId: 'me',
+        const content = inputValue;
+        const sharedMusic = initialTrack ? {
+            id: initialTrack.id,
+            title: initialTrack.title,
+            artist: initialTrack.artist,
+            thumbnail: initialTrack.thumbnail
+        } : null;
+
+        // Optimistic update
+        const tempMsg: Message = {
+            id: 'temp-' + Date.now(),
+            senderId: session?.user?.email || 'me', // placeholder
             receiverId: activeFriend.id,
-            content: inputValue,
+            content: content,
             createdAt: new Date(),
-            ...(initialTrack ? {
-                artist: initialTrack.artist,
-                title: initialTrack.title,
-                thumbnail: initialTrack.thumbnail,
-                trackId: initialTrack.id
-            } : {})
+            title: sharedMusic?.title,
+            artist: sharedMusic?.artist,
+            thumbnail: sharedMusic?.thumbnail,
+            trackId: sharedMusic?.id
         };
 
-        setMessages(prev => [...prev, newMessage]);
+        setMessages(prev => [...prev, tempMsg]);
         setInputValue('');
+
+        try {
+            const res = await fetch('/api/messages', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    receiverId: activeFriend.id,
+                    content,
+                    sharedMusic
+                })
+            });
+
+            if (res.ok) {
+                // The next poll will replace the optimistic UI with real data
+            }
+        } catch (e) {
+            console.error("Failed to send message", e);
+        }
     };
 
     const handleAddFriend = async () => {
@@ -181,7 +230,7 @@ export default function MusicFlowConnect({ isOpen, onClose, initialTrack }: Musi
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 overflow-y-auto bg-gradient-to-b from-[#18181b] to-black relative" ref={scrollRef}>
+                <div className="flex-1 overflow-y-auto bg-gradient-to-b from-[#18181b] to-black relative custom-scrollbar" ref={scrollRef}>
                     {view === 'friends' && (
                         <div className="p-4 space-y-2">
                             <div className="flex justify-between items-center mb-4 px-2">
@@ -195,7 +244,7 @@ export default function MusicFlowConnect({ isOpen, onClose, initialTrack }: Musi
                                 </button>
                             </div>
 
-                            {isLoading ? (
+                            {isLoading && friends.length === 0 ? (
                                 <div className="text-center text-gray-500 py-10 text-sm">Loading friends...</div>
                             ) : friends.length === 0 ? (
                                 <div className="text-center text-zinc-500 py-10">
@@ -280,26 +329,49 @@ export default function MusicFlowConnect({ isOpen, onClose, initialTrack }: Musi
 
                     {view === 'chat' && (
                         <div className="p-4 space-y-6 pt-6">
-                            {/* Messages rendering same as before... */}
-                            {messages.map((msg) => {
-                                const isMe = msg.senderId === 'me';
-                                return (
-                                    <div key={msg.id} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
-                                        {/* Shared Music Card logic ... (can keep existing) */}
-                                        {msg.trackId && (
-                                            <div className="...">Shared Track Placeholder</div>
-                                        )}
-                                        {msg.content && (
-                                            <div className={`px-4 py-2.5 rounded-2xl text-sm max-w-[75%] leading-relaxed shadow-sm ${isMe ? 'bg-primary text-white rounded-br-sm' : 'bg-white/10 text-gray-200 rounded-bl-sm'}`}>
-                                                {msg.content}
-                                            </div>
-                                        )}
-                                        <span className="text-[10px] text-gray-600 mt-1 px-1">
-                                            {msg.createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                        </span>
-                                    </div>
-                                );
-                            })}
+                            {messages.length === 0 ? (
+                                <div className="text-center text-zinc-600 py-10 text-sm">
+                                    No messages yet. Send a message to start chatting!
+                                </div>
+                            ) : (
+                                messages.map((msg) => {
+                                    const isMe = msg.senderId !== activeFriend?.id;
+                                    return (
+                                        <div key={msg.id} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
+                                            {/* Shared Music Card */}
+                                            {msg.trackId && (
+                                                <div
+                                                    onClick={() => playTrack({ id: msg.trackId!, title: msg.title!, artist: msg.artist!, thumbnail: msg.thumbnail! })}
+                                                    className={`mb-2 p-2 rounded-2xl bg-white/5 border border-white/10 w-[80%] hover:bg-white/10 transition-colors cursor-pointer group`}
+                                                >
+                                                    <div className="flex gap-3">
+                                                        <img src={msg.thumbnail} alt="" className="w-14 h-14 rounded-xl object-cover" />
+                                                        <div className="flex-1 min-w-0 flex flex-col justify-center">
+                                                            <p className="text-xs font-bold text-primary mb-0.5">Shared Music</p>
+                                                            <h5 className="text-white text-sm font-bold truncate">{msg.title}</h5>
+                                                            <p className="text-xs text-zinc-400 truncate">{msg.artist}</p>
+                                                        </div>
+                                                        <div className="flex items-center pr-1">
+                                                            <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all">
+                                                                <Play size={16} fill="currentColor" />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {msg.content && (
+                                                <div className={`px-4 py-2.5 rounded-2xl text-sm max-w-[85%] leading-relaxed shadow-sm ${isMe ? 'bg-primary text-white rounded-br-sm' : 'bg-white/10 text-gray-200 rounded-bl-sm'}`}>
+                                                    {msg.content}
+                                                </div>
+                                            )}
+                                            <span className="text-[10px] text-gray-600 mt-1 px-1">
+                                                {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            </span>
+                                        </div>
+                                    );
+                                })
+                            )}
                         </div>
                     )}
                 </div>
@@ -307,6 +379,20 @@ export default function MusicFlowConnect({ isOpen, onClose, initialTrack }: Musi
                 {/* Input Area (Only for chat) */}
                 {view === 'chat' && (
                     <div className="p-4 bg-[#18181b] border-t border-white/5">
+                        {initialTrack && view === 'chat' && (
+                            <div className="mb-3 p-2 bg-primary/10 border border-primary/20 rounded-xl flex items-center justify-between">
+                                <div className="flex items-center gap-2 min-w-0">
+                                    <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0">
+                                        <img src={initialTrack.thumbnail} alt="" className="w-full h-full object-cover" />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <p className="text-[10px] font-bold text-primary uppercase">Sharing Track</p>
+                                        <p className="text-xs text-white font-bold truncate">{initialTrack.title}</p>
+                                    </div>
+                                </div>
+                                <button className="p-1 px-2 text-[10px] font-black bg-primary text-white rounded-md">ATTACHED</button>
+                            </div>
+                        )}
                         <div className="flex items-center gap-2 bg-white/5 rounded-full pl-4 pr-2 py-2 border border-white/5 focus-within:border-primary/50 focus-within:bg-white/10 transition-all">
                             <input
                                 type="text"
@@ -331,3 +417,4 @@ export default function MusicFlowConnect({ isOpen, onClose, initialTrack }: Musi
         </div>
     );
 }
+

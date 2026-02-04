@@ -11,7 +11,7 @@ export async function GET(req: Request) {
     }
 
     try {
-        const user = await prisma.user.findUnique({
+        const user: any = await prisma.user.findUnique({
             where: { email: session.user.email },
             include: {
                 friends: {
@@ -28,23 +28,31 @@ export async function GET(req: Request) {
         if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
         // Merge both sides of friendship
-        const sentFriends = user.friends.map(f => ({
-            id: f.friend.id,
-            name: f.friend.name,
-            image: f.friend.image,
-            status: 'Offline' // Placeholder status
-        }));
+        const sentFriends = user.friends.map(f => {
+            const lastActive = f.friend.lastActiveAt;
+            const isOnline = lastActive ? (new Date().getTime() - new Date(lastActive).getTime() < 120000) : false;
 
-        const receivedFriends = user.friendOf.map(f => ({
-            id: f.user.id,
-            name: f.user.name,
-            image: f.user.image,
-            status: 'Offline'
-        }));
+            return {
+                id: f.friend.id,
+                name: f.friend.name,
+                image: f.friend.image,
+                status: isOnline ? 'Online' : 'Offline',
+                lastActiveAt: lastActive
+            };
+        });
 
-        // Deduplicate if necessary (though query should be clean if handled right, simplified here)
-        // With logic "A accepted B" and "B accepted A", we might have duplicates if we created 2 records.
-        // If we created 2 records for ACCEPTED, this merge is correct.
+        const receivedFriends = user.friendOf.map(f => {
+            const lastActive = f.user.lastActiveAt;
+            const isOnline = lastActive ? (new Date().getTime() - new Date(lastActive).getTime() < 120000) : false;
+
+            return {
+                id: f.user.id,
+                name: f.user.name,
+                image: f.user.image,
+                status: isOnline ? 'Online' : 'Offline',
+                lastActiveAt: lastActive
+            };
+        });
 
         const allFriends = [...sentFriends, ...receivedFriends];
         // Unique by ID
@@ -52,6 +60,7 @@ export async function GET(req: Request) {
 
         return NextResponse.json(uniqueFriends);
     } catch (error) {
+        console.error("Friends API Error:", error);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
 }

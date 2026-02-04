@@ -38,6 +38,7 @@ model User {
   // Real Social Features
   inviteCode       String?      @unique
   notifications    Notification[]
+  lastActiveAt     DateTime?
 }
 
 model Account {

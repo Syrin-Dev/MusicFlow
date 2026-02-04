@@ -47,13 +47,19 @@ export async function POST(request: NextRequest) {
         const hourOfDay = now.getHours();
         const dayOfWeek = now.getDay();
 
-        // Create the listening event
+        // 1. Ensure Track exists (Normalization)
+        await prisma.track.upsert({
+            where: { id: videoId },
+            update: { title, artist, thumbnail: body.thumbnail || '' },
+            create: { id: videoId, title, artist, thumbnail: body.thumbnail || '' }
+        });
+
+        // 2. Create the listening event
         const event = await prisma.listeningEvent.create({
             data: {
                 userId: user.id,
                 videoId,
-                title,
-                artist,
+                trackId: videoId,
                 playDuration: Math.round(playDuration),
                 totalDuration: Math.round(totalDuration),
                 completionRate,
@@ -61,88 +67,14 @@ export async function POST(request: NextRequest) {
                 liked: liked || false,
                 hourOfDay,
                 dayOfWeek,
-                endedAt: now
+                startedAt: now
             }
-        });
-
-        // Update artist affinity scores
-        await updateArtistAffinity(user.id, artist, {
-            playDuration: Math.round(playDuration),
-            completionRate,
-            skipped: skipped || false,
-            liked: liked || false
         });
 
         return NextResponse.json({ success: true, eventId: event.id });
     } catch (error) {
         console.error('Listening event error:', error);
         return NextResponse.json({ error: 'Failed to record event' }, { status: 500 });
-    }
-}
-
-// Update or create artist affinity scores
-async function updateArtistAffinity(
-    userId: string,
-    artist: string,
-    metrics: { playDuration: number; completionRate: number; skipped: boolean; liked: boolean }
-) {
-    const existing = await prisma.artistAffinity.findUnique({
-        where: { userId_artist: { userId, artist } }
-    });
-
-    if (existing) {
-        // Update existing affinity
-        const newPlayCount = existing.playCount + 1;
-        const newTotalListenTime = existing.totalListenTime + metrics.playDuration;
-        const newLikeCount = existing.likeCount + (metrics.liked ? 1 : 0);
-        const newSkipCount = existing.skipCount + (metrics.skipped ? 1 : 0);
-
-        // Running average for completion rate
-        const newAvgCompletion = (existing.avgCompletion * existing.playCount + metrics.completionRate) / newPlayCount;
-
-        // Calculate affinity score using weighted formula
-        // Based on the document: engagement + satisfaction - negative signals
-        const affinityScore = calculateAffinityScore({
-            playCount: newPlayCount,
-            totalListenTime: newTotalListenTime,
-            likeCount: newLikeCount,
-            skipCount: newSkipCount,
-            avgCompletion: newAvgCompletion
-        });
-
-        await prisma.artistAffinity.update({
-            where: { id: existing.id },
-            data: {
-                playCount: newPlayCount,
-                totalListenTime: newTotalListenTime,
-                likeCount: newLikeCount,
-                skipCount: newSkipCount,
-                avgCompletion: newAvgCompletion,
-                affinityScore
-            }
-        });
-    } else {
-        // Create new affinity record
-        const affinityScore = calculateAffinityScore({
-            playCount: 1,
-            totalListenTime: metrics.playDuration,
-            likeCount: metrics.liked ? 1 : 0,
-            skipCount: metrics.skipped ? 1 : 0,
-            avgCompletion: metrics.completionRate
-        });
-
-        await prisma.artistAffinity.create({
-            data: {
-                userId,
-                artist,
-                playCount: 1,
-                totalListenTime: metrics.playDuration,
-                likeCount: metrics.liked ? 1 : 0,
-                skipCount: metrics.skipped ? 1 : 0,
-                avgCompletion: metrics.completionRate,
-                affinityScore
-            }
-        });
     }
 }
 
@@ -190,17 +122,11 @@ export async function GET() {
             return NextResponse.json({ error: 'User not found' }, { status: 404 });
         }
 
-        // Get top artists by affinity
-        const topArtists = await prisma.artistAffinity.findMany({
-            where: { userId: user.id },
-            orderBy: { affinityScore: 'desc' },
-            take: 20
-        });
-
-        // Get recent listening events
+        // Get recent listening events with track data
         const recentEvents = await prisma.listeningEvent.findMany({
             where: { userId: user.id },
             orderBy: { startedAt: 'desc' },
+            include: { track: true },
             take: 50
         });
 
@@ -211,10 +137,10 @@ export async function GET() {
         });
 
         return NextResponse.json({
-            topArtists,
+            topArtists: [], // Calculated dynamically later or from Activity feed
             recentEventsCount: recentEvents.length,
             hourlyDistribution,
-            totalListeningTime: topArtists.reduce((sum, a) => sum + a.totalListenTime, 0)
+            totalListeningTime: 0
         });
     } catch (error) {
         console.error('Get listening stats error:', error);

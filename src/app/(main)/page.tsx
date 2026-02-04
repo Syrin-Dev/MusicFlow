@@ -134,7 +134,7 @@ function GenreFilteredView({ query }: { query: string }) {
   );
 }
 
-import { FriendActivity } from '@/components/FriendActivity';
+
 
 export default function Home() {
   const [selectedGenre, setSelectedGenre] = useState('All');
@@ -160,7 +160,7 @@ export default function Home() {
 
             <div className="space-y-24">
               <DailyMixes />
-              <FriendActivity />
+
               <RecommendedGrid />
               <QuickPicks />
               <MusicVideos />

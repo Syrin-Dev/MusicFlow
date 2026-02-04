@@ -145,11 +145,12 @@ async function generateCandidates(
     if (userId && candidates.length < count) {
         const likedSongs = await prisma.likedSong.findMany({
             where: { userId },
+            include: { track: true },
             orderBy: { createdAt: 'desc' },
             take: 10
         });
 
-        const likedArtists = [...new Set(likedSongs.map(s => s.artist))];
+        const likedArtists = [...new Set(likedSongs.map(s => s.track?.artist || '').filter(Boolean))];
         for (const artist of likedArtists.slice(0, 3)) {
             try {
                 const response = await fetch(

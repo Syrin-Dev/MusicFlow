@@ -75,18 +75,22 @@ async function generateCandidates(
     const candidates: Track[] = [];
     const seenIds = new Set<string>();
 
-    // Strategy 1: User's top artists (collaborative filtering signal)
+    // Strategy 1: User's liked artists (collaborative filtering signal)
     if (userId) {
-        const topArtists = await prisma.artistAffinity.findMany({
+        const likedSongs = await prisma.likedSong.findMany({
             where: { userId },
-            orderBy: { affinityScore: 'desc' },
-            take: 5
+            include: { track: true },
+            orderBy: { createdAt: 'desc' },
+            take: 20
         });
 
-        for (const affinity of topArtists) {
+        // Extract unique artists from likes
+        const topArtists = [...new Set(likedSongs.map(s => s.track?.artist || '').filter(Boolean))].slice(0, 5);
+
+        for (const artistName of topArtists) {
             try {
                 const response = await fetch(
-                    `${getBaseUrl()}/api/search?q=${encodeURIComponent(affinity.artist + ' songs')}&limit=10`,
+                    `${getBaseUrl()}/api/search?q=${encodeURIComponent(artistName + ' songs')}&limit=8`,
                     { cache: 'no-store' }
                 );
                 const tracks = await response.json();
@@ -184,18 +188,19 @@ async function rankCandidates(
     let recentlyPlayedIds: Set<string> = new Set();
 
     if (userId) {
-        // Load artist affinities
-        const affinities = await prisma.artistAffinity.findMany({
-            where: { userId }
-        });
-        affinities.forEach(a => userAffinities.set(a.artist.toLowerCase(), a.affinityScore));
-
-        // Load liked songs
+        // Load liked artists as a proxy for affinity
         const liked = await prisma.likedSong.findMany({
             where: { userId },
-            select: { videoId: true }
+            include: { track: true }
         });
-        liked.forEach(l => likedVideoIds.add(l.videoId));
+
+        liked.forEach(l => {
+            likedVideoIds.add(l.videoId);
+            if (l.track?.artist) {
+                const artist = l.track.artist.toLowerCase();
+                userAffinities.set(artist, (userAffinities.get(artist) || 0) + 1);
+            }
+        });
 
         // Load recently played (to potentially demote for freshness)
         const recent = await prisma.listeningEvent.findMany({

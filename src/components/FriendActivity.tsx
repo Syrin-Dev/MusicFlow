@@ -102,6 +102,15 @@ export function FriendActivity() {
                                     src={friend.lastTrack?.thumbnail}
                                     className="w-full h-full object-cover transition-transform duration-700 group-hover/art:scale-110"
                                     alt=""
+                                    onError={(e) => {
+                                        const img = e.currentTarget;
+                                        if (img.src.includes('hqdefault')) {
+                                            img.src = `https://i.ytimg.com/vi/${friend.lastTrack?.videoId}/mqdefault.jpg`;
+                                        } else {
+                                            img.style.display = 'none';
+                                            img.parentElement!.style.background = 'linear-gradient(to bottom right, #6B21A8, #8b5cf6)';
+                                        }
+                                    }}
                                 />
                                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/art:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[2px]">
                                     <button

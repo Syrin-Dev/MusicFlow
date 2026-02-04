@@ -10,7 +10,7 @@ export async function GET() {
     }
 
     try {
-        const user = await prisma.user.findUnique({
+        const user = await (prisma.user as any).findUnique({
             where: { email: session.user.email },
             include: {
                 friends: { where: { status: 'ACCEPTED' } },
@@ -22,12 +22,12 @@ export async function GET() {
 
         // Get IDs of friends to filter activity
         const friendIds = [
-            ...user.friends.map(f => f.friendId),
-            ...user.friendOf.map(f => f.userId)
+            ...(user as any).friends.map((f: any) => f.friendId),
+            ...(user as any).friendOf.map((f: any) => f.userId)
         ];
 
         // Fetch activities from friends + some global public ones
-        const activities = await prisma.activity.findMany({
+        const activities = (await (prisma as any).activity.findMany({
             where: {
                 OR: [
                     { userId: { in: friendIds } },
@@ -35,12 +35,18 @@ export async function GET() {
                 ]
             },
             include: {
-                user: { select: { name: true, image: true } },
+                user: { select: { id: true, name: true, image: true } },
                 track: true
             },
             orderBy: { createdAt: 'desc' },
             take: 30
-        });
+        })).map((act: any) => ({
+            ...act,
+            track: act.track ? {
+                ...act.track,
+                thumbnail: act.track.thumbnail || `https://i.ytimg.com/vi/${act.trackId}/hqdefault.jpg`
+            } : null
+        }));
 
         return NextResponse.json(activities);
     } catch (error) {

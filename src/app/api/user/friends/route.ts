@@ -11,7 +11,7 @@ export async function GET(req: Request) {
     }
 
     try {
-        const user: any = await prisma.user.findUnique({
+        const user: any = await (prisma as any).user.findUnique({
             where: { email: session.user.email },
             include: {
                 friends: {
@@ -21,7 +21,8 @@ export async function GET(req: Request) {
                             include: {
                                 history: {
                                     orderBy: { playedAt: 'desc' },
-                                    take: 1
+                                    take: 1,
+                                    include: { track: true }
                                 }
                             }
                         }
@@ -34,7 +35,8 @@ export async function GET(req: Request) {
                             include: {
                                 history: {
                                     orderBy: { playedAt: 'desc' },
-                                    take: 1
+                                    take: 1,
+                                    include: { track: true }
                                 }
                             }
                         }
@@ -49,7 +51,17 @@ export async function GET(req: Request) {
         const sentFriends = user.friends.map((f: any) => {
             const lastActive = f.friend.lastActiveAt;
             const isOnline = lastActive ? (new Date().getTime() - new Date(lastActive).getTime() < 120000) : false;
-            const lastTrack = f.friend.history?.[0] || null;
+            const historyItem = f.friend.history?.[0] || null;
+
+            let lastTrack = null;
+            if (historyItem) {
+                lastTrack = {
+                    videoId: historyItem.videoId,
+                    title: historyItem.track?.title || 'Unknown',
+                    artist: historyItem.track?.artist || 'Unknown',
+                    thumbnail: historyItem.track?.thumbnail || `https://i.ytimg.com/vi/${historyItem.videoId}/hqdefault.jpg`
+                };
+            }
 
             return {
                 id: f.friend.id,
@@ -64,7 +76,17 @@ export async function GET(req: Request) {
         const receivedFriends = user.friendOf.map((f: any) => {
             const lastActive = f.user.lastActiveAt;
             const isOnline = lastActive ? (new Date().getTime() - new Date(lastActive).getTime() < 120000) : false;
-            const lastTrack = f.user.history?.[0] || null;
+            const historyItem = f.user.history?.[0] || null;
+
+            let lastTrack = null;
+            if (historyItem) {
+                lastTrack = {
+                    videoId: historyItem.videoId,
+                    title: historyItem.track?.title || 'Unknown',
+                    artist: historyItem.track?.artist || 'Unknown',
+                    thumbnail: historyItem.track?.thumbnail || `https://i.ytimg.com/vi/${historyItem.videoId}/hqdefault.jpg`
+                };
+            }
 
             return {
                 id: f.user.id,

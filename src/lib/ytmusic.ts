@@ -137,25 +137,28 @@ export async function getPlaylistDetails(id: string) {
     try {
         await ensureInitialized();
 
-        // 1. Try as Album if ID looks like an album (OLAK..., MPRE...)
-        if (id.startsWith('OLAK') || id.startsWith('MPRE')) {
+        // 1. Try as Album if ID looks like an album or if we should default to album
+        // Common album prefixes: OLAK, MPRE, MPT (Music Topic?)
+        if (id.startsWith('OLAK') || id.startsWith('MPRE') || id.startsWith('MPT') || !id.startsWith('PL')) {
             try {
                 const album = await ytmusic.getAlbum(id) as any;
-                console.log('Album response keys:', Object.keys(album));
-                return {
-                    id: album.albumId || id,
-                    title: album.title || album.name,
-                    description: 'Album',
-                    thumbnail: getHighQualityThumbnail(id, album.thumbnails, true),
-                    channelTitle: album.artist?.name || album.artists?.[0]?.name || 'Unknown Artist',
-                    tracks: (album.songs || album.tracks || []).map((song: any) => ({
-                        id: song.videoId,
-                        title: song.name || song.title,
-                        artist: song.artist?.name || album.artist?.name || 'Unknown',
-                        thumbnail: getHighQualityThumbnail(song.videoId, song.thumbnails),
-                        duration: song.duration || song.length // duration might be string "3:25" or mapped elsewhere
-                    })).filter((t: any) => t.id)
-                };
+                // Verify it has tracks, otherwise it might be a false positive or empty result
+                if (album && (album.songs || album.tracks || []).length > 0) {
+                    return {
+                        id: album.albumId || id,
+                        title: album.title || album.name,
+                        description: 'Album',
+                        thumbnail: getHighQualityThumbnail(id, album.thumbnails, true),
+                        channelTitle: album.artist?.name || album.artists?.[0]?.name || 'Unknown Artist',
+                        tracks: (album.songs || album.tracks || []).map((song: any) => ({
+                            id: song.videoId,
+                            title: song.name || song.title,
+                            artist: song.artist?.name || album.artist?.name || 'Unknown',
+                            thumbnail: getHighQualityThumbnail(song.videoId, song.thumbnails),
+                            duration: song.duration || song.length
+                        })).filter((t: any) => t.id)
+                    };
+                }
             } catch (e) {
                 console.log("Failed as album, trying playlist fallback...", e);
             }
@@ -186,6 +189,129 @@ export async function getPlaylistDetails(id: string) {
         };
     } catch (error) {
         console.error('YTMusic Get Detail Error:', error);
+        return null;
+    }
+}
+
+export async function getArtistData(name: string) {
+    try {
+        await ensureInitialized();
+
+        // 1. Search for the artist to get the ID
+        const searchResults = await ytmusic.searchArtists(name);
+        if (!searchResults || searchResults.length === 0) {
+            console.log(`No artist found for: ${name}`);
+            return null;
+        }
+
+        const artistInfo = searchResults[0];
+        const artistId = (artistInfo as any).browseId || (artistInfo as any).artistId;
+
+        console.log(`Found artist: ${artistInfo.name} (${artistId})`);
+
+        // 2. Get full artist details
+        const artistDetails = await ytmusic.getArtist(artistId) as any;
+
+        // 3. Parse Sections
+        // ytmusic-api returns sections like "Songs", "Albums", "Singles", "Videos"
+        // structure: { name: "Songs", results: [...] }
+
+        /* 
+           Note: the structure of 'artistDetails' depends on the library version. 
+           Usually it has properties like 'name', 'description', 'thumbnails'
+           and 'sections' array in newer versions, or direct properties.
+           Based on common usage:
+        */
+
+        // 3. Parse Data
+        // The library might return direct properties or sections depending on the artist/version
+
+        const topSongs = artistDetails.topSongs || artistDetails.sections?.find((s: any) => s.title === 'Songs' || s.title === 'Top songs')?.results || [];
+        const albums = artistDetails.topAlbums || artistDetails.sections?.find((s: any) => s.title === 'Albums')?.results || [];
+        const singles = artistDetails.topSingles || artistDetails.sections?.find((s: any) => s.title === 'Singles')?.results || [];
+        const related = artistDetails.similarArtists || artistDetails.sections?.find((s: any) => s.title === 'Fans might also like')?.results || [];
+
+        return {
+            id: artistId,
+            name: artistInfo.name,
+            description: artistDetails.description || '',
+            subscribers: artistDetails.subscribers || '',
+            thumbnail: getHighQualityThumbnail(artistId, artistInfo.thumbnails),
+            background: getHighQualityThumbnail(artistId, artistInfo.thumbnails).replace('w1200-h1200', 'w2560-h1440'),
+            topSongs: topSongs.map((song: any) => ({
+                id: song.videoId,
+                title: song.title || song.name,
+                artist: artistInfo.name,
+                album: song.album?.name || (song.album as any)?.title, // Access title if album is object
+                duration: song.duration,
+                thumbnail: getHighQualityThumbnail(song.videoId, song.thumbnails),
+                plays: song.plays
+            })).slice(0, 20),
+            albums: albums.map((album: any) => ({
+                id: album.albumId || album.browseId || album.playlistId,
+                title: album.title || album.name,
+                year: album.year,
+                thumbnail: getHighQualityThumbnail(album.browseId, album.thumbnails, true),
+                type: 'Album'
+            })),
+            singles: singles.map((single: any) => ({
+                id: single.albumId || single.browseId || single.playlistId,
+                title: single.title || single.name,
+                year: single.year,
+                thumbnail: getHighQualityThumbnail(single.browseId, single.thumbnails, true),
+                type: 'Single'
+            })),
+            videos: (artistDetails.topVideos || artistDetails.sections?.find((s: any) => s.title === 'Videos')?.results || []).map((video: any) => ({
+                id: video.videoId,
+                title: video.title || video.name,
+                year: video.year, // Videos typically don't have year in basic info but might have views
+                thumbnail: getHighQualityThumbnail(video.videoId, video.thumbnails, true),
+                type: 'Video',
+                views: video.views // Optional views property
+            })),
+            related: related.map((artist: any) => ({
+                id: artist.browseId || artist.artistId,
+                name: artist.name,
+                thumbnail: getHighQualityThumbnail(artist.browseId, artist.thumbnails)
+            })).slice(0, 4),
+            events: [
+                {
+                    id: 'evt1',
+                    date: 'OCT 15',
+                    venue: 'Madison Square Garden',
+                    location: 'New York, NY',
+                    url: `https://www.ticketmaster.com/search?q=${encodeURIComponent(artistInfo.name)}`
+                },
+                {
+                    id: 'evt2',
+                    date: 'OCT 22',
+                    venue: 'The O2',
+                    location: 'London, UK',
+                    url: `https://www.ticketmaster.com/search?q=${encodeURIComponent(artistInfo.name)}`
+                },
+                {
+                    id: 'evt3',
+                    date: 'NOV 05',
+                    venue: 'Mercedes-Benz Arena',
+                    location: 'Berlin, DE',
+                    url: `https://www.ticketmaster.com/search?q=${encodeURIComponent(artistInfo.name)}`
+                }
+            ],
+            merch: {
+                title: `${artistInfo.name} Official Merch`,
+                items: [
+                    {
+                        title: 'T-Shirt',
+                        price: '$35.00',
+                        image: artistInfo.thumbnails?.[0]?.url || '', // Fallback to artist thumb
+                        url: `https://merch.com/${encodeURIComponent(artistInfo.name)}`
+                    }
+                ]
+            }
+        };
+
+    } catch (error) {
+        console.error('YTMusic Artist Data Error:', error);
         return null;
     }
 }

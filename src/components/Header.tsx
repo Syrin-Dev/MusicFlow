@@ -5,10 +5,13 @@ import { useSession, signIn, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { SearchBar } from './SearchBar';
 import { Bell, User, Settings, LogOut, Users, Menu } from 'lucide-react';
+import { useAudio } from '@/components/AudioProvider';
+import { NotificationsDropdown } from '@/components/NotificationsDropdown';
 
 export function Header() {
     const { data: session, status } = useSession();
     const router = useRouter();
+    const { openConnect } = useAudio();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
     const [localUser, setLocalUser] = useState<{ name?: string; email?: string } | null>(null);
@@ -70,15 +73,17 @@ export function Header() {
                 <div className="flex items-center gap-2 md:gap-4 pl-4">
 
                     {/* Activity Button (Desktop) */}
-                    <button className="hidden md:flex p-2.5 rounded-full text-zinc-400 hover:bg-white/10 hover:text-white transition-all duration-300 group" title="Friend Activity">
+                    <button
+                        onClick={() => openConnect()}
+                        className="hidden md:flex p-2.5 rounded-full text-zinc-400 hover:bg-white/10 hover:text-white transition-all duration-300 group"
+                        title="Friend Activity"
+                    >
                         <Users size={20} className="group-hover:scale-110 transition-transform" />
                     </button>
 
                     {/* Notifications */}
-                    <button className="p-2.5 rounded-full text-zinc-400 hover:bg-white/10 hover:text-white transition-all duration-300 relative group">
-                        <Bell size={20} className="group-hover:scale-110 transition-transform group-hover:rotate-12" />
-                        <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-violet-500 rounded-full ring-2 ring-[#0A0A0B] animate-pulse"></span>
-                    </button>
+                    {/* Notifications */}
+                    <NotificationsDropdown />
 
                     <div className="w-px h-8 bg-white/10 mx-1 hidden md:block"></div>
 
@@ -152,7 +157,7 @@ export function Header() {
                             </>
                         ) : (
                             <button
-                                onClick={() => signIn('google')}
+                                onClick={() => signIn('google')} // Fallback or use specific provider
                                 className="flex items-center gap-2 px-6 py-2.5 bg-white text-black rounded-full font-bold text-sm hover:scale-105 transition-transform shadow-lg shadow-white/10"
                             >
                                 <svg className="w-4 h-4" viewBox="0 0 24 24">

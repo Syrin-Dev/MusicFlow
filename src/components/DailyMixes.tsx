@@ -135,13 +135,13 @@ export function DailyMixes() {
     };
 
     if (personalizedMixes.length === 0) return (
-        <div className="h-64 flex items-center justify-center animate-pulse">
+        <div suppressHydrationWarning className="h-64 flex items-center justify-center animate-pulse">
             <div className="text-zinc-500">Curating your daily vibes...</div>
         </div>
     );
 
     return (
-        <section className="py-2">
+        <section suppressHydrationWarning className="py-2">
             <div className="flex flex-col mb-8 px-1">
                 <div className="flex items-center gap-2 mb-2">
                     {/* Icon based on time? Optional polish */}

@@ -42,6 +42,10 @@ interface AudioContextType {
     reorderQueue: (fromIndex: number, toIndex: number) => void;
     loadMoreRecommendations: () => Promise<void>;
     playPlaylist: (tracks: Track[], startIndex?: number) => void;
+    isConnectOpen: boolean;
+    connectInitialTrack: Track | null;
+    openConnect: (track?: Track) => void;
+    closeConnect: () => void;
 }
 
 const AudioContext = createContext<AudioContextType | undefined>(undefined);
@@ -453,6 +457,20 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         };
     }, []);
 
+    // Social Features State
+    const [isConnectOpen, setIsConnectOpen] = useState(false);
+    const [connectInitialTrack, setConnectInitialTrack] = useState<Track | null>(null);
+
+    const openConnect = (track?: Track) => {
+        if (track) setConnectInitialTrack(track);
+        setIsConnectOpen(true);
+    };
+
+    const closeConnect = () => {
+        setIsConnectOpen(false);
+        setConnectInitialTrack(null);
+    };
+
     return (
         <AudioContext.Provider value={{
             currentTrack, isPlaying, playTrack, togglePlay, volume, setVolume: updateVolume,
@@ -460,7 +478,8 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
             shuffle, toggleShuffle, repeat, toggleRepeat, listeningHistory, likedSongs,
             toggleLike, isLiked, isPlayerExpanded, togglePlayerExpansion, videoMode,
             toggleVideoMode, isVideoFullscreen, toggleVideoFullscreen, reorderQueue,
-            loadMoreRecommendations, playPlaylist
+            loadMoreRecommendations, playPlaylist,
+            isConnectOpen, connectInitialTrack, openConnect, closeConnect
         }}>
             {children}
             <div

@@ -28,6 +28,16 @@ model User {
   emailUpdates     Boolean @default(true)
   newReleases      Boolean @default(true)
   securityAlerts   Boolean @default(true)
+
+  // Friends & Messages
+  friends          Friendship[] @relation("UserFriends")
+  friendOf         Friendship[] @relation("FriendUsers")
+  sentMessages     Message[]    @relation("SentMessages")
+  receivedMessages Message[]    @relation("ReceivedMessages")
+  
+  // Real Social Features
+  inviteCode       String?      @unique
+  notifications    Notification[]
 }
 
 model Account {
@@ -172,4 +182,61 @@ model PlaylistTrack {
   
   @@unique([playlistId, videoId]) // Track can only be in playlist once
   @@index([playlistId])
+}
+
+model Friendship {
+  id        String   @id @default(cuid())
+  userId    String
+  friendId  String
+  status    FriendshipStatus @default(PENDING)
+  createdAt DateTime @default(now())
+  
+  user   User @relation("UserFriends", fields: [userId], references: [id], onDelete: Cascade)
+  friend User @relation("FriendUsers", fields: [friendId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, friendId])
+}
+
+model Message {
+  id              String   @id @default(cuid())
+  content         String? 
+  senderId        String
+  receiverId      String
+  
+  // Shared Music Data
+  sharedMusicId   String?  // YouTube Video ID
+  sharedMusicTitle String?
+  sharedMusicArtist String?
+  sharedMusicImg  String? 
+  
+  createdAt       DateTime @default(now())
+  
+  sender   User @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+}
+
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  message   String
+  link      String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+}
+
+enum NotificationType {
+  FRIEND_REQUEST
+  NEW_RELEASE
+  SYSTEM
 }

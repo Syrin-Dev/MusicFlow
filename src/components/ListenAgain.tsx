@@ -56,7 +56,7 @@ export function ListenAgain() {
     }, [fetchTracks, listeningHistory]);
 
     return (
-        <section className="animate-in fade-in duration-700">
+        <section suppressHydrationWarning className="animate-in fade-in duration-700">
             <div className="flex items-center gap-4 mb-8">
                 <div className="relative group">
                     <div className="w-14 h-14 rounded-full overflow-hidden p-[2px] bg-gradient-to-tr from-[#8B5CF6] to-[#D946EF] shadow-lg">
@@ -64,7 +64,7 @@ export function ListenAgain() {
                             {session?.user?.image ? (
                                 <img src={session.user.image} alt={userName} className="w-full h-full object-cover" />
                             ) : (
-                                <div className="w-full h-full bg-zinc-800 flex items-center justify-center text-white font-bold text-xl uppercase">
+                                <div suppressHydrationWarning className="w-full h-full bg-zinc-800 flex items-center justify-center text-white font-bold text-xl uppercase">
                                     {userName.charAt(0)}
                                 </div>
                             )}

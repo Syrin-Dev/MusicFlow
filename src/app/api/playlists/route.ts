@@ -50,14 +50,23 @@ export async function GET() {
         }
 
         const playlists = await prisma.playlist.findMany({
-            where: { userId: user.id },
+            where: {
+                OR: [
+                    { userId: user.id },
+                    { members: { some: { userId: user.id } } }
+                ]
+            },
             include: {
                 tracks: {
                     orderBy: { addedAt: 'desc' },
-                    take: 4
+                    take: 4,
+                    include: { track: true }
                 },
                 _count: {
                     select: { tracks: true }
+                },
+                members: {
+                    include: { user: { select: { name: true, image: true } } }
                 }
             },
             orderBy: { updatedAt: 'desc' }
@@ -95,7 +104,22 @@ export async function POST(request: NextRequest) {
         const playlist = await prisma.playlist.create({
             data: {
                 userId: user.id,
-                name: name.trim()
+                name: name.trim(),
+                members: {
+                    create: {
+                        userId: user.id,
+                        role: 'OWNER'
+                    }
+                }
+            }
+        });
+
+        // Activity log
+        await prisma.activity.create({
+            data: {
+                userId: user.id,
+                type: 'PLAYLIST_CREATED',
+                playlistId: playlist.id
             }
         });
 

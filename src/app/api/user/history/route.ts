@@ -22,17 +22,15 @@ export async function GET() {
             where: { userId: user.id },
             orderBy: { playedAt: 'desc' },
             take: 50,
-            distinct: ['videoId'] // Keep only unique songs, taking the latest due to orderBy? 
-            // NOTE: distinct with orderBy in SQLite/Postgres can be tricky, let's keep it simple: just take latest 50
+            distinct: ['videoId'],
+            include: { track: true }
         });
 
-        // The distinct logic above works in Postgres/SQLite generally to get unique rows
-        // But let's map it to Track interface
         const mappedHistory = history.map(h => ({
             id: h.videoId,
-            title: h.title,
-            artist: h.artist,
-            thumbnail: h.thumbnail
+            title: h.track?.title || 'Unknown',
+            artist: h.track?.artist || 'Unknown',
+            thumbnail: h.track?.thumbnail || ''
         }));
 
         return NextResponse.json(mappedHistory);
@@ -57,22 +55,32 @@ export async function POST(req: Request) {
             where: { email: session.user.email }
         });
 
-        if (!user) {
-            return NextResponse.json({ error: 'User not found' }, { status: 404 });
-        }
+        if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
-        // Add to history
+        // 1. Upsert Track (Source of Truth)
+        await prisma.track.upsert({
+            where: { id },
+            update: { title, artist, thumbnail },
+            create: { id, title, artist, thumbnail }
+        });
+
+        // 2. Add to history
         await prisma.listeningHistory.create({
             data: {
                 userId: user.id,
                 videoId: id,
-                title,
-                artist,
-                thumbnail
+                trackId: id
             }
         });
 
-        // Optional: Clean up old history if it gets too big (e.g. keep last 100)
+        // 3. Log Activity for the feed
+        await prisma.activity.create({
+            data: {
+                userId: user.id,
+                type: 'TRACK_PLAYED',
+                trackId: id
+            }
+        });
 
         return NextResponse.json({ success: true });
     } catch (error) {

@@ -12,10 +12,22 @@ export async function GET() {
     try {
         const user = await prisma.user.findUnique({
             where: { email: session.user.email },
-            include: { likedSongs: { orderBy: { createdAt: 'desc' } } }
+            include: {
+                likedSongs: {
+                    orderBy: { createdAt: 'desc' },
+                    include: { track: true }
+                }
+            }
         });
 
-        return NextResponse.json(user?.likedSongs || []);
+        const mappedLikes = user?.likedSongs.map(l => ({
+            id: l.videoId,
+            title: l.track?.title || 'Unknown',
+            artist: l.track?.artist || 'Unknown',
+            thumbnail: l.track?.thumbnail || ''
+        })) || [];
+
+        return NextResponse.json(mappedLikes);
     } catch (error) {
         console.error('Failed to fetch likes:', error);
         return NextResponse.json([], { status: 500 });
@@ -37,11 +49,16 @@ export async function POST(req: Request) {
             where: { email: session.user.email }
         });
 
-        if (!user) {
-            return NextResponse.json({ error: 'User not found' }, { status: 404 });
-        }
+        if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
-        // Check if already liked
+        // 1. Ensure Track exists
+        await prisma.track.upsert({
+            where: { id },
+            update: { title, artist, thumbnail },
+            create: { id, title, artist, thumbnail }
+        });
+
+        // 2. Check if already liked
         const existingLike = await prisma.likedSong.findUnique({
             where: {
                 userId_videoId: {
@@ -63,11 +80,19 @@ export async function POST(req: Request) {
                 data: {
                     userId: user.id,
                     videoId: id,
-                    title,
-                    artist,
-                    thumbnail
+                    trackId: id
                 }
             });
+
+            // Log Activity
+            await prisma.activity.create({
+                data: {
+                    userId: user.id,
+                    type: 'LIKE',
+                    trackId: id
+                }
+            });
+
             return NextResponse.json({ liked: true });
         }
     } catch (error) {

@@ -57,6 +57,7 @@ model Track {
   historyItems    ListeningHistory[]
   rooms           ListeningRoom[]
   playlistItems   PlaylistTrack[]
+  messages        Message[]
 }
 
 model LikedSong {
@@ -206,6 +207,9 @@ model Message {
   sharedMusicTitle     String?
   receiver             User     @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
   sender               User     @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  track                Track?   @relation(fields: [sharedMusicId], references: [id])
+  replyTo              Message? @relation("MessageReplies", fields: [replyToId], references: [id])
+  replies              Message[] @relation("MessageReplies")
 }
 
 model Account {

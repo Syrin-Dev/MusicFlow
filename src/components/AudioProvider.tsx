@@ -601,7 +601,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         playTrackInternal(trackToPlay, prevTrack);
     };
 
-    // Media Session Handlers Refs to prevent stale closures
+    // Media Session Handlers Refs - STABLE REFS
     const playNextRef = useRef(playNext);
     const playPreviousRef = useRef(playPrevious);
     const togglePlayRef = useRef(togglePlay);
@@ -614,77 +614,66 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         seekToRef.current = seekTo;
     }, [playNext, playPrevious, togglePlay, seekTo]);
 
-    // Media Session API Support
+    // Force Metadata Update
     useEffect(() => {
-        if (!('mediaSession' in navigator)) return;
+        if (!('mediaSession' in navigator) || !currentTrack) return;
 
-        if (currentTrack) {
-            navigator.mediaSession.metadata = new MediaMetadata({
-                title: currentTrack.title,
-                artist: currentTrack.artist,
-                album: 'Hievly Music',
-                artwork: [
-                    { src: currentTrack.thumbnail || `https://i.ytimg.com/vi/${currentTrack.id}/hqdefault.jpg`, sizes: '512x512', type: 'image/jpeg' },
-                    { src: currentTrack.thumbnail || `https://i.ytimg.com/vi/${currentTrack.id}/maxresdefault.jpg`, sizes: '512x512', type: 'image/jpeg' }
-                ]
-            });
-        }
+        navigator.mediaSession.metadata = new MediaMetadata({
+            title: currentTrack.title,
+            artist: currentTrack.artist,
+            album: 'Hievly Music',
+            artwork: [
+                { src: currentTrack.thumbnail || `https://i.ytimg.com/vi/${currentTrack.id}/hqdefault.jpg`, sizes: '512x512', type: 'image/jpeg' },
+                { src: currentTrack.thumbnail || `https://i.ytimg.com/vi/${currentTrack.id}/maxresdefault.jpg`, sizes: '512x512', type: 'image/jpeg' }
+            ]
+        });
 
-        const handlers = [
+        // Re-enable all buttons explicitly every time track changes
+        const actions: [MediaSessionAction, () => void][] = [
             ['play', () => { togglePlayRef.current(); }],
             ['pause', () => { togglePlayRef.current(); }],
             ['previoustrack', () => { playPreviousRef.current(); }],
             ['nexttrack', () => { playNextRef.current(); }],
-            ['seekto', (details: any) => { if (details.seekTime !== undefined) seekToRef.current(details.seekTime); }],
             ['seekbackward', () => { seekToRef.current(Math.max(0, currentTime - 10)); }],
-            ['seekforward', () => { seekToRef.current(Math.min(duration, currentTime + 10)); }]
+            ['seekforward', () => { seekToRef.current(Math.min(duration, currentTime + 10)); }],
+            ['seekto', (details: any) => { if (details.seekTime !== undefined) seekToRef.current(details.seekTime); }]
         ];
 
-        for (const [action, handler] of handlers) {
-            try {
-                navigator.mediaSession.setActionHandler(action as any, handler as any);
-            } catch (error) { }
-        }
+        actions.forEach(([action, handler]) => {
+            try { navigator.mediaSession.setActionHandler(action, handler); } catch (e) { }
+        });
 
         return () => {
-            for (const [action] of handlers) {
-                try { navigator.mediaSession.setActionHandler(action as any, null); } catch (e) { }
+            actions.forEach(([action]) => {
+                try { navigator.mediaSession.setActionHandler(action, null); } catch (e) { }
+            });
+        };
+    }, [currentTrack?.id, queue.length]);
+
+    // Background Resilience Logic
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'hidden' && isPlaying) {
+                // When leaving the app, make sure our ghost audio is definitely playing
+                silentAudioRef.current?.play().catch(() => { });
+                // And try to keep YT playing
+                playerRef.current?.playVideo();
             }
         };
-    }, [currentTrack?.id, queue.length]); // Re-register if track or queue changes to ensure buttons are active
 
-    // Separate effect for playback state to avoid re-registering handlers too often
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    }, [isPlaying]);
+
     useEffect(() => {
         if (!('mediaSession' in navigator)) return;
         navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
 
         if (isPlaying) {
             silentAudioRef.current?.play().catch(() => { });
-            // If in background, try to ensure YT is playing
-            if (document.visibilityState === 'hidden') {
-                playerRef.current?.playVideo();
-            }
         } else {
             silentAudioRef.current?.pause();
         }
-    }, [isPlaying]);
-
-    // Add explicit listener for when the browser tries to pause the silent audio
-    useEffect(() => {
-        const audio = silentAudioRef.current;
-        if (!audio) return;
-
-        const handlePause = () => {
-            if (isPlaying && document.visibilityState === 'hidden') {
-                // Browser tried to pause our audio in background, try to fight back
-                setTimeout(() => {
-                    if (isPlaying) audio.play().catch(() => { });
-                }, 100);
-            }
-        };
-
-        audio.addEventListener('pause', handlePause);
-        return () => audio.removeEventListener('pause', handlePause);
     }, [isPlaying]);
 
     useEffect(() => {
@@ -694,7 +683,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
                 navigator.mediaSession.setPositionState({
                     duration: duration,
                     playbackRate: 1,
-                    position: currentTime,
+                    position: Math.min(currentTime, duration),
                 });
             }
         } catch (e) { }
@@ -768,10 +757,16 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
             </div>
             <audio
                 ref={silentAudioRef}
-                src="https://www.soundjay.com/nature/ocean-wave-1.mp3"
+                src="https://www.soundjay.com/misc/sounds/silent-shimmer-1.mp3"
                 loop
-                muted={false}
-                style={{ position: 'fixed', top: -100, left: -100, width: 1, height: 1 }}
+                onError={(e) => {
+                    // Fallback to another silent source if first one fails
+                    const target = e.target as HTMLAudioElement;
+                    if (!target.src.includes('nature')) {
+                        target.src = "https://www.soundjay.com/nature/ocean-wave-1.mp3";
+                    }
+                }}
+                style={{ position: 'fixed', top: -100, left: -100, width: 1, height: 1, pointerEvents: 'none' }}
             />
         </AudioContext.Provider>
     );

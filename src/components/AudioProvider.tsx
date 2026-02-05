@@ -2,6 +2,8 @@
 
 import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
 import { useSession } from "next-auth/react";
+import { toast } from 'sonner';
+import { Heart, HeartOff } from 'lucide-react';
 
 interface Track {
     id: string;
@@ -46,6 +48,11 @@ interface AudioContextType {
     connectInitialTrack: Track | null;
     openConnect: (track?: Track) => void;
     closeConnect: () => void;
+    currentRoomId: string | null;
+    isHostingRoom: boolean;
+    joinRoom: (friendId: string) => Promise<void>;
+    leaveRoom: () => Promise<void>;
+    hostRoom: () => Promise<void>;
 }
 
 const AudioContext = createContext<AudioContextType | undefined>(undefined);
@@ -54,6 +61,11 @@ const LISTENING_HISTORY_KEY = 'hievly_listening_history';
 
 export function AudioProvider({ children }: { children: React.ReactNode }) {
     const { data: session } = useSession();
+
+    // Live Room State (Moved up for access)
+    const [currentRoomId, setCurrentRoomId] = useState<string | null>(null);
+    const [isHostingRoom, setIsHostingRoom] = useState(false);
+    const [roomData, setRoomData] = useState<any>(null);
 
     // Playback State
     const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
@@ -221,59 +233,6 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
 
     const isLiked = (trackId: string) => likedSongs.some(t => t.id === trackId);
 
-    // Audio Control Logic
-    const playTrackInternal = (track: Track, previousTrack?: Track | null) => {
-        if (previousTrack && trackingRef.current && trackingRef.current.trackId === previousTrack.id) {
-            const playDuration = (Date.now() - trackingRef.current.startTime) / 1000;
-            const totalDuration = trackingRef.current.duration || duration;
-            const skipped = playDuration < 30 && totalDuration > 30;
-            recordListeningEvent(previousTrack, playDuration, totalDuration, skipped);
-        }
-
-        trackingRef.current = {
-            startTime: Date.now(),
-            trackId: track.id,
-            duration: 0
-        };
-
-        setCurrentTrack(track);
-        setIsLoading(true);
-        setCurrentTime(0);
-        saveToListeningHistory(track);
-
-        if (playerRef.current && playerRef.current.loadVideoById) {
-            playerRef.current.loadVideoById(track.id);
-        } else {
-            setTimeout(() => {
-                if (playerRef.current && playerRef.current.loadVideoById) {
-                    playerRef.current.loadVideoById(track.id);
-                }
-            }, 800);
-        }
-    };
-
-    const playTrack = (track: Track) => {
-        const prevTrack = currentTrack;
-        if (currentTrack) {
-            setHistory(prev => [...prev, currentTrack]);
-        }
-        playTrackInternal(track, prevTrack);
-    };
-
-    const playPlaylist = (tracks: Track[], startIndex: number = 0) => {
-        if (!tracks || tracks.length === 0) return;
-
-        const trackToPlay = tracks[startIndex];
-        const prevTrack = currentTrack;
-        if (currentTrack) {
-            setHistory(prev => [...prev, currentTrack]);
-        }
-
-        // Reset Queue
-        setQueue(tracks.slice(startIndex + 1));
-
-        playTrackInternal(trackToPlay, prevTrack);
-    };
 
     const togglePlay = () => {
         if (!playerRef.current) return;
@@ -440,6 +399,55 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         return 'off';
     });
 
+    // YouTube Event Handlers (Defined here to access functions like handleTrackEnd)
+    const onPlayerStateChange = useCallback((event: any) => {
+        const { data } = event;
+        // YT.PlayerState: -1 (unstarted), 0 (ended), 1 (playing), 2 (paused), 3 (buffering), 5 (video cued)
+
+        if (data === 1) { // Playing
+            setIsPlaying(true);
+            setIsLoading(false);
+            setDuration(playerRef.current?.getDuration() || 0);
+
+            // Start time tracking
+            if (timeUpdateInterval.current) clearInterval(timeUpdateInterval.current);
+            timeUpdateInterval.current = setInterval(() => {
+                if (playerRef.current && playerRef.current.getCurrentTime) {
+                    const time = playerRef.current.getCurrentTime();
+                    setCurrentTime(time);
+                    if (trackingRef.current) {
+                        trackingRef.current.duration = playerRef.current.getDuration();
+                    }
+                }
+            }, 1000);
+        } else if (data === 2) { // Paused
+            setIsPlaying(false);
+        } else if (data === 0) { // Ended
+            setIsPlaying(false);
+            if (timeUpdateInterval.current) clearInterval(timeUpdateInterval.current);
+            handleTrackEnd();
+        } else if (data === 3) { // Buffering
+            setIsLoading(true);
+        }
+    }, [handleTrackEnd]);
+
+    const onPlayerError = useCallback((event: any) => {
+        console.error("YouTube Player Error:", event.data);
+        setIsLoading(false);
+        if (event.data === 150 || event.data === 101) {
+            toast.error("Song unavailable (restricted). Skipping...");
+            playNext(); // Use playNext
+        } else {
+            toast.error("Playback error occurred.");
+        }
+    }, [playNext]);
+
+    // Update refs with fresh closures
+    useEffect(() => {
+        onPlayerStateChangeRef.current = onPlayerStateChange;
+        onPlayerErrorRef.current = onPlayerError;
+    }, [onPlayerStateChange, onPlayerError]);
+
     const reorderQueue = (fromIndex: number, toIndex: number) => {
         setQueue(prev => {
             const newQueue = [...prev];
@@ -457,7 +465,6 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         };
     }, []);
 
-    // Social Features State
     const [isConnectOpen, setIsConnectOpen] = useState(false);
     const [connectInitialTrack, setConnectInitialTrack] = useState<Track | null>(null);
 
@@ -471,6 +478,158 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         setConnectInitialTrack(null);
     };
 
+    const joinRoom = async (friendId: string) => {
+        try {
+            const res = await fetch('/api/rooms', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'JOIN_ROOM', friendId })
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setCurrentRoomId(data.id);
+                setIsHostingRoom(false);
+                setRoomData(data);
+                toast.success("Joined live room!");
+            }
+        } catch (e) {
+            toast.error("Failed to join room");
+        }
+    };
+
+    const leaveRoom = async () => {
+        try {
+            await fetch('/api/rooms', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'LEAVE_ROOM' })
+            });
+            setCurrentRoomId(null);
+            setIsHostingRoom(false);
+            setRoomData(null);
+        } catch (e) { }
+    };
+
+    const hostRoom = async () => {
+        if (!currentTrack) return;
+        try {
+            const res = await fetch('/api/rooms', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'CREATE_ROOM',
+                    trackId: currentTrack.id,
+                    progress: Math.floor(currentTime)
+                })
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setCurrentRoomId(data.id);
+                setIsHostingRoom(true);
+                // toast.success("Living room started!");
+            }
+        } catch (e) { }
+    };
+
+    // --- RE-ORDERED FOR ACCESS ---
+    // Moving playTrackInternal AFTER the definitions it depends on (hostRoom)
+
+    // Audio Control Logic
+    const playTrackInternal = (track: Track, previousTrack?: Track | null) => {
+        if (previousTrack && trackingRef.current && trackingRef.current.trackId === previousTrack.id) {
+            const playDuration = (Date.now() - trackingRef.current.startTime) / 1000;
+            const totalDuration = trackingRef.current.duration || duration;
+            const skipped = playDuration < 30 && totalDuration > 30;
+            recordListeningEvent(previousTrack, playDuration, totalDuration, skipped);
+        }
+
+        trackingRef.current = {
+            startTime: Date.now(),
+            trackId: track.id,
+            duration: 0
+        };
+
+        setCurrentTrack(track);
+        setIsLoading(true);
+        setCurrentTime(0);
+        saveToListeningHistory(track);
+
+        if (playerRef.current && playerRef.current.loadVideoById) {
+            playerRef.current.loadVideoById(track.id);
+        } else {
+            setTimeout(() => {
+                if (playerRef.current && playerRef.current.loadVideoById) {
+                    playerRef.current.loadVideoById(track.id);
+                }
+            }, 800);
+        }
+
+        // Automatically start/update hosting room when playing
+        hostRoom().catch(() => { });
+    };
+
+    const playTrack = (track: Track) => {
+        const prevTrack = currentTrack;
+        if (currentTrack) {
+            setHistory(prev => [...prev, currentTrack]);
+        }
+        playTrackInternal(track, prevTrack);
+    };
+
+    const playPlaylist = (tracks: Track[], startIndex: number = 0) => {
+        if (!tracks || tracks.length === 0) return;
+
+        const trackToPlay = tracks[startIndex];
+        const prevTrack = currentTrack;
+        if (currentTrack) {
+            setHistory(prev => [...prev, currentTrack]);
+        }
+
+        // Reset Queue
+        setQueue(tracks.slice(startIndex + 1));
+
+        playTrackInternal(trackToPlay, prevTrack);
+    };
+
+    // Room Heartbeat Sync
+    useEffect(() => {
+        let interval: any;
+
+        const sync = async () => {
+            if (isHostingRoom && currentTrack) {
+                await fetch('/api/rooms', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'CREATE_ROOM',
+                        trackId: currentTrack.id,
+                        progress: Math.floor(currentTime)
+                    })
+                });
+            } else if (currentRoomId && !isHostingRoom) {
+                const res = await fetch(`/api/rooms?roomId=${currentRoomId}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    setRoomData(data);
+
+                    if (data.activeTrack && (!currentTrack || currentTrack.id !== data.activeTrack.id)) {
+                        playTrackInternal(data.activeTrack);
+                        setTimeout(() => seekTo(data.progress), 1000);
+                    } else if (data.activeTrack && Math.abs(currentTime - data.progress) > 4) {
+                        seekTo(data.progress);
+                    }
+                }
+            }
+        };
+
+        if (currentRoomId || isHostingRoom) {
+            sync();
+            interval = setInterval(sync, 4000);
+        }
+
+        return () => clearInterval(interval);
+    }, [currentRoomId, isHostingRoom, currentTrack?.id, isPlaying]);
+
     return (
         <AudioContext.Provider value={{
             currentTrack, isPlaying, playTrack, togglePlay, volume, setVolume: updateVolume,
@@ -479,7 +638,8 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
             toggleLike, isLiked, isPlayerExpanded, togglePlayerExpansion, videoMode,
             toggleVideoMode, isVideoFullscreen, toggleVideoFullscreen, reorderQueue,
             loadMoreRecommendations, playPlaylist,
-            isConnectOpen, connectInitialTrack, openConnect, closeConnect
+            isConnectOpen, connectInitialTrack, openConnect, closeConnect,
+            currentRoomId, isHostingRoom, joinRoom, leaveRoom, hostRoom
         }}>
             {children}
             <div

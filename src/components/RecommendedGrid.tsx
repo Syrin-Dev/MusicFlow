@@ -60,7 +60,7 @@ export function RecommendedGrid() {
 
     useEffect(() => {
         fetchRecommendations(false);
-    }, [listeningHistory]);
+    }, []);
 
     const handleNext = async () => {
         setIsTransitioning(true);
@@ -143,7 +143,7 @@ export function RecommendedGrid() {
                         >
                             <div className="relative aspect-square rounded-2xl overflow-hidden mb-3 bg-[#18181b] shadow-lg ring-1 ring-white/5">
                                 <img
-                                    src={`https://i.ytimg.com/vi/${track.id}/hqdefault.jpg`}
+                                    src={track.thumbnail || `https://i.ytimg.com/vi/${track.id}/hqdefault.jpg`}
                                     alt={track.title}
                                     onError={(e) => handleImageError(e, track)}
                                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 opacity-90 group-hover:opacity-100"

@@ -119,7 +119,7 @@ export function DailyMixes() {
         };
 
         generatePersonalizedMixes();
-    }, [likedSongs]); // Re-run when liked songs change (or on mount)
+    }, []); // Run only on mount
 
     const handlePlayMix = async (index: number, query: string) => {
         setLoadingMix(index);
@@ -157,7 +157,7 @@ export function DailyMixes() {
                 </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
                 {personalizedMixes.map((mix, i) => {
                     const Icon = mix.icon;
                     const isLoading = loadingMix === i;

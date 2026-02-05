@@ -29,13 +29,16 @@ export default function ArtistPage() {
     const [isFollowing, setIsFollowing] = useState(false);
     const [filter, setFilter] = useState<'all' | 'albums' | 'singles' | 'videos'>('all');
     const [showFullBio, setShowFullBio] = useState(false);
-    const [showAllSongs, setShowAllSongs] = useState(false);
+    const [visibleSongs, setVisibleSongs] = useState(5);
     const [showMoreMenu, setShowMoreMenu] = useState(false);
     const [songMenuOpen, setSongMenuOpen] = useState<string | null>(null);
     const [scrollY, setScrollY] = useState(0);
 
     useEffect(() => {
         if (!artistName) return;
+
+        // Reset visible songs on artist change
+        setVisibleSongs(5);
 
         // Check local storage for following status
         const followed = localStorage.getItem('followed_artists');
@@ -150,7 +153,6 @@ export default function ArtistPage() {
                 onScroll={handleScroll}
             >
                 {/* Hero Section */}
-                {/* Hero Section */}
                 <section className="relative h-[45vh] min-h-[400px] w-full group">
                     <div className="absolute inset-0 overflow-hidden">
                         <div
@@ -223,7 +225,6 @@ export default function ArtistPage() {
                                             >
                                                 <span className="material-icons-round text-lg">share</span> Share
                                             </div>
-                                            {/* Removed Start Radio based on user request */}
                                         </div>
                                     )}
 
@@ -247,7 +248,7 @@ export default function ArtistPage() {
                             <section>
                                 <h2 className="text-2xl font-bold text-white mb-6">Popular</h2>
                                 <div className="space-y-1">
-                                    {(showAllSongs ? artist.topSongs : artist.topSongs.slice(0, 5)).map((track, index) => (
+                                    {artist.topSongs.slice(0, visibleSongs).map((track, index) => (
                                         <div
                                             key={track.id}
                                             className="flex items-center justify-between p-3 rounded-lg hover:bg-white/5 group transition-colors cursor-pointer relative"
@@ -293,7 +294,6 @@ export default function ArtistPage() {
                                                                 className="px-4 py-2 hover:bg-white/5 cursor-pointer flex items-center gap-2 text-sm text-gray-300 hover:text-white"
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
-                                                                    // Navigate to album if possible, simplified for now
                                                                     alert(`Go to album: ${track.album}`);
                                                                     setSongMenuOpen(null);
                                                                 }}
@@ -304,7 +304,6 @@ export default function ArtistPage() {
                                                                 className="px-4 py-2 hover:bg-white/5 cursor-pointer flex items-center gap-2 text-sm text-gray-300 hover:text-white"
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
-                                                                    // Logic for adding to playlist
                                                                     alert("Add to playlist - to be implemented");
                                                                     setSongMenuOpen(null);
                                                                 }}
@@ -318,12 +317,12 @@ export default function ArtistPage() {
                                         </div>
                                     ))}
                                 </div>
-                                {artist.topSongs.length > 5 && (
+                                {visibleSongs < artist.topSongs.length && (
                                     <button
-                                        className="text-xs font-bold text-gray-400 hover:text-white uppercase tracking-wider mt-6 pl-3 transition-colors"
-                                        onClick={() => setShowAllSongs(!showAllSongs)}
+                                        className="text-xs font-bold text-gray-400 hover:text-white uppercase tracking-wider mt-6 pl-3 transition-colors flex items-center gap-1"
+                                        onClick={() => setVisibleSongs(prev => prev + 5)}
                                     >
-                                        {showAllSongs ? 'Show Less' : 'See More'}
+                                        Load More <span className="material-icons-round text-sm">expand_more</span>
                                     </button>
                                 )}
                             </section>

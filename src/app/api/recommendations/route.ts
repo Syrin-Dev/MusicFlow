@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prismadb';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { searchMusic } from '@/lib/ytmusic';
 
 // Helper to get user email with dev fallback
 async function getUserEmail() {
@@ -67,6 +68,8 @@ export async function GET(request: NextRequest) {
 
 // Phase 1: Candidate Generation
 // Retrieves a broad set of potentially relevant tracks
+// Phase 1: Candidate Generation
+// Retrieves a broad set of potentially relevant tracks
 async function generateCandidates(
     userId: string | null,
     context: string,
@@ -74,8 +77,32 @@ async function generateCandidates(
 ): Promise<Track[]> {
     const candidates: Track[] = [];
     const seenIds = new Set<string>();
+    const searchPromises: Promise<any>[] = [];
 
-    // Strategy 1: User's liked artists (collaborative filtering signal)
+    // Helper to add unique tracks
+    const addTracks = (tracks: any[]) => {
+        if (Array.isArray(tracks)) {
+            tracks.forEach((track: any) => {
+                // Map search result to Track interface
+                const mappedTrack: Track = {
+                    id: track.id || track.videoId,
+                    title: track.title || track.name,
+                    artist: track.artist?.name || track.artist || 'Unknown',
+                    thumbnail: track.thumbnail?.url || track.thumbnail
+                };
+
+                // Basic validation
+                if (!mappedTrack.id || !mappedTrack.title || mappedTrack.title === 'Unknown') return;
+
+                if (!seenIds.has(mappedTrack.id)) {
+                    seenIds.add(mappedTrack.id);
+                    candidates.push(mappedTrack);
+                }
+            });
+        }
+    };
+
+    // Strategy 1: User's liked artists
     if (userId) {
         const likedSongs = await prisma.likedSong.findMany({
             where: { userId },
@@ -84,28 +111,16 @@ async function generateCandidates(
             take: 20
         });
 
-        // Extract unique artists from likes
         const topArtists = [...new Set(likedSongs.map(s => s.track?.artist || '').filter(Boolean))].slice(0, 5);
 
-        for (const artistName of topArtists) {
-            try {
-                const response = await fetch(
-                    `${getBaseUrl()}/api/search?q=${encodeURIComponent(artistName + ' songs')}&limit=8`,
-                    { cache: 'no-store' }
-                );
-                const tracks = await response.json();
-                if (Array.isArray(tracks)) {
-                    tracks.forEach((track: Track) => {
-                        if (!seenIds.has(track.id)) {
-                            seenIds.add(track.id);
-                            candidates.push(track);
-                        }
-                    });
-                }
-            } catch (e) {
-                console.error('Artist search failed:', e);
-            }
-        }
+        // Queue artist searches
+        topArtists.forEach(artistName => {
+            searchPromises.push(
+                searchMusic(artistName + ' songs')
+                    .then(res => ({ source: 'artist', data: res }))
+                    .catch(e => { console.warn(`Failed search for ${artistName}`, e); return []; })
+            );
+        });
     }
 
     // Strategy 2: Context-based queries
@@ -118,59 +133,53 @@ async function generateCandidates(
     };
 
     const queries = contextQueries[context] || contextQueries.home;
+    queries.forEach(query => {
+        searchPromises.push(
+            searchMusic(query)
+                .then(res => ({ source: 'context', data: res }))
+                .catch(e => { console.warn(`Failed search for ${query}`, e); return []; })
+        );
+    });
 
-    for (const query of queries) {
-        if (candidates.length >= count) break;
+    // Strategy 3: Liked songs mix (if logged in)
+    if (userId) {
+        // Re-fetch liked songs if needed, but we likely caught them in Strategy 1's query or can reuse.
+        // To stay consistent with original logic but optimized:
+        // We already fetched likedSongs for artists. Let's assume we want a mix for the top 3 artists again?
+        // Original logic fetched likedSongs AGAIN. Let's reuse if we had them, but for brevity/optimization,
+        // let's just use the topArtists we already found.
+        // Actually, let's keep it simple and safe: just skip duplicate logic if we covered it.
+        // But the original had "artist + mix". Let's add those queries too.
 
-        try {
-            const response = await fetch(
-                `${getBaseUrl()}/api/search?q=${encodeURIComponent(query)}&limit=15`,
-                { cache: 'no-store' }
-            );
-            const tracks = await response.json();
-            if (Array.isArray(tracks)) {
-                tracks.forEach((track: Track) => {
-                    if (!seenIds.has(track.id)) {
-                        seenIds.add(track.id);
-                        candidates.push(track);
-                    }
-                });
-            }
-        } catch (e) {
-            console.error('Context search failed:', e);
-        }
-    }
-
-    // Strategy 3: User's liked songs artists (if logged in)
-    if (userId && candidates.length < count) {
         const likedSongs = await prisma.likedSong.findMany({
             where: { userId },
             include: { track: true },
             orderBy: { createdAt: 'desc' },
             take: 10
         });
-
         const likedArtists = [...new Set(likedSongs.map(s => s.track?.artist || '').filter(Boolean))];
-        for (const artist of likedArtists.slice(0, 3)) {
-            try {
-                const response = await fetch(
-                    `${getBaseUrl()}/api/search?q=${encodeURIComponent(artist + ' mix')}&limit=5`,
-                    { cache: 'no-store' }
-                );
-                const tracks = await response.json();
-                if (Array.isArray(tracks)) {
-                    tracks.forEach((track: Track) => {
-                        if (!seenIds.has(track.id)) {
-                            seenIds.add(track.id);
-                            candidates.push(track);
-                        }
-                    });
-                }
-            } catch (e) {
-                console.error('Liked artist search failed:', e);
-            }
-        }
+
+        likedArtists.slice(0, 3).forEach(artist => {
+            searchPromises.push(
+                searchMusic(artist + ' mix')
+                    .then(res => ({ source: 'mix', data: res }))
+                    .catch(e => { console.warn(`Failed mix search for ${artist}`, e); return []; })
+            );
+        });
     }
+
+    // Await all parallel searches
+    const results = await Promise.allSettled(searchPromises);
+
+    // Process results
+    results.forEach(result => {
+        if (result.status === 'fulfilled' && result.value) {
+            // result.value might be the array directly or wrapped object if we returned that
+            // The .then() above wraps it.
+            const data = (result.value as any).data || result.value;
+            addTracks(data); // Add valid tracks
+        }
+    });
 
     return candidates.slice(0, count);
 }
@@ -299,10 +308,4 @@ function applyDiversityConstraints(
     return result;
 }
 
-// Helper to get base URL
-function getBaseUrl(): string {
-    if (process.env.VERCEL_URL) {
-        return `https://${process.env.VERCEL_URL}`;
-    }
-    return 'http://localhost:3000';
-}
+

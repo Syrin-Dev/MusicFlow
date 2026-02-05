@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { searchMusic, searchPlaylists } from '@/lib/ytmusic';
 import { prisma } from '@/lib/prismadb';
 import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
@@ -13,7 +14,7 @@ export async function GET(request: Request) {
     }
 
     // Log search query for personalization (Fire and forget, don't block response)
-    getServerSession().then(async (session) => {
+    getServerSession(authOptions).then(async (session) => {
         if (session?.user?.email) {
             try {
                 const user = await prisma.user.findUnique({ where: { email: session.user.email } });

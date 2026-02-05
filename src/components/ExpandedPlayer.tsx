@@ -231,7 +231,7 @@ export function ExpandedPlayer() {
             right: 0,
             bottom: 0,
             zIndex: 0,
-            backgroundImage: `url(https://i.ytimg.com/vi/${currentTrack.id}/hqdefault.jpg)`,
+            backgroundImage: `url(${currentTrack.thumbnail || `https://i.ytimg.com/vi/${currentTrack.id}/hqdefault.jpg`})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             filter: 'blur(80px) brightness(0.3)',
@@ -297,7 +297,7 @@ export function ExpandedPlayer() {
                         <img
                             alt={currentTrack.title}
                             className="w-full h-full object-cover rounded-[24px] shadow-[0_20px_50px_rgba(0,0,0,0.5)] md:shadow-[0_40px_100px_rgba(0,0,0,0.6)]"
-                            src={`https://i.ytimg.com/vi/${currentTrack.id}/hqdefault.jpg`}
+                            src={currentTrack.thumbnail || `https://i.ytimg.com/vi/${currentTrack.id}/hqdefault.jpg`}
                         />
                     </div>
                     {/* Title and Artist for Mobile are better placed here or in footer depending on design. Let's keep desktop logic but ensure it fits */}
@@ -358,7 +358,7 @@ export function ExpandedPlayer() {
                         <h3 className="text-white font-bold mb-4 uppercase text-xs tracking-widest text-gray-500">Up Next</h3>
                         {queue.slice(0, 3).map((track, i) => (
                             <div key={i} className="flex items-center gap-3 py-2 border-b border-white/5" onClick={() => playTrack(track)}>
-                                <img src={`https://i.ytimg.com/vi/${track.id}/mqdefault.jpg`} className="w-10 h-10 rounded-md object-cover" />
+                                <img src={track.thumbnail || `https://i.ytimg.com/vi/${track.id}/mqdefault.jpg`} className="w-10 h-10 rounded-md object-cover" />
                                 <div className="flex-1 min-w-0">
                                     <p className="text-sm font-medium text-white truncate">{track.title}</p>
                                     <p className="text-xs text-gray-400 truncate">{track.artist}</p>
@@ -406,7 +406,7 @@ export function ExpandedPlayer() {
                         <div className="flex-1 overflow-y-auto custom-scrollbar space-y-4 pr-2">
                             <div className="flex items-center gap-4 p-3 bg-white/10 rounded-2xl border border-[#8B5CF6]/20 flex-shrink-0">
                                 <div className="relative w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
-                                    <img alt="Current" className="w-full h-full object-cover" src={`https://i.ytimg.com/vi/${currentTrack.id}/hqdefault.jpg`} />
+                                    <img alt="Current" className="w-full h-full object-cover" src={currentTrack.thumbnail || `https://i.ytimg.com/vi/${currentTrack.id}/hqdefault.jpg`} />
                                     <div className="absolute inset-0 bg-[#8B5CF6]/40 flex items-center justify-center">
                                         <Volume2 size={20} className="text-white" />
                                     </div>
@@ -419,7 +419,7 @@ export function ExpandedPlayer() {
                             {queue.map((track, i) => (
                                 <div key={`${track.id}-${i}`} draggable onDragStart={(e) => handleDragStart(e, i)} onDragOver={handleDragOver} onDrop={(e) => handleDrop(e, i)} onClick={() => playTrack(track)}
                                     className={`flex items-center gap-4 p-3 hover:bg-white/5 rounded-2xl transition-colors cursor-pointer group ${draggedIndex === i ? 'opacity-50 ring-2 ring-[#8B5CF6] ring-inset' : ''}`}>
-                                    <img alt={track.title} className="w-12 h-12 rounded-lg object-cover flex-shrink-0" src={`https://i.ytimg.com/vi/${track.id}/hqdefault.jpg`} />
+                                    <img alt={track.title} className="w-12 h-12 rounded-lg object-cover flex-shrink-0" src={track.thumbnail || `https://i.ytimg.com/vi/${track.id}/hqdefault.jpg`} />
                                     <div className="flex-1 min-w-0">
                                         <h4 className="text-sm font-semibold truncate group-hover:text-[#8B5CF6] transition-colors">{track.title}</h4>
                                         <p className="text-xs text-slate-400 truncate">{track.artist}</p>

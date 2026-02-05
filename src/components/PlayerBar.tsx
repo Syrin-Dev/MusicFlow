@@ -92,7 +92,7 @@ export function PlayerBar() {
 
     return (
         <div suppressHydrationWarning className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-4 pointer-events-none">
-            <div className="glassmorphism rounded-2xl p-3 flex items-center justify-between shadow-2xl pointer-events-auto border border-white/10 mx-auto max-w-screen-2xl">
+            <div className="glassmorphism backdrop-blur-md bg-black/60 rounded-2xl p-3 flex items-center justify-between shadow-2xl pointer-events-auto border border-white/5 mx-auto max-w-screen-2xl ring-1 ring-white/10">
                 {/* Left: Track Info */}
                 {/* ... existing left section ... */}
                 <div className="flex items-center gap-4 w-1/4 min-w-[200px]">
@@ -100,7 +100,7 @@ export function PlayerBar() {
                         <img
                             alt={currentTrack.title}
                             className="w-12 h-12 rounded-md shadow-md object-cover"
-                            src={`https://i.ytimg.com/vi/${currentTrack.id}/hqdefault.jpg`}
+                            src={currentTrack.thumbnail || `https://i.ytimg.com/vi/${currentTrack.id}/hqdefault.jpg`}
                             onError={handleImageError}
                         />
                         <div

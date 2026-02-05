@@ -28,11 +28,21 @@ export async function GET(req: Request) {
                     { senderId: friendId, receiverId: user.id }
                 ]
             },
+            include: {
+                replyTo: {
+                    select: {
+                        id: true,
+                        content: true,
+                        senderId: true,
+                        sharedMusicTitle: true
+                    }
+                }
+            },
             orderBy: { createdAt: 'asc' },
-            take: 50 // Limit content history for performance
+            take: 100
         });
 
-        // Also update lastActiveAt since the user is fetching messages
+        // Also update lastActiveAt
         await prisma.user.update({
             where: { id: user.id },
             data: { lastActiveAt: new Date() }
@@ -51,7 +61,7 @@ export async function POST(req: Request) {
     }
 
     try {
-        const { receiverId, content, sharedMusic } = await req.json();
+        const { receiverId, content, sharedMusic, replyToId } = await req.json();
 
         if (!receiverId || (!content && !sharedMusic)) {
             return NextResponse.json({ error: 'Invalid data' }, { status: 400 });
@@ -64,22 +74,85 @@ export async function POST(req: Request) {
             senderId: user.id,
             receiverId: receiverId,
             content: content || null,
+            replyToId: replyToId || null
         };
 
         if (sharedMusic) {
             messageData.sharedMusicId = sharedMusic.id;
             messageData.sharedMusicTitle = sharedMusic.title;
             messageData.sharedMusicArtist = sharedMusic.artist;
-            messageData.sharedMusicImg = sharedMusic.thumbnail;
+            messageData.sharedMusicThumbnail = sharedMusic.thumbnail;
+
+            // Ensure track exists in system
+            await prisma.track.upsert({
+                where: { id: sharedMusic.id },
+                update: {},
+                create: {
+                    id: sharedMusic.id,
+                    title: sharedMusic.title,
+                    artist: sharedMusic.artist,
+                    thumbnail: sharedMusic.thumbnail
+                }
+            });
         }
 
         const newMessage = await prisma.message.create({
-            data: messageData
+            data: messageData,
+            include: {
+                replyTo: {
+                    select: {
+                        id: true,
+                        content: true,
+                        senderId: true,
+                        sharedMusicTitle: true
+                    }
+                }
+            }
         });
 
         return NextResponse.json(newMessage);
     } catch (error) {
         console.error("Message Error:", error);
+        return NextResponse.json({ error: 'Internal Error' }, { status: 500 });
+    }
+}
+
+export async function DELETE(req: Request) {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.email) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    try {
+        const { searchParams } = new URL(req.url);
+        const messageId = searchParams.get('id');
+
+        if (!messageId) {
+            return NextResponse.json({ error: 'Missing messageId' }, { status: 400 });
+        }
+
+        const user = await prisma.user.findUnique({ where: { email: session.user.email } });
+        if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
+
+        // Check if message belongs to user
+        const message = await prisma.message.findUnique({
+            where: { id: messageId }
+        });
+
+        if (!message || message.senderId !== user.id) {
+            return NextResponse.json({ error: 'Unauthorized delete' }, { status: 403 });
+        }
+
+        await prisma.message.update({
+            where: { id: messageId },
+            data: {
+                isDeleted: true,
+                content: "Message deleted"
+            }
+        });
+
+        return NextResponse.json({ success: true });
+    } catch (error) {
         return NextResponse.json({ error: 'Internal Error' }, { status: 500 });
     }
 }

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Play, Pause, Heart } from 'lucide-react';
 import { useAudio } from '@/components/AudioProvider';
+import { AddToPlaylist } from './AddToPlaylist';
 
 export function Hero() {
     const { playTrack, currentTrack, isLiked, toggleLike, isPlaying, togglePlay, likedSongs, listeningHistory } = useAudio();
@@ -103,12 +104,13 @@ export function Hero() {
                                 />
                             </button>
 
-                            <button
+                            <AddToPlaylist
+                                track={displayTrack}
+                                dropdownPosition="bottom"
                                 className="p-5 rounded-full backdrop-blur-xl border border-white/10 text-white hover:bg-white/10 hover:border-white/20 transition-all active:scale-90"
-                                title="Add to Library"
                             >
                                 <span className="material-icons-round text-2xl">playlist_add</span>
-                            </button>
+                            </AddToPlaylist>
                         </div>
                     </div>
                 </div>

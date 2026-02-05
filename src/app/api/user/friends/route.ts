@@ -19,6 +19,7 @@ export async function GET(req: Request) {
                     include: {
                         friend: {
                             include: {
+                                hostingRoom: true,
                                 history: {
                                     orderBy: { playedAt: 'desc' },
                                     take: 1,
@@ -33,6 +34,7 @@ export async function GET(req: Request) {
                     include: {
                         user: {
                             include: {
+                                hostingRoom: true,
                                 history: {
                                     orderBy: { playedAt: 'desc' },
                                     take: 1,
@@ -69,7 +71,8 @@ export async function GET(req: Request) {
                 image: f.friend.image,
                 status: isOnline ? 'Online' : 'Offline',
                 lastActiveAt: lastActive,
-                lastTrack
+                lastTrack,
+                hostingRoom: f.friend.hostingRoom
             };
         });
 
@@ -94,7 +97,8 @@ export async function GET(req: Request) {
                 image: f.user.image,
                 status: isOnline ? 'Online' : 'Offline',
                 lastActiveAt: lastActive,
-                lastTrack
+                lastTrack,
+                hostingRoom: f.user.hostingRoom
             };
         });
 

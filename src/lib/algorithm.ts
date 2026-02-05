@@ -8,6 +8,7 @@ interface Track {
 
 // Helper to clean artist names
 function cleanArtist(artist: string): string {
+    if (!artist) return '';
     return artist.replace(/ - Topic|VEVO|Official|Official Channel/gi, '').trim();
 }
 

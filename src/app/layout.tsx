@@ -1,11 +1,31 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { Providers } from '@/components/Providers';
+import { Toaster } from 'sonner';
 
 export const metadata: Metadata = {
-    title: 'Hievly - Premium Music Streaming',
-    description: 'Experience premium music streaming with Hievly',
+    title: {
+        default: 'Hievly - Premium Music Streaming',
+        template: '%s | Hievly'
+    },
+    description: 'Experience premium music streaming with Hievly. Ad-free, high quality, and personalized for you.',
     manifest: '/manifest.json',
+    icons: {
+        icon: '/logo.png',
+        apple: '/logo.png',
+    },
+    keywords: ['music', 'streaming', 'hievly', 'premium', 'audio', 'songs', 'playlists'],
+    openGraph: {
+        type: 'website',
+        locale: 'en_US',
+        url: 'https://hievly.com',
+        title: 'Hievly - Premium Music Streaming',
+        description: 'Experience premium music streaming with Hievly.',
+        siteName: 'Hievly',
+    },
+    twitter: {
+        card: 'summary_large_image',
+    }
 };
 
 export const viewport: Viewport = {
@@ -29,7 +49,7 @@ export default function RootLayout({
                     href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
                     rel="stylesheet"
                 />
-                <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet" />
+
                 <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
                 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
                 <link
@@ -40,6 +60,7 @@ export default function RootLayout({
             <body className="bg-[#0d0d0f] text-white h-screen overflow-hidden" suppressHydrationWarning>
                 <Providers>
                     {children}
+                    <Toaster position="bottom-right" theme="dark" closeButton />
                 </Providers>
             </body>
         </html>

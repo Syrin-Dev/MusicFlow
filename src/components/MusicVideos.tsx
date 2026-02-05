@@ -42,7 +42,7 @@ export function MusicVideos() {
             const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
             const data = await res.json();
             if (Array.isArray(data)) {
-                setVideos(data.slice(0, 4));
+                setVideos(data.slice(0, 5));
             }
         } catch (e) {
             console.error('Failed to fetch videos:', e);
@@ -52,7 +52,7 @@ export function MusicVideos() {
 
     useEffect(() => {
         fetchVideos();
-    }, [listeningHistory]); // Re-run when history updates
+    }, []); // Run only on mount
 
     const handlePlayVideo = (video: Video, index: number) => {
         playTrack(video);
@@ -81,9 +81,9 @@ export function MusicVideos() {
                 </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
                 {loading ? (
-                    Array.from({ length: 4 }).map((_, i) => (
+                    Array.from({ length: 5 }).map((_, i) => (
                         <div key={i} className="animate-pulse">
                             <div className="aspect-video rounded-2xl bg-[#18181b] mb-3"></div>
                             <div className="h-4 bg-[#18181b] rounded w-3/4 mb-2"></div>
@@ -99,7 +99,7 @@ export function MusicVideos() {
                         >
                             <div className="relative aspect-video rounded-2xl overflow-hidden mb-3 bg-[#18181b] shadow-lg ring-1 ring-white/5">
                                 <img
-                                    src={`https://i.ytimg.com/vi/${video.id}/hqdefault.jpg`}
+                                    src={video.thumbnail || `https://i.ytimg.com/vi/${video.id}/hqdefault.jpg`}
                                     alt={video.title}
                                     onError={(e) => handleImageError(e, video)}
                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-80 group-hover:opacity-100"

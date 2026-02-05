@@ -23,6 +23,7 @@ export function NotificationsDropdown() {
     const fetchNotifications = async () => {
         try {
             const res = await fetch('/api/notifications');
+            if (!res.ok) return;
             const data = await res.json();
             if (Array.isArray(data)) {
                 setNotifications(data);
@@ -50,24 +51,45 @@ export function NotificationsDropdown() {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    const markAllRead = async () => {
+        try {
+            await fetch('/api/notifications', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ all: true })
+            });
+            setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+            setUnreadCount(0);
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    const deleteNotification = async (id: string) => {
+        try {
+            await fetch(`/api/notifications?id=${id}`, { method: 'DELETE' });
+            setNotifications(prev => prev.filter(n => n.id !== id));
+            setUnreadCount(prev => notifications.find(n => n.id === id)?.read ? prev : Math.max(0, prev - 1));
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    const markAsRead = async (id: string) => {
+        try {
+            await fetch('/api/notifications', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id })
+            });
+            setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+            setUnreadCount(prev => Math.max(0, prev - 1));
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
     const handleAction = async (notificationId: string, action: 'ACCEPT' | 'REJECT', notificationData: any) => {
-        // We need the requesterId. In the notification logic I created, I didn't store requesterId explicitly in Notification model
-        // but I put a link `/profile/${sender.id}`. I can extract it or simpler:
-        // The API expecting requesterId is a bit strict.
-        // Let's look at how I implemented the API.
-        // `const { requesterId, action } = await req.json();`
-
-        // Wait, the notification model doesn't store the sender ID directly, just a message and link.
-        // This is a flaw in my quick schema design for Notification.
-        // However, I can parse the link if I stuck to the format.
-        // Or I can update Notification to have `relatedUserId`.
-
-        // For now, let's assume I can parse it or I will update the schema quickly?
-        // No, schema update takes time.
-
-        // Let's parse the link `/profile/USER_ID`.
-        // `link: `/profile/${sender.id}``
-
         let requesterId = '';
         if (notificationData.link && notificationData.link.startsWith('/profile/')) {
             requesterId = notificationData.link.split('/profile/')[1];
@@ -82,12 +104,19 @@ export function NotificationsDropdown() {
                 body: JSON.stringify({ requesterId, action })
             });
 
-            // Remove notification or mark handled
-            setNotifications(prev => prev.filter(n => n.id !== notificationId));
-            // Refresh notifications to get "Accepted" message if any
-            fetchNotifications(); // Reload to be safe
+            // Remove notification after action
+            deleteNotification(notificationId);
         } catch (e) {
             console.error(e);
+        }
+    };
+
+    const getTypeStyles = (type: string) => {
+        switch (type) {
+            case 'FRIEND_REQUEST': return 'bg-blue-500';
+            case 'NEW_RELEASE': return 'bg-violet-500';
+            case 'SYSTEM': return 'bg-zinc-500';
+            default: return 'bg-primary';
         }
     };
 
@@ -109,34 +138,60 @@ export function NotificationsDropdown() {
                     <div className="p-4 border-b border-white/5 bg-white/5 flex justify-between items-center">
                         <h3 className="text-white font-semibold text-sm">Notifications</h3>
                         {unreadCount > 0 && (
-                            <button className="text-[10px] text-primary hover:underline">Mark all read</button>
+                            <button
+                                onClick={markAllRead}
+                                className="text-[10px] text-primary hover:underline font-bold uppercase tracking-wider"
+                            >
+                                Mark all read
+                            </button>
                         )}
                     </div>
 
-                    <div className="max-h-[400px] overflow-y-auto">
+                    <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
                         {notifications.length === 0 ? (
-                            <div className="p-8 text-center text-zinc-500 text-xs">
+                            <div className="p-8 text-center text-zinc-500 text-xs flex flex-col items-center gap-2">
+                                <Bell size={24} className="opacity-20" />
                                 No new notifications.
                             </div>
                         ) : (
                             notifications.map(notification => (
-                                <div key={notification.id} className="p-4 border-b border-white/5 hover:bg-white/5 transition-colors">
+                                <div
+                                    key={notification.id}
+                                    className={`p-4 border-b border-white/5 transition-colors relative group/item ${notification.read ? 'opacity-60' : 'bg-white/[0.02]'}`}
+                                    onClick={() => !notification.read && markAsRead(notification.id)}
+                                >
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            deleteNotification(notification.id);
+                                        }}
+                                        className="absolute top-4 right-4 opacity-0 group-hover/item:opacity-100 p-1 hover:bg-white/10 rounded-md text-zinc-500 hover:text-white transition-all"
+                                    >
+                                        <X size={14} />
+                                    </button>
+
                                     <div className="flex gap-3">
-                                        <div className="w-2 h-2 mt-1.5 rounded-full bg-primary flex-shrink-0"></div>
-                                        <div className="flex-1">
+                                        <div className={`w-2 h-2 mt-1.5 rounded-full flex-shrink-0 ${notification.read ? 'bg-zinc-700' : getTypeStyles(notification.type)}`}></div>
+                                        <div className="flex-1 pr-4">
                                             <p className="text-white text-sm font-medium">{notification.title}</p>
                                             <p className="text-zinc-400 text-xs mt-0.5 leading-relaxed">{notification.message}</p>
 
-                                            {notification.type === 'FRIEND_REQUEST' && (
+                                            {notification.type === 'FRIEND_REQUEST' && !notification.read && (
                                                 <div className="flex gap-2 mt-3">
                                                     <button
-                                                        onClick={() => handleAction(notification.id, 'ACCEPT', notification)}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleAction(notification.id, 'ACCEPT', notification);
+                                                        }}
                                                         className="flex-1 bg-primary hover:bg-primary/80 text-white text-xs font-bold py-1.5 rounded-lg transition-colors flex items-center justify-center gap-1"
                                                     >
                                                         <Check size={12} /> Accept
                                                     </button>
                                                     <button
-                                                        onClick={() => handleAction(notification.id, 'REJECT', notification)}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleAction(notification.id, 'REJECT', notification);
+                                                        }}
                                                         className="flex-1 bg-white/10 hover:bg-white/20 text-white text-xs font-bold py-1.5 rounded-lg transition-colors flex items-center justify-center gap-1"
                                                     >
                                                         <X size={12} /> Decline
@@ -145,8 +200,8 @@ export function NotificationsDropdown() {
                                             )}
                                         </div>
                                     </div>
-                                    <span className="text-[10px] text-zinc-600 mt-2 block pl-5">
-                                        {new Date(notification.createdAt).toLocaleDateString()}
+                                    <span className="text-[10px] text-zinc-600 mt-2 block pl-5 uppercase font-medium">
+                                        {new Date(notification.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                                     </span>
                                 </div>
                             ))

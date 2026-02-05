@@ -6,6 +6,7 @@ import {
     User, Shield, CreditCard, Bell, Camera, Lock, Mail, Smartphone,
     Monitor, Moon, Check, LogOut, Loader2
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 type Tab = 'profile' | 'security' | 'subscription' | 'notifications';
 
@@ -61,7 +62,7 @@ export default function SettingsPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(updates)
             });
-            // Optional: Show toast success
+            toast.success('Settings saved successfully');
         } catch (e) {
             console.error(e);
         } finally {

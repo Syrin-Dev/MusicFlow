@@ -40,6 +40,8 @@ model User {
   inviteCode    String?        @unique
   notifications Notification[]
   lastActiveAt  DateTime?
+  typingToId    String? // ID of the friend the user is currently typing to
+  lastTypingAt  DateTime? // Timestamp of last typing activity
   activities    Activity[] // New: Social feed source
   searches      UserSearch[] // New: Personalized search
 
@@ -246,12 +248,19 @@ model Message {
   content       String?
   senderId      String
   receiverId    String
-  sharedMusicId String? // Normalized link to Track (videoId)
-  createdAt     DateTime @default(now())
+  sharedMusicId        String? // Normalized link to Track (videoId)
+  sharedMusicTitle     String?
+  sharedMusicArtist    String?
+  sharedMusicThumbnail String?
+  replyToId            String? // ID of the message being replied to
+  isDeleted            Boolean  @default(false)
+  createdAt            DateTime @default(now())
 
-  sender   User   @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
-  receiver User   @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
-  track    Track? @relation(fields: [sharedMusicId], references: [id])
+  sender   User      @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User      @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+  track    Track?    @relation(fields: [sharedMusicId], references: [id])
+  replyTo  Message?  @relation("MessageReplies", fields: [replyToId], references: [id])
+  replies  Message[] @relation("MessageReplies")
 }
 
 model Account {

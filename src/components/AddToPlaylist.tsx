@@ -1,7 +1,7 @@
-'use client';
-
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Plus, Check, Music, ListPlus } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface Track {
     id: string;
@@ -20,27 +20,39 @@ interface AddToPlaylistProps {
     track: Track;
     children?: React.ReactNode;
     className?: string;
+    dropdownPosition?: 'top' | 'bottom';
 }
 
-export function AddToPlaylist({ track, children, className }: AddToPlaylistProps) {
+export function AddToPlaylist({ track, children, className, dropdownPosition = 'top' }: AddToPlaylistProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [playlists, setPlaylists] = useState<Playlist[]>([]);
     const [loading, setLoading] = useState(false);
     const [addedTo, setAddedTo] = useState<Set<string>>(new Set());
     const [showCreate, setShowCreate] = useState(false);
     const [newName, setNewName] = useState('');
+    const [coords, setCoords] = useState({ x: 0, y: 0 });
+    const buttonRef = useRef<HTMLButtonElement>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node) &&
+                buttonRef.current && !buttonRef.current.contains(event.target as Node)) {
                 setIsOpen(false);
             }
         };
 
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
+        const handleScroll = () => {
+            if (isOpen) setIsOpen(false); // Close on scroll to avoid floating issues
+        };
+
+        window.addEventListener('mousedown', handleClickOutside);
+        window.addEventListener('scroll', handleScroll, true);
+        return () => {
+            window.removeEventListener('mousedown', handleClickOutside);
+            window.removeEventListener('scroll', handleScroll, true);
+        };
+    }, [isOpen]);
 
     const fetchPlaylists = async () => {
         setLoading(true);
@@ -58,13 +70,22 @@ export function AddToPlaylist({ track, children, className }: AddToPlaylistProps
 
     const handleOpen = (e: React.MouseEvent) => {
         e.stopPropagation();
-        setIsOpen(!isOpen);
-        if (!isOpen) {
+
+        if (!isOpen && buttonRef.current) {
+            const rect = buttonRef.current.getBoundingClientRect();
+            // Default to aligning right edge of dropdown with right edge of button
+            // If dropdownPosition is 'top', place it above, else below
+            const x = rect.right; // Will calculate exact left in CSS or here. Let's align right edge.
+            const y = dropdownPosition === 'top' ? rect.top : rect.bottom;
+
+            setCoords({ x, y });
             fetchPlaylists();
         }
+        setIsOpen(!isOpen);
     };
 
     const addToPlaylist = async (playlistId: string) => {
+        // ... (keep existing logic)
         try {
             const res = await fetch(`/api/playlists/${playlistId}`, {
                 method: 'POST',
@@ -78,6 +99,7 @@ export function AddToPlaylist({ track, children, className }: AddToPlaylistProps
             });
 
             if (res.ok) {
+                toast.success('Added to playlist');
                 setAddedTo(prev => new Set([...prev, playlistId]));
                 setTimeout(() => {
                     setAddedTo(prev => {
@@ -89,10 +111,12 @@ export function AddToPlaylist({ track, children, className }: AddToPlaylistProps
             }
         } catch (error) {
             console.error('Failed to add to playlist:', error);
+            toast.error('Failed to add to playlist');
         }
     };
 
     const createAndAdd = async () => {
+        // ... (keep existing logic)
         if (!newName.trim()) return;
 
         try {
@@ -108,23 +132,34 @@ export function AddToPlaylist({ track, children, className }: AddToPlaylistProps
                 await addToPlaylist(playlist.id);
                 setNewName('');
                 setShowCreate(false);
+                window.dispatchEvent(new Event('playlist-change'));
             }
         } catch (error) {
             console.error('Failed to create playlist:', error);
+            toast.error('Failed to create playlist');
         }
     };
 
     return (
-        <div className="relative" ref={dropdownRef}>
+        <>
             <button
+                ref={buttonRef}
                 onClick={handleOpen}
                 className={className || "p-2 hover:bg-white/10 rounded-full transition-colors text-slate-400 hover:text-white"}
             >
                 {children || <ListPlus size={18} />}
             </button>
 
-            {isOpen && (
-                <div className="absolute right-0 bottom-full mb-2 w-64 bg-[#1A1A1E] rounded-xl shadow-2xl border border-white/10 overflow-hidden z-50">
+            {isOpen && typeof document !== 'undefined' && createPortal(
+                <div
+                    ref={dropdownRef}
+                    className="fixed w-64 bg-[#1A1A1E] rounded-xl shadow-2xl border border-white/10 overflow-hidden z-[9999]"
+                    style={{
+                        left: coords.x - 256, // Align right edge (256 is width)
+                        top: dropdownPosition === 'top' ? coords.y - 8 : coords.y + 8,
+                        transform: dropdownPosition === 'top' ? 'translateY(-100%)' : 'none'
+                    }}
+                >
                     <div className="p-3 border-b border-white/5">
                         <p className="text-xs text-slate-400 uppercase tracking-wider">Add to playlist</p>
                     </div>
@@ -202,8 +237,9 @@ export function AddToPlaylist({ track, children, className }: AddToPlaylistProps
                             </>
                         )}
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
-        </div>
+        </>
     );
 }

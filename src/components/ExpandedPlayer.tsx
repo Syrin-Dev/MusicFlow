@@ -6,7 +6,7 @@ import { useEffect, useState, useRef } from 'react';
 import {
     ChevronDown, Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Heart,
     ListMusic, Volume2, Mic2, Maximize2, Minimize2, Languages, Globe,
-    ArrowUp, ArrowDown
+    ArrowUp, ArrowDown, RefreshCw
 } from 'lucide-react';
 
 // Format seconds to mm:ss helper

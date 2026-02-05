@@ -235,14 +235,28 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     const isLiked = (trackId: string) => likedSongs.some(t => t.id === trackId);
 
 
+    // --- MASTER CONTROLLER: Silent Audio Element ---
+    // The browser respects HTML5 Audio for background playback much more than IFrame.
+    // We play the "ghost" audio, and its state drives the YouTube player.
+
     const togglePlay = () => {
-        if (!playerRef.current) return;
+        if (!silentAudioRef.current) return;
+
         if (isPlaying) {
-            playerRef.current.pauseVideo();
-            silentAudioRef.current?.pause();
+            silentAudioRef.current.pause();
         } else {
-            playerRef.current.playVideo();
-            silentAudioRef.current?.play().catch(e => console.error("Ghost audio play failed", e));
+            // Volume must be non-zero to keep session alive. 
+            // 0.05 is virtually silent but technically audible to the OS.
+            silentAudioRef.current.volume = 0.05;
+            silentAudioRef.current.play()
+                .then(() => {
+                    // Browser is satisfied we are playing audio.
+                    // Now we verify YouTube is doing its job.
+                    if (playerRef.current && playerRef.current.playVideo) {
+                        playerRef.current.playVideo();
+                    }
+                })
+                .catch(e => console.error("Master Play Failed", e));
         }
     };
 
@@ -340,8 +354,13 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
 
         onPlayerStateChangeRef.current = (event: any) => {
             if (event.data === 1) { // Playing
-                setIsPlaying(true);
                 setIsLoading(false);
+                // Sync Master (Silent Audio) if it fell behind
+                if (silentAudioRef.current && silentAudioRef.current.paused) {
+                    silentAudioRef.current.play().catch(() => { });
+                }
+                setIsPlaying(true);
+
                 if (timeUpdateInterval.current) clearInterval(timeUpdateInterval.current);
                 timeUpdateInterval.current = setInterval(() => {
                     if (playerRef.current && playerRef.current.getCurrentTime) {
@@ -354,13 +373,14 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
                 }, 500);
             }
             if (event.data === 2) { // Paused
-                if (document.visibilityState === 'visible') {
+                // If YouTube pauses, but we are in background (Master Audio playing),
+                // we FORCE YouTube to resume.
+                if (silentAudioRef.current && !silentAudioRef.current.paused && document.visibilityState === 'hidden') {
+                    console.log("YouTube tried to pause in background - Forcing Resume");
+                    playerRef.current?.playVideo();
+                } else if (document.visibilityState === 'visible') {
+                    // Only legitimate pause if user is looking at the screen or Master is paused
                     setIsPlaying(false);
-                } else {
-                    // In background, we stay in "virtual playing" mode. 
-                    // We don't force YT to play yet, as it might fail and cause glitching.
-                    // Instead, the Media Session controls will stay, and user can hit Play from there if it stops.
-                    console.log("Background pause - holding state");
                 }
             }
             if (event.data === 0) handleTrackEnd(); // Ended
@@ -606,7 +626,36 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         playTrackInternal(trackToPlay, prevTrack);
     };
 
-    // Media Session Handlers Refs - STABLE REFS
+    // --- Media Session & Background Audio Sync ---
+
+    // 1. Sync Silent Audio -> YouTube
+    // If the browser controls pause our Master Audio, we pause YouTube.
+    useEffect(() => {
+        const audio = silentAudioRef.current;
+        if (!audio) return;
+
+        const onPlay = () => {
+            setIsPlaying(true);
+            if (playerRef.current && playerRef.current.playVideo) playerRef.current.playVideo();
+        };
+
+        const onPause = () => {
+            // Only pause YouTube if we are visible. 
+            // If hidden, the pause might be the browser killing background execution, 
+            // so we don't want to explicitly tell YouTube to stop unless we are sure.
+            // But generally, if Master pauses, everything should pause to update UI.
+            setIsPlaying(false);
+            if (playerRef.current && playerRef.current.pauseVideo) playerRef.current.pauseVideo();
+        };
+
+        audio.addEventListener('play', onPlay);
+        audio.addEventListener('pause', onPause);
+
+        return () => {
+            audio.removeEventListener('play', onPlay);
+            audio.removeEventListener('pause', onPause);
+        };
+    }, []);
     const playNextRef = useRef(playNext);
     const playPreviousRef = useRef(playPrevious);
     const togglePlayRef = useRef(togglePlay);
@@ -686,30 +735,10 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
                 silentAudioRef.current.volume = 0.01;
                 silentAudioRef.current.play().catch(() => { });
             }
-        } else {
-            silentAudioRef.current?.pause();
         }
     }, [isPlaying]);
 
-    // Background keep-alive monitor
-    useEffect(() => {
-        if (!isPlaying) return;
-
-        const interval = setInterval(() => {
-            if (document.visibilityState === 'hidden' && isPlaying) {
-                // If we are hidden and supposed to be playing, make sure audio is active
-                if (silentAudioRef.current?.paused) {
-                    silentAudioRef.current.play().catch(() => { });
-                }
-                // Try to keep YT alive too
-                if (playerRef.current && playerRef.current.getPlayerState() !== 1) {
-                    playerRef.current.playVideo();
-                }
-            }
-        }, 1500);
-
-        return () => clearInterval(interval);
-    }, [isPlaying]);
+    // Background keep-alive monitor removed - relying on Master Audio events
 
     useEffect(() => {
         if (!('mediaSession' in navigator) || !('setPositionState' in navigator.mediaSession)) return;
@@ -792,16 +821,12 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
             </div>
             <audio
                 ref={silentAudioRef}
-                src="https://www.soundjay.com/misc/sounds/silent-shimmer-1.mp3"
+                // reliable long silence
+                src="https://github.com/anars/blank-audio/blob/master/10- minutes-of-silence.mp3?raw=true"
                 loop
-                onError={(e) => {
-                    // Fallback to another silent source if first one fails
-                    const target = e.target as HTMLAudioElement;
-                    if (!target.src.includes('nature')) {
-                        target.src = "https://www.soundjay.com/nature/ocean-wave-1.mp3";
-                    }
-                }}
-                style={{ position: 'fixed', top: -100, left: -100, width: 1, height: 1, pointerEvents: 'none' }}
+                playsInline
+                controls={false}
+                style={{ position: 'fixed', top: 0, left: 0, opacity: 0.001, pointerEvents: 'none' }}
             />
         </AudioContext.Provider>
     );

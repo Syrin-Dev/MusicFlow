@@ -637,7 +637,10 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
 
         if (isPlaying) {
-            silentAudioRef.current?.play().catch(() => { });
+            if (silentAudioRef.current) {
+                silentAudioRef.current.volume = 0.01; // Tiny volume to keep context alive
+                silentAudioRef.current.play().catch(() => { });
+            }
         } else {
             silentAudioRef.current?.pause();
         }
@@ -711,10 +714,9 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
                 id="youtube-player-portal"
                 suppressHydrationWarning
                 onClick={togglePlay}
-                className={`fixed inset-0 bg-black overflow-hidden transition-all duration-500 ${videoMode && isPlayerExpanded ? 'opacity-100 pointer-events-auto z-[60]' : 'opacity-0 pointer-events-none z-[-1]'}`}
+                className={`fixed bg-black overflow-hidden transition-all duration-500 ${videoMode && isPlayerExpanded ? 'opacity-100 pointer-events-auto z-[60] inset-0' : 'opacity-0.01 pointer-events-none z-[-1] w-[1px] h-[1px] bottom-0 left-0'}`}
                 style={{
-                    top: 0, left: 0, width: '100%',
-                    height: isVideoFullscreen ? '100%' : 'calc(100% - 112px)',
+                    height: (videoMode && isPlayerExpanded) ? (isVideoFullscreen ? '100%' : 'calc(100% - 112px)') : '1px',
                 }}
             >
                 <div suppressHydrationWarning className="w-full h-full pointer-events-none flex items-center justify-center">
@@ -725,9 +727,8 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
             </div>
             <audio
                 ref={silentAudioRef}
-                src="https://www.soundjay.com/buttons/beep-01a.mp3"
+                src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA=="
                 loop
-                muted
                 className="hidden"
             />
         </AudioContext.Provider>

@@ -351,7 +351,16 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
                     }
                 }, 500);
             }
-            if (event.data === 2) setIsPlaying(false); // Paused
+            if (event.data === 2) { // Paused
+                // Check if user is actually on the page before setting isPlaying to false
+                // This prevents the browser from killing the session when user leaves the tab
+                if (document.visibilityState === 'visible') {
+                    setIsPlaying(false);
+                } else if (isPlaying) {
+                    // Try to keep it alive in background if it was playing
+                    playerRef.current?.playVideo();
+                }
+            }
             if (event.data === 0) handleTrackEnd(); // Ended
             if (event.data === 3) setIsLoading(true); // Buffering
         };
@@ -727,9 +736,16 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
             </div>
             <audio
                 ref={silentAudioRef}
-                src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA=="
+                src="https://actions.google.com/sounds/v1/alarms/alarm_clock_beeping.ogg"
                 loop
                 className="hidden"
+                onPause={(e) => {
+                    // If it was paused but we still want to play (background/lock), try to restart
+                    if (isPlaying) {
+                        const target = e.target as HTMLAudioElement;
+                        target.play().catch(() => { });
+                    }
+                }}
             />
         </AudioContext.Provider>
     );

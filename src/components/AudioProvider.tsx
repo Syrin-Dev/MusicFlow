@@ -629,18 +629,18 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         });
 
         // Re-enable all buttons explicitly every time track changes
-        const actions: [MediaSessionAction, () => void][] = [
+        const actions: [MediaSessionAction, (details: any) => void][] = [
             ['play', () => { togglePlayRef.current(); }],
             ['pause', () => { togglePlayRef.current(); }],
             ['previoustrack', () => { playPreviousRef.current(); }],
             ['nexttrack', () => { playNextRef.current(); }],
             ['seekbackward', () => { seekToRef.current(Math.max(0, currentTime - 10)); }],
             ['seekforward', () => { seekToRef.current(Math.min(duration, currentTime + 10)); }],
-            ['seekto', (details: any) => { if (details.seekTime !== undefined) seekToRef.current(details.seekTime); }]
+            ['seekto', (details: MediaSessionActionDetails) => { if (details.seekTime !== undefined) seekToRef.current(details.seekTime); }]
         ];
 
         actions.forEach(([action, handler]) => {
-            try { navigator.mediaSession.setActionHandler(action, handler); } catch (e) { }
+            try { navigator.mediaSession.setActionHandler(action, handler as any); } catch (e) { }
         });
 
         return () => {
@@ -670,10 +670,33 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
 
         if (isPlaying) {
-            silentAudioRef.current?.play().catch(() => { });
+            if (silentAudioRef.current) {
+                silentAudioRef.current.volume = 0.01;
+                silentAudioRef.current.play().catch(() => { });
+            }
         } else {
             silentAudioRef.current?.pause();
         }
+    }, [isPlaying]);
+
+    // Background keep-alive monitor
+    useEffect(() => {
+        if (!isPlaying) return;
+
+        const interval = setInterval(() => {
+            if (document.visibilityState === 'hidden' && isPlaying) {
+                // If we are hidden and supposed to be playing, make sure audio is active
+                if (silentAudioRef.current?.paused) {
+                    silentAudioRef.current.play().catch(() => { });
+                }
+                // Try to keep YT alive too
+                if (playerRef.current && playerRef.current.getPlayerState() !== 1) {
+                    playerRef.current.playVideo();
+                }
+            }
+        }, 1500);
+
+        return () => clearInterval(interval);
     }, [isPlaying]);
 
     useEffect(() => {

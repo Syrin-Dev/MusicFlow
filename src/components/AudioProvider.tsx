@@ -58,6 +58,8 @@ interface AudioContextType {
 const AudioContext = createContext<AudioContextType | undefined>(undefined);
 
 const LISTENING_HISTORY_KEY = 'hievly_listening_history';
+// Base64 Silent Audio (WAV) - Short loop to keep AudioContext active
+const SILENT_AUDIO_URI = 'data:audio/wav;base64,UklGRjIAAABXQVZFZm10IBIAAAABAAEAQB8AAEAfAAABAAgAAABmYWN0BAAAAAAAAABkYXRhAAAAAA==';
 
 export function AudioProvider({ children }: { children: React.ReactNode }) {
     const { data: session } = useSession();
@@ -95,6 +97,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     const playerRef = useRef<any>(null);
     const silentAudioRef = useRef<HTMLAudioElement | null>(null);
     const timeUpdateInterval = useRef<NodeJS.Timeout | null>(null);
+    const wakeLockRef = useRef<any>(null); // Use any to avoid type issues
 
     // Listening Event Tracking
     const trackingRef = useRef<{
@@ -110,6 +113,34 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     const togglePlayerExpansion = () => setIsPlayerExpanded(prev => !prev);
     const toggleVideoMode = () => setVideoMode(prev => !prev);
     const toggleVideoFullscreen = () => setIsVideoFullscreen(prev => !prev);
+
+    // Wake Lock Helper
+    const requestWakeLock = async () => {
+        if ('wakeLock' in navigator) {
+            try {
+                if (!wakeLockRef.current) {
+                    const wakeLock = await (navigator as any).wakeLock.request('screen');
+                    wakeLockRef.current = wakeLock;
+                    wakeLock.addEventListener('release', () => {
+                        wakeLockRef.current = null;
+                    });
+                }
+            } catch (err) {
+                console.error("Wake Lock error:", err);
+            }
+        }
+    };
+
+    const releaseWakeLock = async () => {
+        if (wakeLockRef.current) {
+            try {
+                await wakeLockRef.current.release();
+                wakeLockRef.current = null;
+            } catch (err) {
+                console.error("Wake Lock release error:", err);
+            }
+        }
+    };
 
     const loadMoreRecommendations = async () => {
         if (!currentTrack) return;
@@ -263,6 +294,134 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         setQueue(prev => [...prev, track]);
     };
 
+    const [isConnectOpen, setIsConnectOpen] = useState(false);
+    const [connectInitialTrack, setConnectInitialTrack] = useState<Track | null>(null);
+
+    const openConnect = (track?: Track) => {
+        if (track) setConnectInitialTrack(track);
+        setIsConnectOpen(true);
+    };
+
+    const closeConnect = () => {
+        setIsConnectOpen(false);
+        setConnectInitialTrack(null);
+    };
+
+    const joinRoom = async (friendId: string) => {
+        try {
+            const res = await fetch('/api/rooms', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'JOIN_ROOM', friendId })
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setCurrentRoomId(data.id);
+                setIsHostingRoom(false);
+                setRoomData(data);
+                toast.success("Joined live room!");
+            }
+        } catch (e) {
+            toast.error("Failed to join room");
+        }
+    };
+
+    const leaveRoom = async () => {
+        try {
+            await fetch('/api/rooms', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'LEAVE_ROOM' })
+            });
+            setCurrentRoomId(null);
+            setIsHostingRoom(false);
+            setRoomData(null);
+        } catch (e) { }
+    };
+
+    const hostRoom = async (trackOverride?: Track) => {
+        const track = trackOverride || currentTrack;
+        if (!track) return;
+        try {
+            const res = await fetch('/api/rooms', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'CREATE_ROOM',
+                    trackId: track.id,
+                    progress: Math.floor(currentTime)
+                })
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setCurrentRoomId(data.id);
+                setIsHostingRoom(true);
+                // toast.success("Living room started!");
+            }
+        } catch (e) { }
+    };
+
+    // Audio Control Logic
+    const playTrackInternal = (track: Track, previousTrack?: Track | null) => {
+        if (previousTrack && trackingRef.current && trackingRef.current.trackId === previousTrack.id) {
+            const playDuration = (Date.now() - trackingRef.current.startTime) / 1000;
+            const totalDuration = trackingRef.current.duration || duration;
+            const skipped = playDuration < 30 && totalDuration > 30;
+            recordListeningEvent(previousTrack, playDuration, totalDuration, skipped);
+        }
+
+        trackingRef.current = {
+            startTime: Date.now(),
+            trackId: track.id,
+            duration: 0
+        };
+
+        setCurrentTrack(track);
+        setIsLoading(true);
+        setCurrentTime(0);
+        saveToListeningHistory(track);
+        requestWakeLock(); // Request Wake Lock on new track
+
+        if (playerRef.current && playerRef.current.loadVideoById) {
+            playerRef.current.loadVideoById(track.id);
+        } else {
+            setTimeout(() => {
+                if (playerRef.current && playerRef.current.loadVideoById) {
+                    playerRef.current.loadVideoById(track.id);
+                }
+            }, 800);
+        }
+
+        // Essential: Play silent audio immediately on user interaction
+        silentAudioRef.current?.play().catch(e => console.error("Ghost audio play failed", e));
+
+        // Automatically start/update hosting room when playing
+        hostRoom(track).catch(() => { });
+    };
+
+    const playTrack = (track: Track) => {
+        const prevTrack = currentTrack;
+        if (currentTrack) {
+            setHistory(prev => [...prev, currentTrack]);
+        }
+        playTrackInternal(track, prevTrack);
+    };
+
+    const playPlaylist = (tracks: Track[], startIndex: number = 0) => {
+        if (!tracks || tracks.length === 0) return;
+
+        const trackToPlay = tracks[startIndex];
+        const prevTrack = currentTrack;
+        if (currentTrack) {
+            setHistory(prev => [...prev, currentTrack]);
+        }
+
+        // Reset Queue
+        setQueue(tracks.slice(startIndex + 1));
+
+        playTrackInternal(trackToPlay, prevTrack);
+    };
+
     const playNext = () => {
         if (queue.length === 0) return;
 
@@ -316,6 +475,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
             playNext();
         } else {
             setIsPlaying(false);
+            releaseWakeLock(); // Release lock when playback ends
         }
     }, [repeat, queue, history, currentTrack, duration]);
 
@@ -341,6 +501,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
             if (event.data === 1) { // Playing
                 setIsPlaying(true);
                 setIsLoading(false);
+                requestWakeLock(); // Request Lock
 
                 // Clear any existing interval
                 if (timeUpdateInterval.current) clearInterval(timeUpdateInterval.current);
@@ -362,28 +523,14 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
             }
             if (event.data === 2) { // Paused
                 setIsPlaying(false);
+                releaseWakeLock(); // Release Lock
             }
             if (event.data === 0) handleTrackEnd(); // Ended
             if (event.data === 3) setIsLoading(true); // Buffering
         };
     }); // Intentionally no dependency array: update on every render
 
-    // YouTube IFrame API Initialization
-    useEffect(() => {
-        if ((window as any).YT) {
-            initPlayer();
-            return;
-        }
-
-        const tag = document.createElement('script');
-        tag.src = "https://www.youtube.com/iframe_api";
-        const firstScriptTag = document.getElementsByTagName('script')[0];
-        firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
-
-        (window as any).onYouTubeIframeAPIReady = initPlayer;
-    }, []);
-
-    const initPlayer = () => {
+    const initPlayer = useCallback(() => {
         if (playerRef.current) return;
 
         playerRef.current = new (window as any).YT.Player('youtube-audio-player', {
@@ -402,7 +549,22 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
                 onError: (e: any) => onPlayerErrorRef.current(e),
             },
         });
-    };
+    }, [volume]);
+
+    // YouTube IFrame API Initialization
+    useEffect(() => {
+        if ((window as any).YT) {
+            initPlayer();
+            return;
+        }
+
+        const tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        const firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
+
+        (window as any).onYouTubeIframeAPIReady = initPlayer;
+    }, [initPlayer]);
 
     const toggleShuffle = () => setShuffle(prev => !prev);
     const toggleRepeat = () => setRepeat(prev => {
@@ -420,6 +582,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
             setIsPlaying(true);
             setIsLoading(false);
             setDuration(playerRef.current?.getDuration() || 0);
+            requestWakeLock(); // Request Lock
 
             // Start time tracking
             if (timeUpdateInterval.current) clearInterval(timeUpdateInterval.current);
@@ -434,9 +597,11 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
             }, 1000);
         } else if (data === 2) { // Paused
             setIsPlaying(false);
+            releaseWakeLock(); // Release Lock
         } else if (data === 0) { // Ended
             setIsPlaying(false);
             if (timeUpdateInterval.current) clearInterval(timeUpdateInterval.current);
+            releaseWakeLock(); // Release Lock
             handleTrackEnd();
         } else if (data === 3) { // Buffering
             setIsLoading(true);
@@ -474,137 +639,9 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
             if (timeUpdateInterval.current) {
                 clearInterval(timeUpdateInterval.current);
             }
+            releaseWakeLock(); // Clean up Wake Lock
         };
     }, []);
-
-    const [isConnectOpen, setIsConnectOpen] = useState(false);
-    const [connectInitialTrack, setConnectInitialTrack] = useState<Track | null>(null);
-
-    const openConnect = (track?: Track) => {
-        if (track) setConnectInitialTrack(track);
-        setIsConnectOpen(true);
-    };
-
-    const closeConnect = () => {
-        setIsConnectOpen(false);
-        setConnectInitialTrack(null);
-    };
-
-    const joinRoom = async (friendId: string) => {
-        try {
-            const res = await fetch('/api/rooms', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'JOIN_ROOM', friendId })
-            });
-            if (res.ok) {
-                const data = await res.json();
-                setCurrentRoomId(data.id);
-                setIsHostingRoom(false);
-                setRoomData(data);
-                toast.success("Joined live room!");
-            }
-        } catch (e) {
-            toast.error("Failed to join room");
-        }
-    };
-
-    const leaveRoom = async () => {
-        try {
-            await fetch('/api/rooms', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'LEAVE_ROOM' })
-            });
-            setCurrentRoomId(null);
-            setIsHostingRoom(false);
-            setRoomData(null);
-        } catch (e) { }
-    };
-
-    const hostRoom = async () => {
-        if (!currentTrack) return;
-        try {
-            const res = await fetch('/api/rooms', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    action: 'CREATE_ROOM',
-                    trackId: currentTrack.id,
-                    progress: Math.floor(currentTime)
-                })
-            });
-            if (res.ok) {
-                const data = await res.json();
-                setCurrentRoomId(data.id);
-                setIsHostingRoom(true);
-                // toast.success("Living room started!");
-            }
-        } catch (e) { }
-    };
-
-    // --- RE-ORDERED FOR ACCESS ---
-    // Moving playTrackInternal AFTER the definitions it depends on (hostRoom)
-
-    // Audio Control Logic
-    const playTrackInternal = (track: Track, previousTrack?: Track | null) => {
-        if (previousTrack && trackingRef.current && trackingRef.current.trackId === previousTrack.id) {
-            const playDuration = (Date.now() - trackingRef.current.startTime) / 1000;
-            const totalDuration = trackingRef.current.duration || duration;
-            const skipped = playDuration < 30 && totalDuration > 30;
-            recordListeningEvent(previousTrack, playDuration, totalDuration, skipped);
-        }
-
-        trackingRef.current = {
-            startTime: Date.now(),
-            trackId: track.id,
-            duration: 0
-        };
-
-        setCurrentTrack(track);
-        setIsLoading(true);
-        setCurrentTime(0);
-        saveToListeningHistory(track);
-
-        if (playerRef.current && playerRef.current.loadVideoById) {
-            playerRef.current.loadVideoById(track.id);
-        } else {
-            setTimeout(() => {
-                if (playerRef.current && playerRef.current.loadVideoById) {
-                    playerRef.current.loadVideoById(track.id);
-                }
-            }, 800);
-        }
-
-        // Essential: Play silent audio immediately on user interaction
-        silentAudioRef.current?.play().catch(e => console.error("Ghost audio play failed", e));
-
-        // Automatically start/update hosting room when playing
-        hostRoom().catch(() => { });
-    };
-
-    const playTrack = (track: Track) => {
-        const prevTrack = currentTrack;
-        if (currentTrack) {
-            setHistory(prev => [...prev, currentTrack]);
-        }
-        playTrackInternal(track, prevTrack);
-    };
-
-    const playPlaylist = (tracks: Track[], startIndex: number = 0) => {
-        if (!tracks || tracks.length === 0) return;
-
-        const trackToPlay = tracks[startIndex];
-        const prevTrack = currentTrack;
-        if (currentTrack) {
-            setHistory(prev => [...prev, currentTrack]);
-        }
-
-        // Reset Queue
-        setQueue(tracks.slice(startIndex + 1));
-
-        playTrackInternal(trackToPlay, prevTrack);
-    };
 
     // --- Media Session & Background Audio Sync ---
 
@@ -612,8 +649,10 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         if (isPlaying) {
             silentAudioRef.current?.play().catch(() => { });
+            requestWakeLock();
         } else {
             silentAudioRef.current?.pause();
+            releaseWakeLock();
         }
     }, [isPlaying]);
 
@@ -675,12 +714,25 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
 
     // Background Resilience Logic
     useEffect(() => {
-        const handleVisibilityChange = () => {
+        const handleVisibilityChange = async () => {
             if (document.visibilityState === 'hidden' && isPlaying) {
                 // When leaving the app, make sure our ghost audio is definitely playing
-                silentAudioRef.current?.play().catch(() => { });
+                try {
+                    await silentAudioRef.current?.play();
+                } catch (e) {
+                    console.error("Silent audio play on vis change failed", e);
+                }
+
                 // And try to keep YT playing
-                playerRef.current?.playVideo();
+                if (playerRef.current && playerRef.current.getPlayerState && playerRef.current.getPlayerState() !== 1) {
+                     playerRef.current.playVideo();
+                }
+
+                // Re-acquire Wake Lock if needed
+                requestWakeLock();
+            } else if (document.visibilityState === 'visible' && isPlaying) {
+                 // Re-acquire if lost
+                 requestWakeLock();
             }
         };
 
@@ -764,9 +816,23 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
                 id="youtube-player-portal"
                 suppressHydrationWarning
                 onClick={togglePlay}
-                className={`fixed bg-black overflow-hidden transition-all duration-500 ${videoMode && isPlayerExpanded ? 'opacity-100 pointer-events-auto z-[60] inset-0' : 'opacity-0.01 pointer-events-none z-[-1] w-[1px] h-[1px] bottom-0 left-0'}`}
+                className={`fixed bg-black overflow-hidden transition-all duration-500 ${videoMode && isPlayerExpanded ? 'opacity-100 pointer-events-auto z-[60] inset-0' : ''}`}
                 style={{
-                    height: (videoMode && isPlayerExpanded) ? (isVideoFullscreen ? '100%' : 'calc(100% - 112px)') : '1px',
+                    ...(videoMode && isPlayerExpanded ? {
+                        height: isVideoFullscreen ? '100%' : 'calc(100% - 112px)',
+                        width: '100%',
+                        opacity: 1
+                    } : {
+                        width: '1px',
+                        height: '1px',
+                        opacity: 0.001,
+                        position: 'fixed',
+                        bottom: 0,
+                        left: 0,
+                        zIndex: -1,
+                        pointerEvents: 'none',
+                        visibility: 'visible'
+                    })
                 }}
             >
                 <div suppressHydrationWarning className="w-full h-full pointer-events-none flex items-center justify-center">
@@ -778,11 +844,11 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
             <audio
                 ref={silentAudioRef}
                 // reliable long silence
-                src="https://github.com/anars/blank-audio/blob/master/10- minutes-of-silence.mp3?raw=true"
+                src={SILENT_AUDIO_URI}
                 loop
                 playsInline
                 controls={false}
-                style={{ position: 'fixed', top: 0, left: 0, opacity: 0.001, pointerEvents: 'none' }}
+                style={{ position: 'fixed', top: 0, left: 0, opacity: 0.001, pointerEvents: 'none', width: '1px', height: '1px', visibility: 'visible' }}
             />
         </AudioContext.Provider>
     );

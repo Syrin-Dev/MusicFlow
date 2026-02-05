@@ -325,46 +325,143 @@ export function ExpandedPlayer() {
                     </div>
                 </div>
 
-                {/* Mobile Scrubber & Controls (Replicating Footer logic for mobile but inline) */}
-                <div className="block md:hidden w-full space-y-6 mb-8">
+                {/* Mobile Scrubber & Controls */}
+                <div className="block md:hidden w-full space-y-6 mb-8 px-2">
                     {/* Scrubber */}
                     <div className="group relative w-full h-4 flex items-center" onClick={handleSeek}>
                         <div className="w-full h-1 bg-white/20 rounded-full overflow-hidden">
-                            <div className="h-full bg-[#8B5CF6]" style={{ width: `${progress}%` }}></div>
+                            <div className="h-full bg-primary" style={{ width: `${progress}%` }}></div>
                         </div>
-                        <div className="absolute h-4 w-4 bg-white rounded-full shadow-lg left-0 ml-[-8px]" style={{ left: `${progress}%` }}></div>
+                        <div className="absolute h-4 w-4 bg-white rounded-full shadow-lg" style={{ left: `calc(${progress}% - 8px)` }}></div>
                     </div>
-                    <div className="flex justify-between text-xs text-gray-400 font-medium -mt-2">
+                    <div className="flex justify-between text-[10px] text-zinc-500 font-bold -mt-2 uppercase tracking-widest">
                         <span>{formatTime(currentTime)}</span>
                         <span>{formatTime(duration)}</span>
                     </div>
 
                     {/* Controls */}
-                    <div className="flex items-center justify-between px-2">
-                        <button onClick={toggleShuffle} className={`${shuffle ? 'text-[#8B5CF6]' : 'text-slate-400'}`}> <Shuffle size={24} /> </button>
-                        <button onClick={playPrevious} className="text-white"> <SkipBack size={32} fill="currentColor" /> </button>
-                        <button onClick={togglePlay} className="w-16 h-16 bg-white text-black rounded-full flex items-center justify-center hover:scale-105 transition-transform shadow-xl">
-                            {isPlaying ? <Pause size={32} fill="currentColor" /> : <Play size={32} fill="currentColor" className="ml-1" />}
+                    <div className="flex items-center justify-between px-4">
+                        <button onClick={toggleShuffle} className={`${shuffle ? 'text-primary' : 'text-zinc-500'}`}> <Shuffle size={24} /> </button>
+                        <button onClick={playPrevious} className="text-white"> <SkipBack size={36} fill="currentColor" /> </button>
+                        <button onClick={togglePlay} className="w-20 h-20 bg-white text-black rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-transform shadow-2xl">
+                            {isPlaying ? <Pause size={36} fill="currentColor" /> : <Play size={36} fill="currentColor" className="ml-1" />}
                         </button>
-                        <button onClick={playNext} className="text-white"> <SkipForward size={32} fill="currentColor" /> </button>
-                        <button onClick={toggleRepeat} className={`relative ${repeat !== 'off' ? 'text-[#8B5CF6]' : 'text-slate-400'}`}>
+                        <button onClick={playNext} className="text-white"> <SkipForward size={36} fill="currentColor" /> </button>
+                        <button onClick={toggleRepeat} className={`relative ${repeat !== 'off' ? 'text-primary' : 'text-zinc-500'}`}>
                             <Repeat size={24} />
-                            {repeat === 'one' && <span className="absolute -top-1 -right-1 text-[8px] font-bold bg-[#8B5CF6] text-white rounded-full px-1">1</span>}
+                            {repeat === 'one' && <span className="absolute -top-1 -right-1 text-[8px] font-bold bg-primary text-white rounded-full px-1">1</span>}
                         </button>
                     </div>
 
-                    {/* Mobile Tabs Wrapper (simple list for now) */}
-                    <div className="mt-8">
-                        <h3 className="text-white font-bold mb-4 uppercase text-xs tracking-widest text-gray-500">Up Next</h3>
-                        {queue.slice(0, 3).map((track, i) => (
-                            <div key={i} className="flex items-center gap-3 py-2 border-b border-white/5" onClick={() => playTrack(track)}>
-                                <img src={track.thumbnail || `https://i.ytimg.com/vi/${track.id}/mqdefault.jpg`} className="w-10 h-10 rounded-md object-cover" />
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-medium text-white truncate">{track.title}</p>
-                                    <p className="text-xs text-gray-400 truncate">{track.artist}</p>
+                    {/* Mobile Tabs Wrapper */}
+                    <div className="mt-12 space-y-6">
+                        <div className="flex gap-8 border-b border-white/5 pb-2 overflow-x-auto no-scrollbar">
+                            {(['upNext', 'lyrics', 'related'] as const).map((tab) => (
+                                <button
+                                    key={tab}
+                                    onClick={() => setActiveTab(tab)}
+                                    className={`text-xs font-black pb-2 transition-all uppercase tracking-[0.2em] whitespace-nowrap ${activeTab === tab
+                                        ? 'border-b-2 border-primary text-white'
+                                        : 'text-zinc-600 hover:text-white'
+                                        }`}
+                                >
+                                    {tab === 'upNext' ? 'Up Next' : tab}
+                                </button>
+                            ))}
+                        </div>
+
+                        <div className="min-h-[200px] mb-12">
+                            {activeTab === 'upNext' && (
+                                <div className="space-y-4">
+                                    {queue.length > 0 ? (
+                                        queue.map((track, i) => (
+                                            <div key={`${track.id}-${i}`} className="flex items-center gap-4 py-2 group" onClick={() => playTrack(track)}>
+                                                <div className="relative w-12 h-12 flex-shrink-0">
+                                                    <img src={track.thumbnail || `https://i.ytimg.com/vi/${track.id}/hqdefault.jpg`} className="w-full h-full rounded-xl object-cover" />
+                                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center rounded-xl">
+                                                        <Play size={16} fill="white" />
+                                                    </div>
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-sm font-bold text-white truncate">{track.title}</p>
+                                                    <p className="text-xs text-zinc-500 truncate">{track.artist}</p>
+                                                </div>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <p className="text-zinc-500 text-center py-8 text-sm font-medium">No songs in queue</p>
+                                    )}
+                                    <button onClick={loadMoreRecommendations} className="w-full py-4 text-center text-xs font-black text-primary uppercase tracking-widest border border-white/5 rounded-2xl hover:bg-white/5 transition-all">Discover More</button>
                                 </div>
-                            </div>
-                        ))}
+                            )}
+
+                            {activeTab === 'lyrics' && (
+                                <div className="py-4">
+                                    {isLoadingLyrics ? (
+                                        <div className="flex items-center justify-center py-20">
+                                            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                                        </div>
+                                    ) : originalLyrics ? (
+                                        <div className="space-y-6">
+                                            <div className="flex justify-between items-center bg-white/5 p-3 rounded-2xl border border-white/5">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Translation</span>
+                                                    <select
+                                                        value={targetLang}
+                                                        onChange={(e) => setTargetLang(e.target.value)}
+                                                        className="bg-transparent text-white text-[10px] font-black uppercase tracking-widest outline-none"
+                                                    >
+                                                        {LANGUAGES.map(l => <option key={l.code} value={l.code} className="bg-[#18181b]">{l.label}</option>)}
+                                                    </select>
+                                                </div>
+                                                <button
+                                                    onClick={handleTranslate}
+                                                    disabled={isTranslating}
+                                                    className={`p-2 rounded-xl transition-all ${showTranslated ? 'bg-primary text-white' : 'bg-white/10 text-zinc-400'}`}
+                                                >
+                                                    {isTranslating ? <RefreshCw size={16} className="animate-spin" /> : <Languages size={16} />}
+                                                </button>
+                                            </div>
+                                            <div className="space-y-4">
+                                                {originalLyrics.map((line, idx) => {
+                                                    const isActive = idx === activeLineIndex;
+                                                    const text = getLineText(idx);
+                                                    return (
+                                                        <p
+                                                            key={idx}
+                                                            ref={isActive ? activeLineRef : null}
+                                                            className={`transition-all duration-500 text-lg leading-relaxed ${isActive ? 'text-white font-black scale-105 origin-left' : 'text-zinc-600 font-bold opacity-40'}`}
+                                                        >
+                                                            {text}
+                                                        </p>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="text-center py-20 bg-white/5 rounded-3xl border border-white/5">
+                                            <Mic2 size={48} className="mx-auto text-zinc-800 mb-4" />
+                                            <p className="text-zinc-500 font-bold uppercase tracking-widest text-xs">No lyrics found</p>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {activeTab === 'related' && (
+                                <div className="space-y-4">
+                                    {relatedTracks.map((track, i) => (
+                                        <div key={`${track.id}-${i}`} className="flex items-center gap-4 py-2 group" onClick={() => playTrack(track)}>
+                                            <img src={track.thumbnail} className="w-12 h-12 rounded-xl object-cover" />
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-bold text-white truncate">{track.title}</p>
+                                                <p className="text-xs text-zinc-500 truncate">{track.artist}</p>
+                                            </div>
+                                            <Play size={16} className="text-zinc-800 group-hover:text-primary transition-colors" />
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
 

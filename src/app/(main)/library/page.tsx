@@ -104,12 +104,12 @@ export default function LibraryPage() {
     return (
         <div className="flex-1 overflow-y-auto bg-[#0A0A0B] pb-32">
             {/* Header */}
-            <div className="sticky top-0 z-10 bg-[#0A0A0B]/90 backdrop-blur-xl px-8 py-6 border-b border-white/5">
+            <div className="sticky top-0 z-10 bg-[#0A0A0B]/90 backdrop-blur-xl px-4 md:px-8 py-4 md:py-6 border-b border-white/5">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div className="flex items-center gap-6">
-                        <h1 className="text-3xl font-bold text-white">Library</h1>
+                    <div className="flex items-center gap-4 md:gap-6">
+                        <h1 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tighter">Library</h1>
                         {!loading && (
-                            <div className="flex gap-4 text-xs font-semibold text-zinc-500 uppercase tracking-widest border-l border-white/10 pl-6 hidden md:flex">
+                            <div className="flex gap-4 text-[10px] font-black text-zinc-600 uppercase tracking-widest border-l border-white/5 pl-4 hidden md:flex">
                                 <span>{playlists.length} Playlists</span>
                                 <span>•</span>
                                 <span>{likedSongs.length} Liked Songs</span>
@@ -150,9 +150,9 @@ export default function LibraryPage() {
                 </div>
             </div>
 
-            <div className="p-8">
+            <div className="p-4 md:p-8">
                 {/* Grid */}
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
 
                     {/* Liked Songs Card - ENHANCED */}
                     {showLikedSongs && (

@@ -293,7 +293,7 @@ export default function MusicFlowConnect({ isOpen, onClose, initialTrack: extern
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-3xl animate-in fade-in duration-300" onClick={onClose}>
             <div
-                className="w-full max-w-xl bg-[#0a0a0b]/80 border border-white/10 rounded-[2.5rem] shadow-2xl overflow-hidden h-full max-h-[750px] flex flex-col animate-in zoom-in-95 slide-in-from-bottom-10 duration-500 backdrop-blur-3xl relative"
+                className="w-full max-w-xl bg-[#0a0a0b]/80 border border-white/10 rounded-[2.5rem] md:rounded-[2.5rem] rounded-t-[2.5rem] rounded-b-none md:rounded-b-[2.5rem] shadow-2xl overflow-hidden h-full md:max-h-[750px] max-h-screen flex flex-col animate-in zoom-in-95 slide-in-from-bottom-10 duration-500 backdrop-blur-3xl relative mt-auto md:mt-0"
                 onClick={e => { e.stopPropagation(); setActiveMenuId(null); }}
             >
                 {/* visual accents */}
@@ -316,11 +316,11 @@ export default function MusicFlowConnect({ isOpen, onClose, initialTrack: extern
                             </div>
                         )}
                         <div>
-                            <h2 className="text-white font-black text-2xl tracking-tight leading-none">
+                            <h2 className="text-white font-black text-xl md:text-2xl tracking-tight leading-none">
                                 {view === 'friends' ? 'Connect' : view === 'add' ? 'Add Friend' : activeFriend?.name}
                             </h2>
                             {view === 'chat' && (
-                                <p className="text-[10px] font-black uppercase tracking-[0.25em] mt-2 ml-0.5">
+                                <p className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.25em] mt-2 ml-0.5">
                                     {isFriendTyping ? <span className="text-primary animate-pulse">Typing now...</span> : <span className="text-gray-500">{activeFriend?.status || 'Offline'}</span>}
                                 </p>
                             )}
@@ -459,26 +459,26 @@ export default function MusicFlowConnect({ isOpen, onClose, initialTrack: extern
                         {view === 'add' && (
                             <div className="space-y-12 p-2">
                                 <div className="space-y-6">
-                                    <div className="p-10 bg-white/[0.02] border border-white/5 rounded-[3rem] text-center space-y-6">
-                                        <div className="w-20 h-20 rounded-[2rem] bg-primary/10 flex items-center justify-center text-primary mx-auto shadow-2xl shadow-primary/5">
-                                            <UserPlus size={36} />
+                                    <div className="p-6 md:p-10 bg-white/[0.02] border border-white/5 rounded-[2rem] md:rounded-[3rem] text-center space-y-6">
+                                        <div className="w-16 h-16 md:w-20 md:h-20 rounded-[1.5rem] md:rounded-[2rem] bg-primary/10 flex items-center justify-center text-primary mx-auto shadow-2xl shadow-primary/5">
+                                            <UserPlus size={32} />
                                         </div>
                                         <div className="space-y-2">
-                                            <h3 className="text-white font-black text-2xl tracking-tight">Expand Your Circle</h3>
-                                            <p className="text-sm text-gray-500 leading-relaxed font-medium px-6">Connect with fellow audiophiles using their unique digital signature.</p>
+                                            <h3 className="text-white font-black text-xl md:text-2xl tracking-tight">Expand Your Circle</h3>
+                                            <p className="text-xs md:text-sm text-gray-500 leading-relaxed font-medium px-2 md:px-6">Connect with fellow audiophiles using their unique digital signature.</p>
                                         </div>
-                                        <div className="flex gap-3 mt-8">
+                                        <div className="flex flex-col md:flex-row gap-3 mt-8">
                                             <input
                                                 type="text"
                                                 value={friendCodeInput}
                                                 onChange={(e) => setFriendCodeInput(e.target.value)}
                                                 placeholder="Enter invite code..."
-                                                className="flex-1 bg-black/40 border border-white/10 rounded-2xl px-6 py-5 text-white font-bold text-base focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/10 transition-all placeholder:text-zinc-800"
+                                                className="flex-1 bg-black/40 border border-white/10 rounded-2xl px-6 py-4 md:py-5 text-white font-bold text-base focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/10 transition-all placeholder:text-zinc-800"
                                             />
                                             <button
                                                 onClick={handleAddFriend}
                                                 disabled={isLoading}
-                                                className="bg-primary hover:bg-white hover:text-primary disabled:opacity-50 text-white font-black px-10 rounded-2xl transition-all shadow-2xl shadow-primary/30 active:scale-95 uppercase tracking-widest text-xs"
+                                                className="bg-primary hover:bg-white hover:text-primary disabled:opacity-50 text-white font-black py-4 md:py-0 px-10 rounded-2xl transition-all shadow-2xl shadow-primary/30 active:scale-95 uppercase tracking-widest text-xs"
                                             >
                                                 {isLoading ? '...' : 'Add'}
                                             </button>
@@ -488,16 +488,16 @@ export default function MusicFlowConnect({ isOpen, onClose, initialTrack: extern
 
                                 <div className="space-y-6 px-4">
                                     <span className="text-[10px] font-black text-gray-500 uppercase tracking-[0.4em] ml-2">My Digital Identity</span>
-                                    <div className="p-8 bg-primary/5 border border-primary/10 rounded-[3rem] flex flex-col items-center gap-6">
-                                        <div className="flex items-center gap-6 bg-black/50 px-10 py-6 rounded-3xl border border-white/10 w-full justify-center group active:scale-[0.98] transition-all cursor-pointer shadow-2xl"
+                                    <div className="p-6 md:p-8 bg-primary/5 border border-primary/10 rounded-[2.5rem] md:rounded-[3rem] flex flex-col items-center gap-6">
+                                        <div className="flex items-center gap-4 md:gap-6 bg-black/50 px-6 md:px-10 py-4 md:py-6 rounded-2xl md:rounded-3xl border border-white/10 w-full justify-center group active:scale-[0.98] transition-all cursor-pointer shadow-2xl"
                                             onClick={() => {
                                                 if (myInviteCode) {
                                                     navigator.clipboard.writeText(myInviteCode);
                                                     toast.success("Identity Signature Copied");
                                                 }
                                             }}>
-                                            <code className="text-4xl font-mono text-white font-black tracking-[0.3em]">{myInviteCode || '------'}</code>
-                                            <Copy size={24} className="text-primary group-hover:scale-110 transition-transform" />
+                                            <code className="text-2xl md:text-4xl font-mono text-white font-black tracking-[0.3em]">{myInviteCode || '------'}</code>
+                                            <Copy size={20} className="text-primary group-hover:scale-110 transition-transform" />
                                         </div>
                                         <p className="text-[10px] font-black text-primary/50 uppercase tracking-[0.3em]">Click to copy signature</p>
                                     </div>
@@ -568,10 +568,10 @@ export default function MusicFlowConnect({ isOpen, onClose, initialTrack: extern
 
                                                         {msg.content && (
                                                             <div className={`relative px-6 py-4 rounded-[2rem] text-sm leading-relaxed ${msg.isDeleted
-                                                                    ? 'bg-transparent border border-white/10 text-zinc-700 italic font-medium'
-                                                                    : isMe
-                                                                        ? 'bg-gradient-to-br from-primary to-violet-700 text-white shadow-2xl shadow-primary/20 rounded-tr-md font-medium'
-                                                                        : 'bg-white/[0.03] border border-white/10 text-gray-200 backdrop-blur-3xl rounded-tl-md font-medium'
+                                                                ? 'bg-transparent border border-white/10 text-zinc-700 italic font-medium'
+                                                                : isMe
+                                                                    ? 'bg-gradient-to-br from-primary to-violet-700 text-white shadow-2xl shadow-primary/20 rounded-tr-md font-medium'
+                                                                    : 'bg-white/[0.03] border border-white/10 text-gray-200 backdrop-blur-3xl rounded-tl-md font-medium'
                                                                 }`}>
                                                                 {msg.content}
 
@@ -627,11 +627,11 @@ export default function MusicFlowConnect({ isOpen, onClose, initialTrack: extern
                                 </div>
                             )}
 
-                            <div className="flex items-center gap-4 bg-white/[0.03] border border-white/10 rounded-[2.5rem] pl-8 pr-3 py-3 focus-within:border-primary/50 focus-within:bg-white/[0.06] transition-all group shadow-2xl">
+                            <div className="flex items-center gap-3 md:gap-4 bg-white/[0.03] border border-white/10 rounded-3xl md:rounded-[2.5rem] pl-6 md:pl-8 pr-2 md:pr-3 py-2 md:py-3 focus-within:border-primary/50 focus-within:bg-white/[0.06] transition-all group shadow-2xl">
                                 <input
                                     type="text"
                                     placeholder={externallySharedTrack ? "Add a note..." : replyingTo ? "Type your reply..." : "Write a message..."}
-                                    className="flex-1 bg-transparent text-white text-base font-medium focus:outline-none placeholder-zinc-800"
+                                    className="flex-1 bg-transparent text-white text-sm md:text-base font-medium focus:outline-none placeholder-zinc-800"
                                     value={inputValue}
                                     onChange={handleInputChange}
                                     onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
@@ -640,12 +640,12 @@ export default function MusicFlowConnect({ isOpen, onClose, initialTrack: extern
                                 <button
                                     onClick={sendMessage}
                                     disabled={(!inputValue.trim() && !externallySharedTrack) || isSending}
-                                    className={`w-14 h-14 flex items-center justify-center rounded-[1.5rem] transition-all shadow-2xl active:scale-95 ${(inputValue.trim() || externallySharedTrack) && !isSending
-                                            ? 'bg-primary text-white shadow-primary/40 hover:scale-105'
-                                            : 'bg-white/5 text-zinc-800 cursor-not-allowed'
+                                    className={`w-12 h-12 md:w-14 md:h-14 flex items-center justify-center rounded-2xl md:rounded-[1.5rem] transition-all shadow-2xl active:scale-95 ${(inputValue.trim() || externallySharedTrack) && !isSending
+                                        ? 'bg-primary text-white shadow-primary/40 hover:scale-105'
+                                        : 'bg-white/5 text-zinc-800 cursor-not-allowed'
                                         }`}
                                 >
-                                    {isSending ? <RefreshCw size={24} className="animate-spin" /> : <Send size={24} fill={(inputValue.trim() || externallySharedTrack) ? "currentColor" : "none"} />}
+                                    {isSending ? <RefreshCw size={20} className="animate-spin" /> : <Send size={24} fill={(inputValue.trim() || externallySharedTrack) ? "currentColor" : "none"} />}
                                 </button>
                             </div>
                         </div>

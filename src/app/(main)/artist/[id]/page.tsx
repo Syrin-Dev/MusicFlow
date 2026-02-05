@@ -135,16 +135,16 @@ export default function ArtistPage() {
         >
             {/* Sticky Header */}
             <div
-                className={`absolute top-0 left-0 right-0 z-50 h-20 bg-background-dark/95 backdrop-blur-md flex items-center px-8 transition-all duration-300 border-b border-white/5 ${scrollY > 350 ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'}`}
+                className={`absolute top-0 left-0 right-0 z-50 h-16 md:h-20 bg-[#0A0A0B]/95 backdrop-blur-md flex items-center px-4 md:px-8 transition-all duration-300 border-b border-white/5 ${scrollY > 300 ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'}`}
             >
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3 md:gap-4">
                     <button
                         onClick={handlePlayTopSongs}
-                        className="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-white shadow-lg hover:scale-105 transition-transform"
+                        className="w-10 h-10 md:w-12 md:h-12 bg-primary rounded-full flex items-center justify-center text-white shadow-lg hover:scale-105 transition-transform"
                     >
-                        <span className="material-icons-round text-3xl">play_arrow</span>
+                        <span className="material-icons-round text-2xl md:text-3xl">play_arrow</span>
                     </button>
-                    <h1 className="text-2xl font-bold text-white">{artist.name}</h1>
+                    <h1 className="text-xl md:text-2xl font-bold text-white truncate max-w-[200px] md:max-w-none">{artist.name}</h1>
                 </div>
             </div>
 
@@ -153,7 +153,7 @@ export default function ArtistPage() {
                 onScroll={handleScroll}
             >
                 {/* Hero Section */}
-                <section className="relative h-[45vh] min-h-[400px] w-full group">
+                <section className="relative h-[40vh] md:h-[45vh] min-h-[350px] md:min-h-[400px] w-full group">
                     <div className="absolute inset-0 overflow-hidden">
                         <div
                             className="absolute inset-0 bg-cover bg-center bg-no-repeat will-change-transform"
@@ -162,17 +162,17 @@ export default function ArtistPage() {
                                 transform: `translateY(${scrollY * 0.5}px) scale(${1 + scrollY * 0.0005})` // Parallax effect
                             }}
                         >
-                            <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-background-dark"></div>
-                            <div className="absolute inset-0 bg-gradient-to-t from-background-dark via-background-dark/60 to-transparent"></div>
+                            <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-[#0A0A0B]"></div>
+                            <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0B] via-[#0A0A0B]/60 to-transparent"></div>
                         </div>
                     </div>
 
-                    <div className="absolute bottom-0 left-0 w-full p-8 flex items-end justify-between z-10">
+                    <div className="absolute bottom-0 left-0 w-full p-4 md:p-8 flex items-end justify-between z-10">
                         <div className="space-y-4 max-w-4xl" style={{ opacity: Math.max(0, 1 - scrollY / 300) }}>
-                            <div className="flex items-center gap-2 text-white/80 text-sm font-medium tracking-widest uppercase">
-                                <span className="material-icons-round text-blue-400 text-base">verified</span> Verified Artist
+                            <div className="flex items-center gap-2 text-white/80 text-[10px] md:text-sm font-black tracking-widest uppercase">
+                                <span className="material-icons-round text-blue-400 text-sm md:text-base">verified</span> Verified Artist
                             </div>
-                            <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-white tracking-tighter drop-shadow-2xl shadow-black">{artist.name}</h1>
+                            <h1 className="text-4xl md:text-7xl lg:text-8xl font-black text-white tracking-tighter drop-shadow-2xl shadow-black leading-[0.9]">{artist.name}</h1>
 
                             {artist.description && (
                                 <div
@@ -240,8 +240,8 @@ export default function ArtistPage() {
                     </div>
                 </section>
 
-                <div className="p-8 space-y-10">
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+                <div className="p-4 md:p-8 space-y-10">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-12">
                         {/* Main Content (2/3 cols) */}
                         <div className="lg:col-span-2 space-y-8">
                             {/* Popular Songs */}

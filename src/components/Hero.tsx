@@ -12,8 +12,8 @@ export function Hero() {
 
     // Some curated fallback hits
     const FEATURED_HITS = [
-        { id: '1-xGerv5FOk', title: 'Starboy', artist: 'The Weeknd', thumbnail: 'https://i.ytimg.com/vi/1-xGerv5FOk/maxresdefault.jpg' },
-        { id: 'm7Bc3pLyij0', title: 'Happier Than Ever', artist: 'Billie Eilish', thumbnail: 'https://i.ytimg.com/vi/m7Bc3pLyij0/maxresdefault.jpg' },
+        { id: '34Na4j8AVgA', title: 'Starboy', artist: 'The Weeknd', thumbnail: 'https://i.ytimg.com/vi/34Na4j8AVgA/maxresdefault.jpg' },
+        { id: '5GJWxDKyk3A', title: 'Happier Than Ever', artist: 'Billie Eilish', thumbnail: 'https://i.ytimg.com/vi/5GJWxDKyk3A/maxresdefault.jpg' },
         { id: 'OPf0YbXqDm0', title: 'Uptown Funk', artist: 'Mark Ronson', thumbnail: 'https://i.ytimg.com/vi/OPf0YbXqDm0/maxresdefault.jpg' },
     ];
 
@@ -46,7 +46,7 @@ export function Hero() {
     const liked = isLiked(displayTrack.id);
 
     return (
-        <div className="relative w-full h-[450px] rounded-[3rem] overflow-hidden shadow-2xl group border border-white/5">
+        <div className="relative w-full h-[400px] md:h-[450px] rounded-2xl md:rounded-[3rem] overflow-hidden shadow-2xl group border border-white/5">
             {/* Background Image with Blur */}
             <div
                 className="absolute inset-0 bg-cover bg-center transition-all duration-1000 transform group-hover:scale-105"
@@ -60,58 +60,56 @@ export function Hero() {
             </div>
 
             {/* Content Container */}
-            <div className="absolute inset-0 p-10 md:p-16 flex flex-col justify-end z-10">
-                <div className="max-w-2xl space-y-8">
-                    <div className="flex items-center gap-3">
-                        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 w-fit">
-                            <span className={`w-2 h-2 rounded-full ${isPlayingHero && isPlaying ? 'bg-primary animate-pulse' : 'bg-white/40'}`}></span>
-                            <span className="text-[10px] font-black text-white/90 tracking-[0.2em] uppercase">
-                                {context}
-                            </span>
-                        </div>
+            <div className="absolute inset-0 p-6 md:p-16 md:pb-24 flex flex-col justify-end z-10">
+                <div className="flex items-center gap-3 mb-4 md:mb-6">
+                    <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 w-fit">
+                        <span className={`w-2 h-2 rounded-full ${isPlayingHero && isPlaying ? 'bg-primary animate-pulse' : 'bg-white/40'}`}></span>
+                        <span className="text-[10px] font-black text-white/90 tracking-[0.2em] uppercase">
+                            {context}
+                        </span>
                     </div>
+                </div>
 
-                    <div className="space-y-4">
-                        <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-white leading-[0.9] tracking-tighter drop-shadow-2xl line-clamp-2">
-                            {displayTrack.title}
-                        </h1>
-                        <p className="text-xl md:text-2xl text-white/60 font-semibold drop-shadow-lg truncate">
-                            {displayTrack.artist}
-                        </p>
-                    </div>
+                <div className="space-y-4 md:space-y-6">
+                    <h1 className="text-3xl md:text-6xl lg:text-7xl font-black text-white leading-tight md:leading-[1.1] tracking-tighter drop-shadow-2xl line-clamp-2">
+                        {displayTrack.title}
+                    </h1>
+                    <p className="text-lg md:text-2xl text-white/60 font-semibold drop-shadow-lg truncate">
+                        {displayTrack.artist}
+                    </p>
+                </div>
 
-                    <div className="flex flex-wrap items-center gap-4 pt-4">
+                <div className="flex flex-wrap items-center gap-4 pt-8 md:pt-12">
+                    <button
+                        onClick={() => isPlayingHero ? togglePlay() : playTrack(displayTrack)}
+                        className="flex items-center gap-3 md:gap-4 px-8 md:px-12 py-4 md:py-5 bg-white text-black rounded-full font-black text-lg md:text-xl hover:scale-105 active:scale-95 transition-all shadow-xl shadow-white/5"
+                    >
+                        {isPlayingHero && isPlaying ? <Pause size={28} fill="black" /> : <Play size={28} fill="black" />}
+                        {isPlayingHero ? (isPlaying ? 'PAUSE' : 'RESUME') : 'PLAY'}
+                    </button>
+
+                    <div className="flex gap-3">
                         <button
-                            onClick={() => isPlayingHero ? togglePlay() : playTrack(displayTrack)}
-                            className="flex items-center gap-4 px-12 py-5 bg-white text-black rounded-full font-black text-xl hover:scale-105 active:scale-95 transition-all shadow-xl shadow-white/5"
+                            onClick={() => toggleLike(displayTrack)}
+                            className={`p-5 rounded-full backdrop-blur-xl border transition-all duration-500 group/btn active:scale-90 ${liked
+                                ? 'bg-primary/20 border-primary shadow-[0_0_20px_rgba(139,92,246,0.3)] text-primary'
+                                : 'bg-white/5 border-white/10 text-white hover:bg-white/10 hover:border-white/20'
+                                }`}
+                            title={liked ? "Unlike" : "Like"}
                         >
-                            {isPlayingHero && isPlaying ? <Pause size={28} fill="black" /> : <Play size={28} fill="black" />}
-                            {isPlayingHero ? (isPlaying ? 'PAUSE' : 'RESUME') : 'PLAY'}
+                            <Heart
+                                size={24}
+                                className={`transition-all duration-500 ${liked ? 'fill-primary scale-110' : 'group-hover/btn:scale-110'}`}
+                            />
                         </button>
 
-                        <div className="flex gap-3">
-                            <button
-                                onClick={() => toggleLike(displayTrack)}
-                                className={`p-5 rounded-full backdrop-blur-xl border transition-all duration-500 group/btn active:scale-90 ${liked
-                                    ? 'bg-primary/20 border-primary shadow-[0_0_20px_rgba(139,92,246,0.3)] text-primary'
-                                    : 'bg-white/5 border-white/10 text-white hover:bg-white/10 hover:border-white/20'
-                                    }`}
-                                title={liked ? "Unlike" : "Like"}
-                            >
-                                <Heart
-                                    size={24}
-                                    className={`transition-all duration-500 ${liked ? 'fill-primary scale-110' : 'group-hover/btn:scale-110'}`}
-                                />
-                            </button>
-
-                            <AddToPlaylist
-                                track={displayTrack}
-                                dropdownPosition="bottom"
-                                className="p-5 rounded-full backdrop-blur-xl border border-white/10 text-white hover:bg-white/10 hover:border-white/20 transition-all active:scale-90"
-                            >
-                                <span className="material-icons-round text-2xl">playlist_add</span>
-                            </AddToPlaylist>
-                        </div>
+                        <AddToPlaylist
+                            track={displayTrack}
+                            dropdownPosition="bottom"
+                            className="p-5 rounded-full backdrop-blur-xl border border-white/10 text-white hover:bg-white/10 hover:border-white/20 transition-all active:scale-90"
+                        >
+                            <span className="material-icons-round text-2xl">playlist_add</span>
+                        </AddToPlaylist>
                     </div>
                 </div>
             </div>

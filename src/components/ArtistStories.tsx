@@ -5,14 +5,14 @@ import { Play } from 'lucide-react';
 import { useAudio } from '@/components/AudioProvider';
 
 const STORIES = [
-    { id: '1', artist: 'The Weeknd', image: 'https://i.scdn.co/image/ab67616d0000b2732a96cbd8b4cf3a630549182d', trackId: '1-xGerv5FOk', title: 'Starboy' },
-    { id: '2', artist: 'Dua Lipa', image: 'https://i.scdn.co/image/ab67616d0000b27394d28dc7f01cba6aa649232d', trackId: 'bcQSzL6f1EM', title: 'Dance The Night' },
-    { id: '3', artist: 'Drake', image: 'https://i.scdn.co/image/ab67616d0000b2734638361ab7b5883d65aa213f', trackId: 'rubNlX5ZcwI', title: 'Passionfruit' },
+    { id: '1', artist: 'The Weeknd', image: 'https://i.scdn.co/image/ab67616d0000b2732a96cbd8b4cf3a630549182d', trackId: '34Na4j8AVgA', title: 'Starboy' },
+    { id: '2', artist: 'Dua Lipa', image: 'https://i.scdn.co/image/ab67616d0000b27394d28dc7f01cba6aa649232d', trackId: 'OiC1rgCPmUQ', title: 'Dance The Night' },
+    { id: '3', artist: 'Drake', image: 'https://i.scdn.co/image/ab67616d0000b2734638361ab7b5883d65aa213f', trackId: 'COz9lDCFHjw', title: 'Passionfruit' },
     { id: '4', artist: 'Taylor Swift', image: 'https://i.scdn.co/image/ab67616d0000b273bb54dde5369e8c4b75120a3a', trackId: 'e-ORhEE9VVg', title: 'Blank Space' },
-    { id: '5', artist: 'Bad Bunny', image: 'https://i.scdn.co/image/ab67616d0000b27349d694203245f241a1bcaa72', trackId: 'hLOkjoF5lMI', title: 'Ojitos Lindos' },
-    { id: '6', artist: 'SZA', image: 'https://i.scdn.co/image/ab67616d0000b27370dbc9f47669d120ad87461a', trackId: 'h20aT3-gDqU', title: 'Kill Bill' },
-    { id: '7', artist: 'Ariana Grande', image: 'https://i.scdn.co/image/ab67616d0000b273cd945b4babad7c650228d40f', trackId: 'SXIIT73WjNQ', title: '7 rings' },
-    { id: '8', artist: 'Travis Scott', image: 'https://i.scdn.co/image/ab67616d0000b273e71783fb737a4e680a6c0e81', trackId: 'Dst9gZkq1a8', title: 'SICKO MODE' },
+    { id: '5', artist: 'Bad Bunny', image: 'https://i.scdn.co/image/ab67616d0000b27349d694203245f241a1bcaa72', trackId: 'wAjHQXrIj9o', title: 'Ojitos Lindos' },
+    { id: '6', artist: 'SZA', image: 'https://i.scdn.co/image/ab67616d0000b27370dbc9f47669d120ad87461a', trackId: 'MSRcC626prw', title: 'Kill Bill' },
+    { id: '7', artist: 'Ariana Grande', image: 'https://i.scdn.co/image/ab67616d0000b273cd945b4babad7c650228d40f', trackId: 'QYh6mYIJG2Y', title: '7 rings' },
+    { id: '8', artist: 'Travis Scott', image: 'https://i.scdn.co/image/ab67616d0000b273e71783fb737a4e680a6c0e81', trackId: '6ONRf7h3Mdk', title: 'SICKO MODE' },
 ];
 
 export function ArtistStories() {

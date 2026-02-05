@@ -41,22 +41,22 @@ function GenreFilteredView({ query }: { query: string }) {
   return (
     <div className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-700 min-h-[70vh]">
       {/* Genre Header Section */}
-      <div className="relative p-10 md:p-16 rounded-[3rem] overflow-hidden group border border-white/5 bg-gradient-to-br from-white/5 to-transparent">
+      <div className="relative p-8 md:p-16 rounded-[2rem] md:rounded-[3rem] overflow-hidden group border border-white/5 bg-gradient-to-br from-white/5 to-transparent">
         <div className="absolute inset-0 bg-primary/10 blur-[100px] -z-10 animate-pulse"></div>
-        <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-8">
-          <div className="space-y-4">
+        <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6 md:gap-8">
+          <div className="space-y-3 md:space-y-4">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/20 border border-primary/20 text-primary text-[10px] font-black uppercase tracking-widest">
               Curated Mix
             </div>
-            <h2 className="text-5xl md:text-7xl font-black text-white tracking-tighter capitalize leading-none">
+            <h2 className="text-4xl md:text-7xl font-black text-white tracking-tighter capitalize leading-none">
               {genreName}
             </h2>
-            <p className="text-zinc-400 text-lg max-w-md font-medium">
+            <p className="text-zinc-500 text-sm md:text-lg max-w-md font-bold">
               The best of {genreName} music, tailored to your listening habits and mood.
             </p>
-            <div className="flex items-center gap-2 text-zinc-500 text-sm font-bold">
+            <div className="flex items-center gap-2 text-zinc-600 text-[10px] md:text-sm font-black uppercase tracking-widest">
               <span className="material-icons-round text-lg">audiotrack</span>
-              {tracks.length} Songs • 45 minutes of magic
+              {tracks.length} Songs • 45m of magic
             </div>
           </div>
 
@@ -64,12 +64,12 @@ function GenreFilteredView({ query }: { query: string }) {
             <button
               onClick={handlePlayAll}
               disabled={loading || tracks.length === 0}
-              className="px-10 py-5 bg-white text-black rounded-full font-black text-xl hover:scale-105 active:scale-95 transition-all shadow-2xl shadow-white/10 disabled:opacity-50 flex items-center gap-3"
+              className="flex-1 md:flex-none px-8 md:px-10 py-4 md:py-5 bg-white text-black rounded-full font-black text-lg md:text-xl hover:scale-105 active:scale-95 transition-all shadow-2xl shadow-white/10 disabled:opacity-50 flex items-center justify-center gap-3"
             >
-              <span className="material-icons-round text-3xl">play_arrow</span>
+              <span className="material-icons-round text-2xl md:text-3xl">play_arrow</span>
               PLAY ALL
             </button>
-            <button className="p-5 rounded-full bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all">
+            <button className="p-4 md:p-5 rounded-full bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all">
               <span className="material-icons-round text-2xl">favorite_border</span>
             </button>
           </div>
@@ -87,13 +87,13 @@ function GenreFilteredView({ query }: { query: string }) {
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6 md:gap-8">
           {tracks.map((track, i) => (
             <div
               key={i}
-              className="group relative space-y-4"
+              className="group relative space-y-3 md:space-y-4"
             >
-              <div className="relative aspect-square overflow-hidden rounded-[2rem] bg-zinc-900 border border-white/5 shadow-xl transition-all duration-500 group-hover:-translate-y-2 group-hover:shadow-2xl group-hover:shadow-primary/20">
+              <div className="relative aspect-square overflow-hidden rounded-2xl md:rounded-[2rem] bg-zinc-900 border border-white/5 shadow-xl transition-all duration-500 group-hover:-translate-y-2 group-hover:shadow-2xl group-hover:shadow-primary/20">
                 <img
                   src={track.thumbnail || `https://i.ytimg.com/vi/${track.id}/hqdefault.jpg`}
                   alt={track.title}
@@ -147,10 +147,10 @@ export default function Home() {
 
   return (
     <>
-      <div suppressHydrationWarning className="px-8 pb-32 space-y-12 pt-8 transition-all">
+      <div suppressHydrationWarning className="px-4 md:px-8 pb-32 space-y-12 pt-4 md:pt-8 transition-all">
 
         {/* Genre Bubbles - Full width sticky bar */}
-        <div className="-mx-8">
+        <div className="-mx-4 md:-mx-8">
           <GenreBubbles selectedGenre={selectedGenre} onGenreSelect={handleGenreSelect} />
         </div>
 

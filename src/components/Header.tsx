@@ -124,7 +124,7 @@ export function Header() {
                                             <button
                                                 onClick={() => {
                                                     setIsDropdownOpen(false);
-                                                    router.push('/profile');
+                                                    router.push('/settings');
                                                 }}
                                                 className="w-full flex items-center gap-3 px-3 py-2 text-zinc-300 hover:bg-white/5 hover:text-white rounded-lg transition-colors text-left text-sm"
                                             >

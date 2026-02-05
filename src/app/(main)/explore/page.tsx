@@ -132,13 +132,13 @@ export default function ExplorePage() {
     return (
         <div className="flex-1 overflow-y-auto bg-[#0A0A0B] pb-32">
 
-            <div className="p-8 space-y-12">
+            <div className="p-4 md:p-8 space-y-10 md:space-y-12">
 
                 {/* 1. New Albums & Singles (Playlists) */}
                 {albums.length > 0 && (
                     <section>
-                        <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-2xl font-bold text-white">New Albums & Playlists</h2>
+                        <div className="flex items-center justify-between mb-4 md:mb-6">
+                            <h2 className="text-xl md:text-2xl font-black text-white uppercase tracking-tighter">New Releases</h2>
                             <div className="flex gap-2 items-center">
                                 {loadingMore && <Loader2 size={20} className="animate-spin text-violet-500" />}
                                 <button onClick={() => scroll('left')} className="p-2 rounded-full bg-[#1A1A1E] text-white hover:bg-white/20 transition-colors border border-white/5"><ChevronLeft size={20} /></button>
@@ -146,14 +146,14 @@ export default function ExplorePage() {
                             </div>
                         </div>
 
-                        <div ref={scrollContainerRef} className="flex gap-6 overflow-x-hidden pb-4 snap-x scroll-smooth">
+                        <div ref={scrollContainerRef} className="flex gap-4 md:gap-6 overflow-x-auto md:overflow-x-hidden pb-4 snap-x scroll-smooth no-scrollbar">
                             {albums.map((track, i) => (
                                 <div
                                     key={`${track.id}-${i}`}
-                                    className="group relative flex-shrink-0 w-56 snap-start cursor-pointer transition-transform hover:-translate-y-2 duration-300"
+                                    className="group relative flex-shrink-0 w-40 md:w-56 snap-start cursor-pointer transition-transform duration-300"
                                     onClick={() => router.push(`/playlist/${track.id}`)}
                                 >
-                                    <div className="relative aspect-square rounded-[24px] overflow-hidden mb-4 shadow-lg bg-gradient-to-br from-violet-600 to-fuchsia-600">
+                                    <div className="relative aspect-square rounded-2xl md:rounded-[24px] overflow-hidden mb-3 md:mb-4 shadow-lg bg-gradient-to-br from-violet-600 to-fuchsia-600">
                                         <img
                                             src={track.thumbnail || ''}
                                             alt={track.title}
@@ -185,8 +185,8 @@ export default function ExplorePage() {
                 {/* 2. Trending Songs */}
                 {trending.length > 0 && (
                     <section>
-                        <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-2xl font-bold text-white">Trending Songs</h2>
+                        <div className="flex items-center justify-between mb-4 md:mb-6">
+                            <h2 className="text-xl md:text-2xl font-black text-white uppercase tracking-tighter">Trending Now</h2>
                             <button
                                 onClick={() => setViewAllTrending(!viewAllTrending)}
                                 className="text-xs font-bold text-[#8B5CF6] hover:text-white transition-colors uppercase tracking-wider"
@@ -227,8 +227,8 @@ export default function ExplorePage() {
 
                 {/* 3. Moods & Genres */}
                 <section>
-                    <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-2xl font-bold text-white">Moods & Genres</h2>
+                    <div className="flex items-center justify-between mb-4 md:mb-6">
+                        <h2 className="text-xl md:text-2xl font-black text-white uppercase tracking-tighter">Moods & Genres</h2>
                         <button className="p-2 rounded-full bg-[#1A1A1E] text-white hover:bg-white/20 transition-colors border border-white/5"><ChevronRight size={20} /></button>
 
                     </div>

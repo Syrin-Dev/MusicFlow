@@ -93,6 +93,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     const [repeat, setRepeat] = useState<'off' | 'one' | 'all'>('off');
 
     const playerRef = useRef<any>(null);
+    const silentAudioRef = useRef<HTMLAudioElement | null>(null);
     const timeUpdateInterval = useRef<NodeJS.Timeout | null>(null);
 
     // Listening Event Tracking
@@ -606,8 +607,14 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
             });
         }
 
-        navigator.mediaSession.setActionHandler('play', togglePlay);
-        navigator.mediaSession.setActionHandler('pause', togglePlay);
+        navigator.mediaSession.setActionHandler('play', () => {
+            togglePlay();
+            silentAudioRef.current?.play();
+        });
+        navigator.mediaSession.setActionHandler('pause', () => {
+            togglePlay();
+            silentAudioRef.current?.pause();
+        });
         navigator.mediaSession.setActionHandler('previoustrack', playPrevious);
         navigator.mediaSession.setActionHandler('nexttrack', playNext);
         navigator.mediaSession.setActionHandler('seekto', (details) => {
@@ -628,7 +635,26 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         if (!('mediaSession' in navigator) || !playerRef.current) return;
         navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
+
+        if (isPlaying) {
+            silentAudioRef.current?.play().catch(() => { });
+        } else {
+            silentAudioRef.current?.pause();
+        }
     }, [isPlaying]);
+
+    useEffect(() => {
+        if (!('mediaSession' in navigator) || !('setPositionState' in navigator.mediaSession)) return;
+        try {
+            if (duration > 0 && currentTime >= 0 && currentTime <= duration) {
+                navigator.mediaSession.setPositionState({
+                    duration: duration,
+                    playbackRate: 1,
+                    position: currentTime,
+                });
+            }
+        } catch (e) { }
+    }, [currentTime, duration]);
 
     // Room Heartbeat Sync
     useEffect(() => {
@@ -697,6 +723,13 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
                     </div>
                 </div>
             </div>
+            <audio
+                ref={silentAudioRef}
+                src="https://www.soundjay.com/buttons/beep-01a.mp3"
+                loop
+                muted
+                className="hidden"
+            />
         </AudioContext.Provider>
     );
 }

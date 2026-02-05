@@ -239,8 +239,10 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         if (!playerRef.current) return;
         if (isPlaying) {
             playerRef.current.pauseVideo();
+            silentAudioRef.current?.pause();
         } else {
             playerRef.current.playVideo();
+            silentAudioRef.current?.play().catch(e => console.error("Ghost audio play failed", e));
         }
     };
 
@@ -574,6 +576,9 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
             }, 800);
         }
 
+        // Essential: Play silent audio immediately on user interaction
+        silentAudioRef.current?.play().catch(e => console.error("Ghost audio play failed", e));
+
         // Automatically start/update hosting room when playing
         hostRoom().catch(() => { });
     };
@@ -628,27 +633,34 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
             ]
         });
 
-        // Re-enable all buttons explicitly every time track changes
-        const actions: [MediaSessionAction, (details: any) => void][] = [
-            ['play', () => { togglePlayRef.current(); }],
-            ['pause', () => { togglePlayRef.current(); }],
-            ['previoustrack', () => { playPreviousRef.current(); }],
-            ['nexttrack', () => { playNextRef.current(); }],
-            ['seekbackward', () => { seekToRef.current(Math.max(0, currentTime - 10)); }],
-            ['seekforward', () => { seekToRef.current(Math.min(duration, currentTime + 10)); }],
-            ['seekto', (details: MediaSessionActionDetails) => { if (details.seekTime !== undefined) seekToRef.current(details.seekTime); }]
-        ];
+    }, [currentTrack?.id, queue.length]);
 
-        actions.forEach(([action, handler]) => {
-            try { navigator.mediaSession.setActionHandler(action, handler as any); } catch (e) { }
-        });
+    // Initial Media Session Setup - Run ONCE
+    useEffect(() => {
+        if (!('mediaSession' in navigator)) return;
 
-        return () => {
-            actions.forEach(([action]) => {
-                try { navigator.mediaSession.setActionHandler(action, null); } catch (e) { }
+        const setHandlers = () => {
+            const actions: [MediaSessionAction, (details: any) => void][] = [
+                ['play', () => { togglePlayRef.current(); }],
+                ['pause', () => { togglePlayRef.current(); }],
+                ['previoustrack', () => { playPreviousRef.current(); }],
+                ['nexttrack', () => { playNextRef.current(); }],
+                ['seekbackward', () => { seekToRef.current(Math.max(0, currentTime - 10)); }],
+                ['seekforward', () => { seekToRef.current(Math.min(duration, currentTime + 10)); }],
+                ['seekto', (details: any) => { if (details.seekTime !== undefined) seekToRef.current(details.seekTime); }]
+            ];
+
+            actions.forEach(([action, handler]) => {
+                try { navigator.mediaSession.setActionHandler(action, handler); } catch (e) { }
             });
         };
-    }, [currentTrack?.id, queue.length]);
+
+        setHandlers();
+
+        return () => {
+            // Optional: clear handlers? Usually better to leave them or overwrite.
+        };
+    }, []); // Empty dependency! Stable handlers.
 
     // Background Resilience Logic
     useEffect(() => {

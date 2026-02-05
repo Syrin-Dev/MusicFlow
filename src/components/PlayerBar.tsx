@@ -229,7 +229,7 @@ export function PlayerBar() {
             </div>
 
             {/* Mobile Mini Player */}
-            <div className="flex md:hidden px-2 pb-[calc(80px+8px+env(safe-area-inset-bottom))] w-full">
+            <div className="flex md:hidden px-2 pb-[calc(70px+16px+12px+env(safe-area-inset-bottom))] w-full">
                 <div
                     className="glassmorphism backdrop-blur-xl bg-[#121214]/90 rounded-xl p-2 flex items-center justify-between shadow-2xl pointer-events-auto border border-white/10 w-full relative overflow-hidden"
                     onClick={togglePlayerExpansion}

@@ -17,7 +17,7 @@ export function MobileNav() {
     ];
 
     return (
-        <div suppressHydrationWarning className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-md bg-[#0A0A0B]/80 backdrop-blur-3xl border border-white/10 z-[100] rounded-[2rem] shadow-2xl safe-area-inset-bottom">
+        <div suppressHydrationWarning className="md:hidden fixed bottom-4 left-1/2 -translate-x-1/2 w-[92%] max-w-md bg-[#0A0A0B]/80 backdrop-blur-3xl border border-white/10 z-[100] rounded-[2rem] shadow-2xl safe-area-inset-bottom">
             <div className="flex justify-around items-center h-[70px] px-2">
                 {navItems.map(({ href, icon: Icon, label }) => {
                     const active = isActive(href);

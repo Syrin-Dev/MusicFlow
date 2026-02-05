@@ -14,16 +14,6 @@ export function Header() {
     const { openConnect } = useAudio();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
-    const [localUser, setLocalUser] = useState<{ name?: string; email?: string } | null>(null);
-
-    useEffect(() => {
-        if (typeof window !== 'undefined') {
-            const stored = localStorage.getItem('hievly_user');
-            if (stored) {
-                setLocalUser(JSON.parse(stored));
-            }
-        }
-    }, []);
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
@@ -35,19 +25,12 @@ export function Header() {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    const isLoggedIn = session || localUser;
-    const userName = session?.user?.name || localUser?.name || 'User';
+    const isLoggedIn = !!session;
+    const userName = session?.user?.name || 'User';
     const userImage = session?.user?.image;
 
     const handleSignOut = () => {
-        localStorage.removeItem('hievly_user');
-        document.cookie = 'hievly_auth=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-
-        if (session) {
-            signOut({ callbackUrl: '/login' });
-        } else {
-            window.location.href = '/login';
-        }
+        signOut({ callbackUrl: '/login' });
     };
 
     const getGreeting = () => {
@@ -116,7 +99,7 @@ export function Header() {
                                         <div className="p-4 border-b border-white/5 bg-white/5">
                                             <p className="text-white font-semibold text-sm">{userName}</p>
                                             <p className="text-zinc-500 text-xs truncate mt-0.5">
-                                                {session?.user?.email || localUser?.email}
+                                                {session?.user?.email}
                                             </p>
                                         </div>
 
@@ -157,7 +140,7 @@ export function Header() {
                             </>
                         ) : (
                             <button
-                                onClick={() => signIn('google')} // Fallback or use specific provider
+                                onClick={() => router.push('/login')}
                                 className="flex items-center gap-2 px-6 py-2.5 bg-white text-black rounded-full font-bold text-sm hover:scale-105 transition-transform shadow-lg shadow-white/10"
                             >
                                 <svg className="w-4 h-4" viewBox="0 0 24 24">

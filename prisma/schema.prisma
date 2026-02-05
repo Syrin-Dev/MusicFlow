@@ -9,78 +9,64 @@ datasource db {
 }
 
 model User {
-  id            String             @id @default(cuid())
-  name          String?
-  email         String?            @unique
-  emailVerified DateTime?
-  image         String?
-  password      String?
-  accounts      Account[]
-  sessions      Session[]
-  likedSongs    LikedSong[]
-  history       ListeningHistory[]
-  playlists     Playlist[]
-  playlistRoles PlaylistMember[] // New: Collaborative playlists
-
-  // Settings
+  id               String             @id @default(cuid())
+  name             String?
+  email            String?            @unique
+  emailVerified    DateTime?
+  image            String?
   displayName      String?
   bio              String?
-  twoFactorEnabled Boolean @default(false)
-  emailUpdates     Boolean @default(true)
-  newReleases      Boolean @default(true)
-  securityAlerts   Boolean @default(true)
-
-  // Friends & Messages
-  friends          Friendship[] @relation("UserFriends")
-  friendOf         Friendship[] @relation("FriendUsers")
-  sentMessages     Message[]    @relation("SentMessages")
-  receivedMessages Message[]    @relation("ReceivedMessages")
-
-  // Social & Personalization
-  inviteCode    String?        @unique
-  notifications Notification[]
-  lastActiveAt  DateTime?
-  typingToId    String? // ID of the friend the user is currently typing to
-  lastTypingAt  DateTime? // Timestamp of last typing activity
-  activities    Activity[] // New: Social feed source
-  searches      UserSearch[] // New: Personalized search
-
-  // Real-time Sync
-  hostingRoom   ListeningRoom? @relation("HostOfRoom")
-  currentRoomId String?
-  currentRoom   ListeningRoom? @relation("RoomParticipants", fields: [currentRoomId], references: [id])
+  twoFactorEnabled Boolean            @default(false)
+  emailUpdates     Boolean            @default(true)
+  newReleases      Boolean            @default(true)
+  securityAlerts   Boolean            @default(true)
+  password         String?
+  inviteCode       String?            @unique
+  lastActiveAt     DateTime?
+  currentRoomId    String?
+  lastTypingAt     DateTime?
+  typingToId       String?
+  accounts         Account[]
+  activities       Activity[]
+  friendOf         Friendship[]       @relation("FriendUsers")
+  friends          Friendship[]       @relation("UserFriends")
+  likedSongs       LikedSong[]
+  history          ListeningHistory[]
+  hostingRoom      ListeningRoom?     @relation("HostOfRoom")
+  receivedMessages Message[]          @relation("ReceivedMessages")
+  sentMessages     Message[]          @relation("SentMessages")
+  notifications    Notification[]
+  playlists        Playlist[]
+  playlistRoles    PlaylistMember[]
+  sessions         Session[]
+  currentRoom      ListeningRoom?     @relation("RoomParticipants", fields: [currentRoomId], references: [id])
+  searches         UserSearch[]
 }
 
-// --- CORE MUSIC DATA ---
-
 model Track {
-  id        String   @id // YouTube Video ID
-  title     String
-  artist    String
-  thumbnail String
-  genres    String[] @default([])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Inverse relations
-  likedBy         LikedSong[]
-  historyItems    ListeningHistory[]
-  playlistItems   PlaylistTrack[]
-  listeningEvents ListeningEvent[]
+  id              String             @id
+  title           String
+  artist          String
+  thumbnail       String
+  genres          String[]           @default([])
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
   activities      Activity[]
+  likedBy         LikedSong[]
+  listeningEvents ListeningEvent[]
+  historyItems    ListeningHistory[]
   rooms           ListeningRoom[]
-  messages        Message[]
+  playlistItems   PlaylistTrack[]
 }
 
 model LikedSong {
   id        String   @id @default(cuid())
   userId    String
-  videoId   String // Keep for easy query
-  trackId   String? // Normalized link
+  videoId   String
   createdAt DateTime @default(now())
-
-  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  track Track? @relation(fields: [trackId], references: [id])
+  trackId   String?
+  track     Track?   @relation(fields: [trackId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, videoId])
 }
@@ -89,29 +75,25 @@ model ListeningHistory {
   id       String   @id @default(cuid())
   userId   String
   videoId  String
-  trackId  String?
   playedAt DateTime @default(now())
-
-  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  track Track? @relation(fields: [trackId], references: [id])
+  trackId  String?
+  track    Track?   @relation(fields: [trackId], references: [id])
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, playedAt])
 }
 
-// --- COLLABORATION & PLAYLISTS ---
-
 model Playlist {
-  id        String   @id @default(cuid())
-  userId    String // Owner ID
+  id        String           @id @default(cuid())
+  userId    String
   name      String
   thumbnail String?
-  isPublic  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user    User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  tracks  PlaylistTrack[]
-  members PlaylistMember[] // Collaborators
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  isPublic  Boolean          @default(true)
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  members   PlaylistMember[]
+  tracks    PlaylistTrack[]
 
   @@index([userId])
 }
@@ -122,34 +104,24 @@ model PlaylistMember {
   userId     String
   role       PlaylistRole @default(VIEWER)
   joinedAt   DateTime     @default(now())
-
-  playlist Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  playlist   Playlist     @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([playlistId, userId])
-}
-
-enum PlaylistRole {
-  OWNER
-  EDITOR
-  VIEWER
 }
 
 model PlaylistTrack {
   id         String   @id @default(cuid())
   playlistId String
   videoId    String
-  trackId    String?
   addedAt    DateTime @default(now())
-
-  playlist Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
-  track    Track?   @relation(fields: [trackId], references: [id])
+  trackId    String?
+  playlist   Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  track      Track?   @relation(fields: [trackId], references: [id])
 
   @@unique([playlistId, videoId])
   @@index([playlistId])
 }
-
-// --- SOCIAL & ANALYTICS ---
 
 model Activity {
   id           String       @id @default(cuid())
@@ -157,21 +129,12 @@ model Activity {
   type         ActivityType
   trackId      String?
   playlistId   String?
-  targetUserId String? // If action is directed at another user
+  targetUserId String?
   createdAt    DateTime     @default(now())
-
-  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  track Track? @relation(fields: [trackId], references: [id])
+  track        Track?       @relation(fields: [trackId], references: [id])
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
-}
-
-enum ActivityType {
-  LIKE
-  TRACK_PLAYED
-  PLAYLIST_CREATED
-  FRIEND_ADDED
-  COMMENT_ADDED
 }
 
 model UserSearch {
@@ -180,34 +143,27 @@ model UserSearch {
   query        String
   count        Int      @default(1)
   lastSearched DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, query])
 }
-
-// --- REAL-TIME SYNC ---
 
 model ListeningRoom {
   id            String   @id @default(cuid())
   hostId        String   @unique
   activeTrackId String?
-  progress      Int      @default(0) // Seconds
+  progress      Int      @default(0)
   isPublic      Boolean  @default(true)
   updatedAt     DateTime @updatedAt
-
-  host         User   @relation("HostOfRoom", fields: [hostId], references: [id], onDelete: Cascade)
-  activeTrack  Track? @relation(fields: [activeTrackId], references: [id])
-  participants User[] @relation("RoomParticipants")
+  activeTrack   Track?   @relation(fields: [activeTrackId], references: [id])
+  host          User     @relation("HostOfRoom", fields: [hostId], references: [id], onDelete: Cascade)
+  participants  User[]   @relation("RoomParticipants")
 }
-
-// --- EXISTING UTILITY MODELS ---
 
 model ListeningEvent {
   id             String   @id @default(cuid())
   userId         String
   videoId        String
-  trackId        String?
   playDuration   Int
   totalDuration  Int
   completionRate Float
@@ -216,8 +172,8 @@ model ListeningEvent {
   hourOfDay      Int
   dayOfWeek      Int
   startedAt      DateTime @default(now())
-
-  track Track? @relation(fields: [trackId], references: [id])
+  trackId        String?
+  track          Track?   @relation(fields: [trackId], references: [id])
 
   @@index([userId, startedAt])
 }
@@ -231,36 +187,25 @@ model Notification {
   link      String?
   read      Boolean          @default(false)
   createdAt DateTime         @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
 
-enum NotificationType {
-  FRIEND_REQUEST
-  NEW_RELEASE
-  SYSTEM
-}
-
 model Message {
-  id            String   @id @default(cuid())
-  content       String?
-  senderId      String
-  receiverId    String
-  sharedMusicId        String? // Normalized link to Track (videoId)
-  sharedMusicTitle     String?
+  id                   String   @id @default(cuid())
+  content              String?
+  senderId             String
+  receiverId           String
+  sharedMusicId        String?
+  createdAt            DateTime @default(now())
+  isDeleted            Boolean  @default(false)
+  replyToId            String?
   sharedMusicArtist    String?
   sharedMusicThumbnail String?
-  replyToId            String? // ID of the message being replied to
-  isDeleted            Boolean  @default(false)
-  createdAt            DateTime @default(now())
-
-  sender   User      @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
-  receiver User      @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
-  track    Track?    @relation(fields: [sharedMusicId], references: [id])
-  replyTo  Message?  @relation("MessageReplies", fields: [replyToId], references: [id])
-  replies  Message[] @relation("MessageReplies")
+  sharedMusicTitle     String?
+  receiver             User     @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+  sender               User     @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
 }
 
 model Account {
@@ -276,8 +221,7 @@ model Account {
   scope             String?
   id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
@@ -298,20 +242,39 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-enum FriendshipStatus {
-  PENDING
-  ACCEPTED
-}
-
 model Friendship {
   id        String           @id @default(cuid())
   userId    String
   friendId  String
-  status    FriendshipStatus @default(PENDING)
   createdAt DateTime         @default(now())
-
-  user   User @relation("UserFriends", fields: [userId], references: [id], onDelete: Cascade)
-  friend User @relation("FriendUsers", fields: [friendId], references: [id], onDelete: Cascade)
+  status    FriendshipStatus @default(PENDING)
+  friend    User             @relation("FriendUsers", fields: [friendId], references: [id], onDelete: Cascade)
+  user      User             @relation("UserFriends", fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, friendId])
+}
+
+enum PlaylistRole {
+  OWNER
+  EDITOR
+  VIEWER
+}
+
+enum ActivityType {
+  LIKE
+  TRACK_PLAYED
+  PLAYLIST_CREATED
+  FRIEND_ADDED
+  COMMENT_ADDED
+}
+
+enum NotificationType {
+  FRIEND_REQUEST
+  NEW_RELEASE
+  SYSTEM
+}
+
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
 }

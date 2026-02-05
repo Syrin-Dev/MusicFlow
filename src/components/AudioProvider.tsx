@@ -591,6 +591,45 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         playTrackInternal(trackToPlay, prevTrack);
     };
 
+    // Media Session API Support
+    useEffect(() => {
+        if (!('mediaSession' in navigator)) return;
+
+        if (currentTrack) {
+            navigator.mediaSession.metadata = new MediaMetadata({
+                title: currentTrack.title,
+                artist: currentTrack.artist,
+                album: 'Hievly Music',
+                artwork: [
+                    { src: currentTrack.thumbnail || `https://i.ytimg.com/vi/${currentTrack.id}/hqdefault.jpg`, sizes: '512x512', type: 'image/jpeg' }
+                ]
+            });
+        }
+
+        navigator.mediaSession.setActionHandler('play', togglePlay);
+        navigator.mediaSession.setActionHandler('pause', togglePlay);
+        navigator.mediaSession.setActionHandler('previoustrack', playPrevious);
+        navigator.mediaSession.setActionHandler('nexttrack', playNext);
+        navigator.mediaSession.setActionHandler('seekto', (details) => {
+            if (details.seekTime !== undefined) seekTo(details.seekTime);
+        });
+
+        return () => {
+            if ('mediaSession' in navigator) {
+                navigator.mediaSession.setActionHandler('play', null);
+                navigator.mediaSession.setActionHandler('pause', null);
+                navigator.mediaSession.setActionHandler('previoustrack', null);
+                navigator.mediaSession.setActionHandler('nexttrack', null);
+                navigator.mediaSession.setActionHandler('seekto', null);
+            }
+        };
+    }, [currentTrack, togglePlay, playNext, playPrevious, seekTo]);
+
+    useEffect(() => {
+        if (!('mediaSession' in navigator) || !playerRef.current) return;
+        navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
+    }, [isPlaying]);
+
     // Room Heartbeat Sync
     useEffect(() => {
         let interval: any;

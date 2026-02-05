@@ -46,14 +46,24 @@ export const authOptions: NextAuthOptions = {
         })
     ],
     session: {
-        strategy: "jwt", // Use JWT for simpler session management even with DB
+        strategy: "jwt",
+    },
+    pages: {
+        signIn: '/login',
     },
     callbacks: {
+        async jwt({ token, user, account }) {
+            if (user) {
+                token.id = user.id;
+            }
+            return token;
+        },
         async session({ session, token }) {
-            if (session.user && token) {
-                (session.user as any).id = token.sub;
+            if (session.user) {
+                (session.user as any).id = token.id;
             }
             return session;
         },
     },
+    debug: process.env.NODE_ENV === 'development',
 };

@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #6B21A8;
-  --color-primary-hover: #581C87;
+  --color-primary: #8b5cf6; /* Vivid Purple */
+  --color-primary-hover: #7c3aed;
   --color-electric-violet: #8b5cf6;
   --color-background-light: #F3F4F6;
   --color-background-dark: #0a0a0a;
@@ -34,15 +34,18 @@ body {
 }
 
 .glass-panel {
+  background: rgba(255, 255, 255, 0.03);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .glassmorphism {
-  background: rgba(24, 24, 27, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(10, 10, 11, 0.4);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .hide-scrollbar::-webkit-scrollbar {
@@ -64,12 +67,12 @@ body {
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #333;
+  background: rgba(255, 255, 255, 0.1);
   border-radius: 3px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  background: rgba(255, 255, 255, 0.2);
 }
 
 /* Music Visualizer Animations */
@@ -95,4 +98,12 @@ body {
 
 .animate-music-bar-3 {
   animation: music-bar 0.8s ease-in-out infinite 0.4s;
+}
+
+@keyframes pulse-slow {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.05); }
+}
+.animate-pulse-slow {
+  animation: pulse-slow 8s ease-in-out infinite;
 }

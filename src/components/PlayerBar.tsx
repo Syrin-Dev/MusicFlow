@@ -15,7 +15,6 @@ function formatTime(seconds: number): string {
 
 export function PlayerBar() {
     const {
-        // ... existing destructuring
         currentTrack,
         isPlaying,
         togglePlay,
@@ -43,10 +42,7 @@ export function PlayerBar() {
 
     const router = useRouter();
 
-
-    // No local state for likes needed anymore!
     const liked = currentTrack ? isLiked(currentTrack.id) : false;
-
     const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
     const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -86,18 +82,18 @@ export function PlayerBar() {
         <div suppressHydrationWarning className="fixed bottom-0 left-0 right-0 z-50 pointer-events-none">
             {/* Desktop Player Bar */}
             <div className="hidden md:flex px-4 pb-4 w-full">
-                <div className="glassmorphism backdrop-blur-md bg-black/60 rounded-2xl p-3 flex items-center justify-between shadow-2xl pointer-events-auto border border-white/5 mx-auto max-w-screen-2xl w-full ring-1 ring-white/10">
+                <div className="glassmorphism rounded-2xl p-3 flex items-center justify-between shadow-[0_8px_32px_rgba(0,0,0,0.5)] pointer-events-auto mx-auto max-w-screen-2xl w-full">
                     {/* Left: Track Info */}
                     <div className="flex items-center gap-4 w-1/4 min-w-[200px]">
                         <div className="relative group">
                             <img
                                 alt={currentTrack.title}
-                                className="w-12 h-12 rounded-md shadow-md object-cover"
+                                className="w-12 h-12 rounded-lg shadow-lg object-cover border border-white/5"
                                 src={currentTrack.thumbnail || `https://i.ytimg.com/vi/${currentTrack.id}/hqdefault.jpg`}
                                 onError={handleImageError}
                             />
                             <div
-                                className="absolute inset-0 bg-black/40 hidden group-hover:flex items-center justify-center rounded-md transition cursor-pointer"
+                                className="absolute inset-0 bg-black/40 hidden group-hover:flex items-center justify-center rounded-lg transition cursor-pointer"
                                 onClick={togglePlayerExpansion}
                             >
                                 <span className="material-icons-round text-white text-xl">expand_less</span>
@@ -112,7 +108,7 @@ export function PlayerBar() {
                                     {currentTrack.title}
                                 </div>
                                 <button onClick={() => toggleLike(currentTrack)}>
-                                    <span className={`material-icons-round text-xs cursor-pointer hover:text-white ${liked ? 'text-primary' : 'text-gray-400'}`}>favorite</span>
+                                    <span className={`material-icons-round text-xs cursor-pointer hover:text-white ${liked ? 'text-[#8B5CF6]' : 'text-gray-400'}`}>favorite</span>
                                 </button>
                             </div>
                             <span
@@ -128,7 +124,7 @@ export function PlayerBar() {
                     <div className="flex flex-col items-center flex-1 max-w-2xl px-8">
                         <div className="flex items-center gap-6 mb-1">
                             <button
-                                className={`transition ${shuffle ? 'text-primary' : 'text-gray-400 hover:text-white'}`}
+                                className={`transition ${shuffle ? 'text-[#8B5CF6] drop-shadow-[0_0_5px_rgba(139,92,246,0.5)]' : 'text-gray-400 hover:text-white'}`}
                                 onClick={toggleShuffle}
                             >
                                 <span className="material-icons-round text-xl">shuffle</span>
@@ -139,17 +135,20 @@ export function PlayerBar() {
                             >
                                 <span className="material-icons-round text-2xl">skip_previous</span>
                             </button>
+
+                            {/* Primary Play Button - Vivid Purple */}
                             <button
-                                className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-black hover:scale-105 transition shadow-lg shadow-white/20"
+                                className="w-10 h-10 bg-[#8B5CF6] rounded-full flex items-center justify-center text-white hover:scale-105 transition shadow-[0_0_15px_rgba(139,92,246,0.4)]"
                                 onClick={togglePlay}
                                 disabled={isLoading}
                             >
                                 {isLoading ? (
-                                    <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                                 ) : (
                                     <span className="material-icons-round text-2xl">{isPlaying ? 'pause' : 'play_arrow'}</span>
                                 )}
                             </button>
+
                             <button
                                 className="text-gray-300 hover:text-white transition"
                                 onClick={playNext}
@@ -157,7 +156,7 @@ export function PlayerBar() {
                                 <span className="material-icons-round text-2xl">skip_next</span>
                             </button>
                             <button
-                                className={`transition ${repeat !== 'off' ? 'text-primary' : 'text-gray-400 hover:text-white'}`}
+                                className={`transition ${repeat !== 'off' ? 'text-[#8B5CF6] drop-shadow-[0_0_5px_rgba(139,92,246,0.5)]' : 'text-gray-400 hover:text-white'}`}
                                 onClick={toggleRepeat}
                             >
                                 <span className="material-icons-round text-xl">{repeat === 'one' ? 'repeat_one' : 'repeat'}</span>
@@ -167,11 +166,12 @@ export function PlayerBar() {
                         <div className="w-full flex items-center gap-3 text-xs font-medium text-gray-400">
                             <span>{formatTime(currentTime)}</span>
                             <div
-                                className="flex-1 h-1 bg-gray-600 rounded-full cursor-pointer group relative"
+                                className="flex-1 h-1 bg-white/10 rounded-full cursor-pointer group relative overflow-hidden"
                                 onClick={handleSeek}
                             >
+                                {/* Progress bar with Purple Glow */}
                                 <div
-                                    className="absolute top-0 left-0 h-full bg-white rounded-full group-hover:bg-primary transition-colors"
+                                    className="absolute top-0 left-0 h-full bg-[#8B5CF6] rounded-full group-hover:bg-[#7c3aed] transition-colors shadow-[0_0_10px_#8B5CF6]"
                                     style={{ width: `${progress}%` }}
                                 ></div>
                                 <div
@@ -186,7 +186,7 @@ export function PlayerBar() {
                     {/* Right: Actions */}
                     <div className="flex items-center justify-end gap-3 w-1/4 min-w-[200px]">
                         <button
-                            className="text-gray-400 hover:text-primary transition p-2 hover:bg-white/5 rounded-full"
+                            className="text-gray-400 hover:text-[#8B5CF6] transition p-2 hover:bg-white/5 rounded-full"
                             onClick={() => openConnect(currentTrack)}
                             title="Share to Friend"
                         >
@@ -197,11 +197,11 @@ export function PlayerBar() {
 
                         <div className="flex items-center gap-2 group w-24">
                             <button onClick={() => setVolume(volume === 0 ? 100 : 0)}>
-                                <span className="material-icons-round text-gray-400 text-xl">
+                                <span className="material-icons-round text-gray-400 text-xl hover:text-white">
                                     {volume === 0 ? 'volume_off' : volume < 50 ? 'volume_down' : 'volume_up'}
                                 </span>
                             </button>
-                            <div className="flex-1 h-1 bg-gray-600 rounded-full cursor-pointer relative group-volume">
+                            <div className="flex-1 h-1 bg-white/10 rounded-full cursor-pointer relative group-volume">
                                 <input
                                     type="range"
                                     min="0"
@@ -211,7 +211,7 @@ export function PlayerBar() {
                                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                                 />
                                 <div
-                                    className="absolute top-0 left-0 h-full bg-white group-hover:bg-primary rounded-full transition-colors"
+                                    className="absolute top-0 left-0 h-full bg-white group-hover:bg-[#8B5CF6] rounded-full transition-colors"
                                     style={{ width: `${volume}%` }}
                                 ></div>
                             </div>
@@ -231,13 +231,13 @@ export function PlayerBar() {
             {/* Mobile Mini Player */}
             <div className="flex md:hidden px-2 pb-[calc(70px+16px+12px+env(safe-area-inset-bottom))] w-full">
                 <div
-                    className="glassmorphism backdrop-blur-xl bg-[#121214]/90 rounded-xl p-2 flex items-center justify-between shadow-2xl pointer-events-auto border border-white/10 w-full relative overflow-hidden"
+                    className="glassmorphism rounded-xl p-2 flex items-center justify-between shadow-2xl pointer-events-auto border-t border-white/10 w-full relative overflow-hidden"
                     onClick={togglePlayerExpansion}
                 >
                     {/* Progress line at top */}
-                    <div className="absolute top-0 left-0 right-0 h-[2px] bg-white/10">
+                    <div className="absolute top-0 left-0 right-0 h-[2px] bg-white/5">
                         <div
-                            className="h-full bg-primary"
+                            className="h-full bg-[#8B5CF6] shadow-[0_0_5px_#8B5CF6]"
                             style={{ width: `${progress}%` }}
                         ></div>
                     </div>
@@ -245,7 +245,7 @@ export function PlayerBar() {
                     <div className="flex items-center gap-3 min-w-0 flex-1">
                         <img
                             alt={currentTrack.title}
-                            className="w-10 h-10 rounded-md object-cover shadow-lg"
+                            className="w-10 h-10 rounded-md object-cover shadow-lg border border-white/5"
                             src={currentTrack.thumbnail || `https://i.ytimg.com/vi/${currentTrack.id}/hqdefault.jpg`}
                             onError={handleImageError}
                         />
@@ -276,7 +276,7 @@ export function PlayerBar() {
                             {isLoading ? (
                                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                             ) : (
-                                <span className="material-icons-round text-2xl">{isPlaying ? 'pause' : 'play_arrow'}</span>
+                                <span className="material-icons-round text-2xl drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]">{isPlaying ? 'pause' : 'play_arrow'}</span>
                             )}
                         </button>
                     </div>

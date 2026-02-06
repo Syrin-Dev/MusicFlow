@@ -1,14 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, ElementType } from 'react';
 import Link from 'next/link';
-import { useSession } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
 import {
     Home, Compass, Library, Heart, ListMusic, Pin, Sparkles
 } from 'lucide-react';
 
-const NavItem = ({ href, icon: Icon, label }: { href: string; icon: any; label: string }) => {
+const NavItem = ({ href, icon: Icon, label }: { href: string; icon: ElementType; label: string }) => {
     const pathname = usePathname();
     const active = pathname === href;
     return (
@@ -17,25 +16,26 @@ const NavItem = ({ href, icon: Icon, label }: { href: string; icon: any; label: 
             className={`
                 group flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-300 relative overflow-hidden
                 ${active
-                    ? 'text-white'
+                    ? 'text-white bg-white/5'
                     : 'text-zinc-400 hover:text-white hover:bg-white/5'
                 }
             `}
         >
             {active && (
-                <div className="absolute inset-0 bg-gradient-to-r from-violet-600/20 to-transparent border-l-2 border-violet-500" />
+                <>
+                    <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-transparent" />
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#8B5CF6] shadow-[0_0_10px_#8B5CF6]" />
+                </>
             )}
-            <Icon size={20} className={`relative z-10 transition-colors ${active ? 'text-violet-400' : 'group-hover:text-violet-300'}`} />
+            <Icon size={20} className={`relative z-10 transition-colors ${active ? 'text-[#8B5CF6] drop-shadow-[0_0_5px_rgba(139,92,246,0.5)]' : 'group-hover:text-purple-300'}`} />
             <span className="relative z-10">{label}</span>
         </Link>
     );
 };
 
 export function Sidebar() {
-    const { data: session } = useSession();
     const pathname = usePathname();
-    const userName = session?.user?.name || 'Guest';
-    const [playlists, setPlaylists] = useState<any[]>([]);
+    const [playlists, setPlaylists] = useState<{ id: string; name: string }[]>([]);
 
     useEffect(() => {
         const fetchPlaylists = () => {
@@ -60,21 +60,21 @@ export function Sidebar() {
     const isActive = (path: string) => pathname === path;
 
     return (
-        <aside suppressHydrationWarning className="w-64 h-full flex flex-col p-4 bg-black/80 backdrop-blur-xl border-r border-white/5 z-50 fixed left-0 top-0 shadow-2xl">
+        <aside suppressHydrationWarning className="w-64 h-full flex flex-col p-4 glass-panel border-r-0 z-50 fixed left-0 top-0 shadow-2xl">
             {/* Logo */}
             <div suppressHydrationWarning className="flex items-center gap-3 px-2 mb-8 mt-2">
-                <div suppressHydrationWarning className="relative w-12 h-12 flex items-center justify-center overflow-hidden rounded-xl bg-white/5">
+                <div suppressHydrationWarning className="relative w-12 h-12 flex items-center justify-center overflow-hidden rounded-xl bg-white/5 border border-white/10 shadow-[0_0_20px_rgba(139,92,246,0.3)]">
                     <img
                         src="/logo.png"
                         alt="Hievly"
-                        className="w-full h-full object-contain scale-[3.2] transition-transform brightness-110 filter invert-[1] hue-rotate-[180deg]"
+                        className="w-full h-full object-contain scale-[3.2] transition-transform brightness-110 filter invert-[1] hue-rotate-[180deg] drop-shadow-[0_0_5px_rgba(139,92,246,0.8)]"
                     />
                 </div>
                 <div>
-                    <h1 className="text-lg font-bold tracking-tight text-white">
+                    <h1 className="text-lg font-bold tracking-tight text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">
                         Hievly
                     </h1>
-                    <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-semibold">Premium</p>
+                    <p className="text-[10px] text-[#8B5CF6] uppercase tracking-widest font-bold drop-shadow-[0_0_5px_rgba(139,92,246,0.5)]">Premium</p>
                 </div>
             </div>
 
@@ -100,22 +100,22 @@ export function Sidebar() {
                         <Link
                             href="/library/liked"
                             className={`
-                                flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group relative
-                                ${isActive('/library/liked') ? 'bg-gradient-to-r from-violet-500/10 to-transparent' : 'hover:bg-white/5'}
+                                flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group relative overflow-hidden border border-transparent
+                                ${isActive('/library/liked') ? 'bg-gradient-to-r from-purple-500/10 to-transparent border-white/5' : 'hover:bg-white/5'}
                             `}
                         >
                             <div className={`
-                                w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-300
+                                w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-300 shadow-lg
                                 ${isActive('/library/liked')
-                                    ? 'bg-gradient-to-br from-violet-500 to-fuchsia-600 shadow-lg shadow-violet-500/20 text-white'
+                                    ? 'bg-gradient-to-br from-[#8B5CF6] to-fuchsia-600 shadow-purple-500/40 text-white'
                                     : 'bg-zinc-800 text-zinc-400 group-hover:text-white group-hover:bg-zinc-700'}
                             `}>
-                                <Heart size={14} fill="currentColor" />
+                                <Heart size={14} fill={isActive('/library/liked') ? "currentColor" : "none"} />
                             </div>
                             <div className="flex-1 min-w-0">
                                 <p className={`text-sm font-medium truncate ${isActive('/library/liked') ? 'text-white' : 'text-zinc-400 group-hover:text-white'}`}>Liked Songs</p>
                                 <div className="flex items-center gap-1.5 mt-0.5">
-                                    <Pin size={10} className="text-violet-500 rotate-45" />
+                                    <Pin size={10} className="text-[#8B5CF6] rotate-45" />
                                     <span className="text-[10px] text-zinc-500 group-hover:text-zinc-400">Pinned</span>
                                 </div>
                             </div>
@@ -128,11 +128,11 @@ export function Sidebar() {
                                 href={`/library/playlist/${playlist.id}`}
                                 className={`
                                     flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200 group
-                                    ${isActive(`/library/playlist/${playlist.id}`) ? 'text-white bg-white/5' : 'text-zinc-500 hover:text-white hover:bg-white/5'}
+                                    ${isActive(`/library/playlist/${playlist.id}`) ? 'text-white bg-white/5 shadow-[0_0_15px_rgba(255,255,255,0.05)]' : 'text-zinc-500 hover:text-white hover:bg-white/5'}
                                 `}
                             >
-                                <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-white/5 flex items-center justify-center flex-shrink-0">
-                                    <ListMusic size={14} className={isActive(`/library/playlist/${playlist.id}`) ? 'text-violet-400' : 'text-zinc-600 group-hover:text-zinc-400'} />
+                                <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/5 flex items-center justify-center flex-shrink-0 backdrop-blur-sm">
+                                    <ListMusic size={14} className={isActive(`/library/playlist/${playlist.id}`) ? 'text-[#8B5CF6]' : 'text-zinc-600 group-hover:text-zinc-400'} />
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <p className="text-sm font-medium truncate">{playlist.name}</p>

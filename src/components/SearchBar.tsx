@@ -70,7 +70,7 @@ export function SearchBar() {
                     onChange={(e) => setQuery(e.target.value)}
                     onFocus={() => query.length > 2 && setShowSuggestions(true)}
                     placeholder="What do you want to listen to?"
-                    className="w-full bg-white/5 border border-white/5 text-white pl-12 pr-10 py-3 rounded-full focus:outline-none focus:bg-white/10 focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 shadow-lg shadow-black/20 backdrop-blur-xl transition-all placeholder:text-zinc-500 hover:bg-white/10 hover:border-white/10"
+                    className="w-full bg-white/5 border border-white/5 text-white pl-12 pr-10 py-3 rounded-full focus:outline-none focus:bg-white/10 focus:border-[#8B5CF6]/50 focus:ring-2 focus:ring-[#8B5CF6]/20 shadow-lg shadow-black/20 backdrop-blur-xl transition-all placeholder:text-zinc-500 hover:bg-white/10 hover:border-white/10"
                 />
                 {query && (
                     <button
@@ -85,14 +85,14 @@ export function SearchBar() {
 
             {/* Suggestions Dropdown */}
             {showSuggestions && suggestions.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-[#18181b]/95 border border-white/10 rounded-2xl shadow-2xl overflow-hidden py-2 backdrop-blur-xl">
+                <div className="absolute top-full left-0 right-0 mt-2 glass-panel bg-[#0d0d0f]/95 rounded-2xl shadow-2xl overflow-hidden py-2 backdrop-blur-xl z-50">
                     {suggestions.map((suggestion, index) => (
                         <button
                             key={index}
                             onClick={() => performSearch(suggestion)}
                             className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-white/5 transition-colors group"
                         >
-                            <Search size={16} className="text-zinc-500 group-hover:text-white transition-colors" />
+                            <Search size={16} className="text-zinc-500 group-hover:text-[#8B5CF6] transition-colors" />
                             <span className="text-zinc-300 group-hover:text-white font-medium transition-colors">{suggestion}</span>
                         </button>
                     ))}

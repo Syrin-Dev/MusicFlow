@@ -41,12 +41,12 @@ export function Header() {
     };
 
     return (
-        <header className="sticky top-0 z-40 px-6 py-4 bg-black/40 backdrop-blur-xl border-b border-white/5 transition-all duration-300">
+        <header className="sticky top-0 z-40 px-6 py-4 glassmorphism transition-all duration-300 border-x-0 border-t-0">
             <div suppressHydrationWarning className="flex items-center justify-between max-w-7xl mx-auto w-full">
 
                 {/* Search Bar Container */}
                 <div className="flex-1 max-w-xl flex items-center gap-4">
-                    <span className="hidden lg:block text-zinc-400 font-medium text-sm whitespace-nowrap">
+                    <span className="hidden lg:block text-zinc-400 font-medium text-sm whitespace-nowrap drop-shadow-md">
                         {getGreeting()}, {userName.split(' ')[0]}
                     </span>
                     <SearchBar />
@@ -61,10 +61,9 @@ export function Header() {
                         className="hidden md:flex p-2.5 rounded-full text-zinc-400 hover:bg-white/10 hover:text-white transition-all duration-300 group"
                         title="Friend Activity"
                     >
-                        <Users size={20} className="group-hover:scale-110 transition-transform" />
+                        <Users size={20} className="group-hover:scale-110 transition-transform group-hover:text-[#8B5CF6] group-hover:drop-shadow-[0_0_5px_rgba(139,92,246,0.5)]" />
                     </button>
 
-                    {/* Notifications */}
                     {/* Notifications */}
                     <NotificationsDropdown />
 
@@ -78,7 +77,7 @@ export function Header() {
                             <>
                                 <button
                                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                                    className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-transparent hover:ring-violet-500/50 transition-all duration-300 transform hover:scale-105"
+                                    className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-transparent hover:ring-[#8B5CF6]/50 transition-all duration-300 transform hover:scale-105 shadow-lg"
                                 >
                                     {userImage ? (
                                         <img
@@ -87,7 +86,7 @@ export function Header() {
                                             className="w-full h-full object-cover"
                                         />
                                     ) : (
-                                        <div className="w-full h-full bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center text-white font-bold text-sm">
+                                        <div className="w-full h-full bg-gradient-to-br from-[#8B5CF6] to-indigo-600 flex items-center justify-center text-white font-bold text-sm">
                                             {userName.charAt(0).toUpperCase()}
                                         </div>
                                     )}
@@ -95,7 +94,7 @@ export function Header() {
 
                                 {/* Dropdown Menu */}
                                 {isDropdownOpen && (
-                                    <div className="absolute right-0 mt-3 w-64 bg-[#18181b] border border-white/10 rounded-2xl shadow-2xl shadow-black/80 overflow-hidden transform origin-top-right transition-all animate-in fade-in slide-in-from-top-2 duration-200">
+                                    <div className="absolute right-0 mt-3 w-64 glass-panel bg-[#0d0d0f]/90 rounded-2xl shadow-2xl shadow-black/80 overflow-hidden transform origin-top-right transition-all animate-in fade-in slide-in-from-top-2 duration-200 z-50">
                                         <div className="p-4 border-b border-white/5 bg-white/5">
                                             <p className="text-white font-semibold text-sm">{userName}</p>
                                             <p className="text-zinc-500 text-xs truncate mt-0.5">

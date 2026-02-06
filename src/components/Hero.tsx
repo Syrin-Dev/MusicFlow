@@ -82,9 +82,13 @@ export function Hero() {
                 <div className="flex flex-wrap items-center gap-4 pt-8 md:pt-12">
                     <button
                         onClick={() => isPlayingHero ? togglePlay() : playTrack(displayTrack)}
-                        className="flex items-center gap-3 md:gap-4 px-8 md:px-12 py-4 md:py-5 bg-white text-black rounded-full font-black text-lg md:text-xl hover:scale-105 active:scale-95 transition-all shadow-xl shadow-white/5"
+                        className={`flex items-center gap-3 md:gap-4 px-8 md:px-12 py-4 md:py-5 rounded-full font-black text-lg md:text-xl hover:scale-105 active:scale-95 transition-all shadow-xl backdrop-blur-md border
+                        ${isPlayingHero && isPlaying
+                            ? 'bg-transparent border-white/50 text-white hover:bg-white/10'
+                            : 'bg-[#8B5CF6]/90 hover:bg-[#8B5CF6] border-[#8B5CF6]/50 text-white shadow-lg shadow-[#8B5CF6]/25'
+                        }`}
                     >
-                        {isPlayingHero && isPlaying ? <Pause size={28} fill="black" /> : <Play size={28} fill="black" />}
+                        {isPlayingHero && isPlaying ? <Pause size={28} fill="currentColor" /> : <Play size={28} fill="currentColor" />}
                         {isPlayingHero ? (isPlaying ? 'PAUSE' : 'RESUME') : 'PLAY'}
                     </button>
 

@@ -86,7 +86,7 @@ export function PlayerBar() {
         <div suppressHydrationWarning className="fixed bottom-0 left-0 right-0 z-50 pointer-events-none">
             {/* Desktop Player Bar */}
             <div className="hidden md:flex px-4 pb-4 w-full">
-                <div className="glassmorphism backdrop-blur-md bg-black/60 rounded-2xl p-3 flex items-center justify-between shadow-2xl pointer-events-auto border border-white/5 mx-auto max-w-screen-2xl w-full ring-1 ring-white/10">
+                <div className="glassmorphism rounded-2xl p-3 flex items-center justify-between shadow-2xl pointer-events-auto border border-white/5 mx-auto max-w-screen-2xl w-full">
                     {/* Left: Track Info */}
                     <div className="flex items-center gap-4 w-1/4 min-w-[200px]">
                         <div className="relative group">
@@ -231,7 +231,7 @@ export function PlayerBar() {
             {/* Mobile Mini Player */}
             <div className="flex md:hidden px-2 pb-[calc(70px+16px+12px+env(safe-area-inset-bottom))] w-full">
                 <div
-                    className="glassmorphism backdrop-blur-xl bg-[#121214]/90 rounded-xl p-2 flex items-center justify-between shadow-2xl pointer-events-auto border border-white/10 w-full relative overflow-hidden"
+                    className="glassmorphism rounded-xl p-2 flex items-center justify-between shadow-2xl pointer-events-auto border border-white/10 w-full relative overflow-hidden"
                     onClick={togglePlayerExpansion}
                 >
                     {/* Progress line at top */}

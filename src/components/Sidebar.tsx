@@ -17,14 +17,11 @@ const NavItem = ({ href, icon: Icon, label }: { href: string; icon: any; label: 
             className={`
                 group flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-300 relative overflow-hidden
                 ${active
-                    ? 'text-white'
+                    ? 'text-white nav-item-active'
                     : 'text-zinc-400 hover:text-white hover:bg-white/5'
                 }
             `}
         >
-            {active && (
-                <div className="absolute inset-0 bg-gradient-to-r from-violet-600/20 to-transparent border-l-2 border-violet-500" />
-            )}
             <Icon size={20} className={`relative z-10 transition-colors ${active ? 'text-violet-400' : 'group-hover:text-violet-300'}`} />
             <span className="relative z-10">{label}</span>
         </Link>
@@ -60,7 +57,7 @@ export function Sidebar() {
     const isActive = (path: string) => pathname === path;
 
     return (
-        <aside suppressHydrationWarning className="w-64 h-full flex flex-col p-4 bg-black/80 backdrop-blur-xl border-r border-white/5 z-50 fixed left-0 top-0 shadow-2xl">
+        <aside suppressHydrationWarning className="w-64 h-full flex flex-col p-4 glassmorphism border-t-0 border-r border-white/5 z-50 fixed left-0 top-0 h-screen shadow-2xl">
             {/* Logo */}
             <div suppressHydrationWarning className="flex items-center gap-3 px-2 mb-8 mt-2">
                 <div suppressHydrationWarning className="relative w-12 h-12 flex items-center justify-center overflow-hidden rounded-xl bg-white/5">

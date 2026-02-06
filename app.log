@@ -1,0 +1,30 @@
+
+> music-web@0.1.0 start
+> next start
+
+▲ Next.js 16.1.6
+- Local:         http://localhost:3000
+- Network:       http://192.168.0.2:3000
+
+✓ Starting...
+✓ Ready in 743ms
+[next-auth][error][NO_SECRET]
+https://next-auth.js.org/errors#no_secret Please define a `secret` in production. Error [MissingSecretError]: Please define a `secret` in production.
+    at r.assertConfig (.next/server/chunks/[root-of-the-server]__19c6166f._.js:34:11891)
+    at m (.next/server/chunks/[root-of-the-server]__19c6166f._.js:34:17760)
+    at async a (.next/server/chunks/[root-of-the-server]__19c6166f._.js:34:42180)
+    at async e.length.t (.next/server/chunks/[root-of-the-server]__19c6166f._.js:34:43623)
+    at async u (.next/server/chunks/[root-of-the-server]__5f048a9b._.js:1:9316)
+    at async l (.next/server/chunks/[root-of-the-server]__5f048a9b._.js:1:10357) {
+  code: 'NO_SECRET'
+}
+[next-auth][error][NO_SECRET]
+https://next-auth.js.org/errors#no_secret Please define a `secret` in production. Error [MissingSecretError]: Please define a `secret` in production.
+    at r.assertConfig (.next/server/chunks/[root-of-the-server]__19c6166f._.js:34:11891)
+    at m (.next/server/chunks/[root-of-the-server]__19c6166f._.js:34:17760)
+    at async a (.next/server/chunks/[root-of-the-server]__19c6166f._.js:34:42180)
+    at async e.length.t (.next/server/chunks/[root-of-the-server]__19c6166f._.js:34:43623)
+    at async u (.next/server/chunks/[root-of-the-server]__5f048a9b._.js:1:9316)
+    at async l (.next/server/chunks/[root-of-the-server]__5f048a9b._.js:1:10357) {
+  code: 'NO_SECRET'
+}

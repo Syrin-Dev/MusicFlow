@@ -118,7 +118,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     const requestWakeLock = async () => {
         if ('wakeLock' in navigator) {
             try {
-                if (!wakeLockRef.current) {
+                if (!wakeLockRef.current && document.visibilityState === 'visible') {
                     const wakeLock = await (navigator as any).wakeLock.request('screen');
                     wakeLockRef.current = wakeLock;
                     wakeLock.addEventListener('release', () => {
@@ -126,7 +126,8 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
                     });
                 }
             } catch (err) {
-                console.error("Wake Lock error:", err);
+                // Wake Lock is nice-to-have, not critical if it fails (e.g. background)
+                console.warn("Wake Lock request failed (likely backgrounded):", err);
             }
         }
     };
@@ -845,10 +846,11 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
             </div>
             <audio
                 ref={silentAudioRef}
-                // reliable long silence
                 src={SILENT_AUDIO_URI}
                 loop
                 playsInline
+                autoPlay
+                muted={false}
                 controls={false}
                 style={{ position: 'fixed', top: 0, left: 0, opacity: 0.001, pointerEvents: 'none', width: '1px', height: '1px', visibility: 'visible' }}
             />

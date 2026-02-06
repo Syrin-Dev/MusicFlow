@@ -279,7 +279,6 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     // --- STANDARD CONTROLLER ---
     const togglePlay = () => {
         if (!playerRef.current) return;
-
         if (isPlaying) {
             isUserPausedRef.current = true; // Mark as intentional pause
             playerRef.current.pauseVideo();
@@ -541,20 +540,10 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
                 }, 1000);
             }
             if (event.data === 2) { // Paused
-                // Robust Background check
+                // Critical: If browser paused it (throttling) but user didn't, resume!
                 if (!isUserPausedRef.current && document.visibilityState === 'hidden') {
-                    console.log("Browser throttled playback. Attempting soft resume in 500ms...");
-
-                    // Do not force immediately - avoids rapid toggle loops
-                    setTimeout(() => {
-                         if (!isUserPausedRef.current && document.visibilityState === 'hidden') {
-                             if (playerRef.current && playerRef.current.getPlayerState && playerRef.current.getPlayerState() === 2) {
-                                  console.log("Soft resume executing...");
-                                  playerRef.current.playVideo();
-                             }
-                         }
-                    }, 500);
-
+                    console.log("Auto-resuming background playback (aggressive)...");
+                    playerRef.current?.playVideo();
                     return;
                 }
                 setIsPlaying(false);
@@ -634,13 +623,8 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         } else if (data === 2) { // Paused
             // Robust Background check
             if (!isUserPausedRef.current && document.visibilityState === 'hidden') {
-                // Same logic as ref callback - redundancy for safety
-                console.log("Prevented background pause (callback)");
-                 setTimeout(() => {
-                     if (!isUserPausedRef.current && document.visibilityState === 'hidden') {
-                          playerRef.current?.playVideo();
-                     }
-                }, 500);
+                console.log("Prevented background pause");
+                playerRef.current?.playVideo();
                 return;
             }
             setIsPlaying(false);
@@ -779,14 +763,12 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
                         console.error("Silent audio background play failed", e);
                     }
 
-                    // 2. Resume Audio Context check? No, simplifying.
-
-                    // 3. Force YouTube to stay playing
+                    // 2. Force YouTube to stay playing
                     if (playerRef.current && playerRef.current.getPlayerState && playerRef.current.getPlayerState() !== 1) {
                          playerRef.current.playVideo();
                     }
 
-                    // 4. Re-acquire Wake Lock
+                    // 3. Re-acquire Wake Lock
                     requestWakeLock();
                 }
             } else if (document.visibilityState === 'visible') {

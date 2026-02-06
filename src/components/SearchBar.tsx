@@ -85,7 +85,7 @@ export function SearchBar() {
 
             {/* Suggestions Dropdown */}
             {showSuggestions && suggestions.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-[#18181b]/95 border border-white/10 rounded-2xl shadow-2xl overflow-hidden py-2 backdrop-blur-xl">
+                <div className="absolute top-full left-0 right-0 mt-2 glass-panel rounded-2xl shadow-2xl overflow-hidden py-2">
                     {suggestions.map((suggestion, index) => (
                         <button
                             key={index}

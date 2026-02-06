@@ -218,12 +218,6 @@ export function ExpandedPlayer() {
     };
 
     const styles = {
-        glass: {
-            background: 'rgba(255, 255, 255, 0.03)',
-            backdropFilter: 'blur(24px)',
-            WebkitBackdropFilter: 'blur(24px)',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
-        },
         albumBlur: {
             position: 'absolute' as const,
             top: 0,
@@ -280,7 +274,7 @@ export function ExpandedPlayer() {
                 </button>
 
                 <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2" style={{ ...styles.glass, padding: '4px', borderRadius: '9999px' }}>
+                    <div className="flex items-center gap-2 glass-panel p-1 rounded-full">
                         <button onClick={() => { if (videoMode) toggleVideoMode(); }} className={`px-4 md:px-6 py-1.5 rounded-full text-xs md:text-sm font-medium transition-colors ${!videoMode ? 'bg-white/10' : 'hover:bg-white/5 text-slate-400'}`}>Song</button>
                         <button onClick={() => { if (!videoMode) toggleVideoMode(); }} className={`px-4 md:px-6 py-1.5 rounded-full text-xs md:text-sm font-medium transition-colors ${videoMode ? 'bg-white/10' : 'hover:bg-white/5 text-slate-400'}`}>Video</button>
                     </div>
@@ -467,8 +461,7 @@ export function ExpandedPlayer() {
 
                 {/* Right Panel (Tabs) - Desktop Only */}
                 <aside
-                    className={`hidden md:flex w-full max-w-md h-full max-h-[65vh] rounded-[32px] p-8 flex-col transition-all duration-500 ease-in-out ${videoMode ? 'opacity-0 translate-x-20 pointer-events-none' : 'opacity-100 translate-x-0'}`}
-                    style={styles.glass}
+                    className={`hidden md:flex w-full max-w-md h-full max-h-[65vh] rounded-[32px] p-8 flex-col transition-all duration-500 ease-in-out glass-panel ${videoMode ? 'opacity-0 translate-x-20 pointer-events-none' : 'opacity-100 translate-x-0'}`}
                 >
                     {/* Tab Switcher */}
                     <div className="flex items-center justify-between mb-6 border-b border-white/10 pb-4 flex-shrink-0">

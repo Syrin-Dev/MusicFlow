@@ -8,10 +8,20 @@ import bcrypt from 'bcrypt';
 
 export const authOptions: NextAuthOptions = {
     adapter: PrismaAdapter(prisma),
+    // Trust Host is essential for Vercel/Custom Domain setups
+    trustHost: true,
     providers: [
         GoogleProvider({
             clientId: process.env.GOOGLE_CLIENT_ID ?? "",
             clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
+            // Force account selection to avoid "auto-sign-in loop" issues
+            authorization: {
+                params: {
+                    prompt: "consent",
+                    access_type: "offline",
+                    response_type: "code"
+                }
+            }
         }),
         // Email/Password Provider
         CredentialsProvider({
@@ -50,6 +60,17 @@ export const authOptions: NextAuthOptions = {
     },
     pages: {
         signIn: '/login',
+    },
+    cookies: {
+        sessionToken: {
+            name: `next-auth.session-token`,
+            options: {
+                httpOnly: true,
+                sameSite: 'lax',
+                path: '/',
+                secure: process.env.NODE_ENV === 'production',
+            },
+        },
     },
     callbacks: {
         async jwt({ token, user, account }) {

@@ -60,7 +60,8 @@ export function Sidebar() {
     const isActive = (path: string) => pathname === path;
 
     return (
-        <aside suppressHydrationWarning className="w-64 h-full flex flex-col p-4 glass-panel border-r-0 z-50 fixed left-0 top-0 shadow-2xl">
+        // Glassmorphism update: Added backdrop-blur-md, bg-black/20, and border-white/5
+        <aside suppressHydrationWarning className="w-64 h-full flex flex-col p-4 backdrop-blur-md bg-black/20 border-r border-white/5 z-50 fixed left-0 top-0 shadow-2xl">
             {/* Logo */}
             <div suppressHydrationWarning className="flex items-center gap-3 px-2 mb-8 mt-2">
                 <div suppressHydrationWarning className="relative w-12 h-12 flex items-center justify-center overflow-hidden rounded-xl bg-white/5 border border-white/10 shadow-[0_0_20px_rgba(139,92,246,0.3)]">

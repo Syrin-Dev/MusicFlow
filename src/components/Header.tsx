@@ -41,7 +41,8 @@ export function Header() {
     };
 
     return (
-        <header className="sticky top-0 z-40 px-6 py-4 glassmorphism transition-all duration-300 border-x-0 border-t-0">
+        // Glassmorphism update: Added glass-panel like styles directly or via class
+        <header className="sticky top-0 z-40 px-6 py-4 transition-all duration-300 border-x-0 border-t-0 backdrop-blur-md bg-black/10 border-b border-white/5">
             <div suppressHydrationWarning className="flex items-center justify-between max-w-7xl mx-auto w-full">
 
                 {/* Search Bar Container */}

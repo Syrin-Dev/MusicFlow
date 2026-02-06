@@ -172,6 +172,63 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
+    // Global Interaction Listener to unlock Audio
+    useEffect(() => {
+        const unlockAudio = () => {
+            initAudioContext();
+            if (silentAudioRef.current) {
+                silentAudioRef.current.play().catch(() => {});
+            }
+            // Remove after first successful interaction to save resources?
+            // Better to keep it for robustness on some browsers that re-lock.
+        };
+
+        window.addEventListener('touchstart', unlockAudio, { passive: true });
+        window.addEventListener('click', unlockAudio, { passive: true });
+
+        return () => {
+            window.removeEventListener('touchstart', unlockAudio);
+            window.removeEventListener('click', unlockAudio);
+        };
+    }, []);
+
+    // Worker Heartbeat Integration
+    useEffect(() => {
+        let worker: Worker | null = null;
+        try {
+             worker = new Worker('/worker.js');
+             worker.onmessage = (e) => {
+                 if (e.data === 'tick') {
+                     // Heartbeat Logic
+                     if (isPlayingRef.current && !isUserPausedRef.current) {
+                         // We should be playing
+                         if (document.visibilityState === 'hidden') {
+                             // Force Resume if needed
+                             if (playerRef.current && playerRef.current.getPlayerState && playerRef.current.getPlayerState() !== 1) {
+                                 console.log("Worker Heartbeat: Force Resume");
+                                 playerRef.current.playVideo();
+                             }
+                             // Ensure silent audio
+                             if (silentAudioRef.current && silentAudioRef.current.paused) {
+                                 silentAudioRef.current.play().catch(() => {});
+                             }
+                         }
+                     }
+                 }
+             };
+             worker.postMessage('start');
+        } catch (err) {
+            console.error("Worker init failed", err);
+        }
+
+        return () => {
+            if (worker) {
+                worker.postMessage('stop');
+                worker.terminate();
+            }
+        };
+    }, []);
+
     const loadMoreRecommendations = async () => {
         if (!currentTrack) return;
 

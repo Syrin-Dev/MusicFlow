@@ -103,9 +103,6 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     const isPlayingRef = useRef(false);
     const isUserPausedRef = useRef(false); // Distinguish user pause vs browser throttle
 
-    // Web Audio API Context for robust Keep-Alive
-    const audioContextRef = useRef<AudioContext | null>(null);
-
     // Listening Event Tracking
     const trackingRef = useRef<{
         startTime: number;
@@ -154,80 +151,6 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
             }
         }
     };
-
-    // Web Audio API Keep-Alive (Oscillator)
-    const initAudioContext = () => {
-        try {
-            if (!audioContextRef.current) {
-                const AudioContext = (window as any).AudioContext || (window as any).webkitAudioContext;
-                if (AudioContext) {
-                    audioContextRef.current = new AudioContext();
-                }
-            }
-            if (audioContextRef.current && audioContextRef.current.state === 'suspended') {
-                audioContextRef.current.resume();
-            }
-        } catch (e) {
-            console.error("AudioContext init failed", e);
-        }
-    };
-
-    // Global Interaction Listener to unlock Audio
-    useEffect(() => {
-        const unlockAudio = () => {
-            initAudioContext();
-            if (silentAudioRef.current) {
-                silentAudioRef.current.play().catch(() => {});
-            }
-            // Remove after first successful interaction to save resources?
-            // Better to keep it for robustness on some browsers that re-lock.
-        };
-
-        window.addEventListener('touchstart', unlockAudio, { passive: true });
-        window.addEventListener('click', unlockAudio, { passive: true });
-
-        return () => {
-            window.removeEventListener('touchstart', unlockAudio);
-            window.removeEventListener('click', unlockAudio);
-        };
-    }, []);
-
-    // Worker Heartbeat Integration
-    useEffect(() => {
-        let worker: Worker | null = null;
-        try {
-             worker = new Worker('/worker.js');
-             worker.onmessage = (e) => {
-                 if (e.data === 'tick') {
-                     // Heartbeat Logic
-                     if (isPlayingRef.current && !isUserPausedRef.current) {
-                         // We should be playing
-                         if (document.visibilityState === 'hidden') {
-                             // Force Resume if needed
-                             if (playerRef.current && playerRef.current.getPlayerState && playerRef.current.getPlayerState() !== 1) {
-                                 console.log("Worker Heartbeat: Force Resume");
-                                 playerRef.current.playVideo();
-                             }
-                             // Ensure silent audio
-                             if (silentAudioRef.current && silentAudioRef.current.paused) {
-                                 silentAudioRef.current.play().catch(() => {});
-                             }
-                         }
-                     }
-                 }
-             };
-             worker.postMessage('start');
-        } catch (err) {
-            console.error("Worker init failed", err);
-        }
-
-        return () => {
-            if (worker) {
-                worker.postMessage('stop');
-                worker.terminate();
-            }
-        };
-    }, []);
 
     const loadMoreRecommendations = async () => {
         if (!currentTrack) return;
@@ -356,7 +279,6 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     // --- STANDARD CONTROLLER ---
     const togglePlay = () => {
         if (!playerRef.current) return;
-        initAudioContext(); // Ensure AudioContext is active on user gesture
 
         if (isPlaying) {
             isUserPausedRef.current = true; // Mark as intentional pause
@@ -464,7 +386,6 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         }
 
         isUserPausedRef.current = false; // Reset intentional pause state
-        initAudioContext(); // Ensure AudioContext is active
 
         trackingRef.current = {
             startTime: Date.now(),
@@ -600,7 +521,6 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
                 setIsLoading(false);
                 requestWakeLock(); // Request Lock
                 isUserPausedRef.current = false;
-                initAudioContext(); // Ensure robust audio context
 
                 // Clear any existing interval
                 if (timeUpdateInterval.current) clearInterval(timeUpdateInterval.current);
@@ -621,10 +541,20 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
                 }, 1000);
             }
             if (event.data === 2) { // Paused
-                // Critical: If browser paused it (throttling) but user didn't, resume!
+                // Robust Background check
                 if (!isUserPausedRef.current && document.visibilityState === 'hidden') {
-                    console.log("Auto-resuming background playback (aggressive)...");
-                    playerRef.current?.playVideo();
+                    console.log("Browser throttled playback. Attempting soft resume in 500ms...");
+
+                    // Do not force immediately - avoids rapid toggle loops
+                    setTimeout(() => {
+                         if (!isUserPausedRef.current && document.visibilityState === 'hidden') {
+                             if (playerRef.current && playerRef.current.getPlayerState && playerRef.current.getPlayerState() === 2) {
+                                  console.log("Soft resume executing...");
+                                  playerRef.current.playVideo();
+                             }
+                         }
+                    }, 500);
+
                     return;
                 }
                 setIsPlaying(false);
@@ -703,10 +633,14 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
             }, 1000);
         } else if (data === 2) { // Paused
             // Robust Background check
-            if (!isUserPausedRef.current) {
-                 // If we didn't pause it, and it's background or hidden, FORCE PLAY
-                console.log("Prevented background pause");
-                playerRef.current?.playVideo();
+            if (!isUserPausedRef.current && document.visibilityState === 'hidden') {
+                // Same logic as ref callback - redundancy for safety
+                console.log("Prevented background pause (callback)");
+                 setTimeout(() => {
+                     if (!isUserPausedRef.current && document.visibilityState === 'hidden') {
+                          playerRef.current?.playVideo();
+                     }
+                }, 500);
                 return;
             }
             setIsPlaying(false);
@@ -753,9 +687,6 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
                 clearInterval(timeUpdateInterval.current);
             }
             releaseWakeLock(); // Clean up Wake Lock
-            if (audioContextRef.current) {
-                audioContextRef.current.close();
-            }
         };
     }, []);
 
@@ -848,10 +779,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
                         console.error("Silent audio background play failed", e);
                     }
 
-                    // 2. Resume Audio Context
-                    if (audioContextRef.current && audioContextRef.current.state === 'suspended') {
-                        audioContextRef.current.resume();
-                    }
+                    // 2. Resume Audio Context check? No, simplifying.
 
                     // 3. Force YouTube to stay playing
                     if (playerRef.current && playerRef.current.getPlayerState && playerRef.current.getPlayerState() !== 1) {

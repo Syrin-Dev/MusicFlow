@@ -339,8 +339,10 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         } catch (e) { }
     };
 
-    const hostRoom = async (trackOverride?: Track) => {
+    const hostRoom = async (trackOverride?: Track, progressOverride?: number) => {
         const track = trackOverride || currentTrack;
+        const progress = progressOverride !== undefined ? progressOverride : Math.floor(currentTime);
+
         if (!track) return;
         try {
             const res = await fetch('/api/rooms', {
@@ -349,7 +351,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
                 body: JSON.stringify({
                     action: 'CREATE_ROOM',
                     trackId: track.id,
-                    progress: Math.floor(currentTime)
+                    progress: progress
                 })
             });
             if (res.ok) {
@@ -396,7 +398,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         silentAudioRef.current?.play().catch(e => console.error("Ghost audio play failed", e));
 
         // Automatically start/update hosting room when playing
-        hostRoom(track).catch(() => { });
+        hostRoom(track, 0).catch(() => { });
     };
 
     const playTrack = (track: Track) => {

@@ -368,9 +368,9 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     };
 
     // Audio Control Logic
-    const playTrackInternal = (track: Track, previousTrack?: Track | null) => {
-        // Reset error count on new track
-        if (currentTrack?.id !== track.id) {
+    const playTrackInternal = (track: Track, previousTrack?: Track | null, isFallback: boolean = false) => {
+        // Reset error count on new track unless it's a fallback attempt
+        if (currentTrack?.id !== track.id && !isFallback) {
             errorCountRef.current = 0;
         }
 
@@ -634,7 +634,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
                     return {
                         ...track,
                         id: fallback.id,
-                        thumbnail: fallback.thumbnail || track.thumbnail // Use new thumb if needed
+                        thumbnail: track.thumbnail // Strictly use original thumb to obscure switch
                     };
                 }
             }
@@ -668,7 +668,8 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
                     findFallbackTrack(currentTrack).then(fallback => {
                         if (fallback && fallback.id !== currentTrack.id) {
                             console.log("Found fallback:", fallback.title, fallback.id);
-                            playTrack(fallback);
+                            // Pass true for isFallback to prevent resetting error count
+                            playTrackInternal(fallback, currentTrack, true);
                             return "Playing alternative version...";
                         } else {
                             throw new Error("No fallback found");

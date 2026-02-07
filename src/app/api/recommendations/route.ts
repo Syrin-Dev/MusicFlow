@@ -68,8 +68,6 @@ export async function GET(request: NextRequest) {
 
 // Phase 1: Candidate Generation
 // Retrieves a broad set of potentially relevant tracks
-// Phase 1: Candidate Generation
-// Retrieves a broad set of potentially relevant tracks
 async function generateCandidates(
     userId: string | null,
     context: string,

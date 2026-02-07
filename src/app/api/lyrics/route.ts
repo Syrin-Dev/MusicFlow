@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSubtitles } from 'youtube-captions-scraper';
+import { cleanString, isMatch } from './utils';
 
 // Helper to parse LRC timestamp [mm:ss.xx] to seconds
 function parseLrcTime(timeStr: string): number {
@@ -38,20 +39,6 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ error: "Missing title" }, { status: 400 });
     }
 
-    // Cleaning logic
-    const cleanString = (str: string) => {
-        return str
-            .replace(/\(.*\)/g, '')
-            .replace(/\[.*\]/g, '')
-            .replace(/official video/gi, '')
-            .replace(/music video/gi, '')
-            .replace(/lyrics/gi, '')
-            .replace(/ft\./gi, '')
-            .replace(/feat\./gi, '')
-            .replace(/\s+/g, ' ')
-            .trim();
-    };
-
     const getBaseTitle = (str: string) => {
         const parts = str.split(/ - | – | — /);
         return cleanString(parts[0]);
@@ -78,27 +65,8 @@ export async function GET(req: NextRequest) {
                 const data = await lrcRes.json();
                 if (!Array.isArray(data)) continue;
 
-                // Helper to check similarity
-                const isMatch = (item: any) => {
-                    if (item.instrumental) return false; // Skip explicit instrumentals for now
-
-                    const itemArtist = cleanString(item.artistName || '').toLowerCase();
-                    const itemTitle = cleanString(item.trackName || '').toLowerCase();
-                    const searchArtist = artistClean.toLowerCase();
-                    const searchTitle = titleClean.toLowerCase();
-
-                    // Check if title contains the search title or vice versa
-                    const titleMatch = itemTitle.includes(searchTitle) || searchTitle.includes(itemTitle);
-
-                    // Check artist match (loose)
-                    // If no artist supplied in search, rely mostly on title
-                    const artistMatch = !searchArtist || itemArtist.includes(searchArtist) || searchArtist.includes(itemArtist);
-
-                    return titleMatch && artistMatch;
-                };
-
                 // Priority 1: Synced Lyrics with strict match
-                let match = data.find((item: any) => item.syncedLyrics && isMatch(item));
+                let match = data.find((item: any) => item.syncedLyrics && isMatch(item, artistClean, titleClean));
 
                 if (match) {
                     console.log(`Found SYNCED lyrics in Lrclib for "${query}" -> ${match.trackName} by ${match.artistName}`);
@@ -110,7 +78,7 @@ export async function GET(req: NextRequest) {
                 }
 
                 // Priority 2: Plain Lyrics with strict match
-                match = data.find((item: any) => item.plainLyrics && isMatch(item));
+                match = data.find((item: any) => item.plainLyrics && isMatch(item, artistClean, titleClean));
 
                 if (match) {
                     return NextResponse.json({

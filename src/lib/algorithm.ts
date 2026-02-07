@@ -1,4 +1,3 @@
-
 interface Track {
     id: string;
     title: string;
@@ -7,9 +6,24 @@ interface Track {
 }
 
 // Helper to clean artist names
-function cleanArtist(artist: string): string {
+export function cleanArtist(artist: string): string {
     if (!artist) return '';
-    return artist.replace(/ - Topic|VEVO|Official|Official Channel/gi, '').trim();
+
+    let cleaned = artist;
+
+    // Remove " - Topic" suffix (case insensitive)
+    cleaned = cleaned.replace(/\s-\sTopic$/i, '');
+
+    // Remove "VEVO" suffix (case sensitive to avoid false positives like "Davevo")
+    cleaned = cleaned.replace(/VEVO$/, '');
+
+    // Remove "Official Channel" phrase (case insensitive, whole words)
+    cleaned = cleaned.replace(/\bOfficial\sChannel\b/gi, '');
+
+    // Remove "Official" word (case insensitive, whole word)
+    cleaned = cleaned.replace(/\bOfficial\b/gi, '');
+
+    return cleaned.trim();
 }
 
 function getTimeContextQuery(): string {

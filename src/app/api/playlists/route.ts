@@ -6,30 +6,8 @@ import { authOptions } from '@/lib/auth';
 // Helper to get user email or dev fallback
 async function getUserEmail() {
     const session = await getServerSession(authOptions);
-    let email = session?.user?.email;
+    const email = session?.user?.email;
 
-    if (!email && process.env.NODE_ENV !== 'production') {
-        // Force create/get dev user
-        try {
-            const devUser = await prisma.user.upsert({
-                where: { email: 'dev@example.com' },
-                update: {},
-                create: {
-                    email: 'dev@example.com',
-                    name: 'Dev User',
-                    image: '',
-                    emailVerified: new Date()
-                }
-            });
-            console.log('✨ [DEV] Using Dev User:', devUser.email);
-            return devUser.email;
-        } catch (e) {
-            console.error('Failed to upsert dev user', e);
-            // Try fallback to any first user
-            const firstUser = await prisma.user.findFirst();
-            if (firstUser?.email) return firstUser.email;
-        }
-    }
     return email;
 }
 

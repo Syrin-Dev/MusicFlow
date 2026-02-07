@@ -7,14 +7,8 @@ import { searchMusic } from '@/lib/ytmusic';
 // Helper to get user email with dev fallback
 async function getUserEmail() {
     const session = await getServerSession(authOptions);
-    let email = session?.user?.email;
+    const email = session?.user?.email;
 
-    if (!email && process.env.NODE_ENV !== 'production') {
-        const firstUser = await prisma.user.findFirst();
-        if (firstUser?.email) {
-            email = firstUser.email;
-        }
-    }
     return email;
 }
 
@@ -193,9 +187,9 @@ async function rankCandidates(
     const scoredTracks: ScoredTrack[] = [];
 
     // Get user affinities if logged in
-    let userAffinities: Map<string, number> = new Map();
-    let likedVideoIds: Set<string> = new Set();
-    let recentlyPlayedIds: Set<string> = new Set();
+    const userAffinities: Map<string, number> = new Map();
+    const likedVideoIds: Set<string> = new Set();
+    const recentlyPlayedIds: Set<string> = new Set();
 
     if (userId) {
         // Load liked artists as a proxy for affinity

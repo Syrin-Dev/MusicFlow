@@ -3,7 +3,7 @@ import YTMusic from 'ytmusic-api';
 const ytmusic = new YTMusic();
 let isInitialized = false;
 
-interface SearchResult {
+export interface SearchResult {
     id: string;
     title: string;
     artist: string;

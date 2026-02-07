@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prismadb';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { searchMusic } from '@/lib/ytmusic';
+import { searchMusic, SearchResult } from '@/lib/ytmusic';
 
 // Helper to get user email with dev fallback
 async function getUserEmail() {
@@ -77,18 +77,20 @@ async function generateCandidates(
 ): Promise<Track[]> {
     const candidates: Track[] = [];
     const seenIds = new Set<string>();
-    const searchPromises: Promise<any>[] = [];
+
+    type SearchPromiseResult = { source: string; data: SearchResult[] } | SearchResult[];
+    const searchPromises: Promise<SearchPromiseResult>[] = [];
 
     // Helper to add unique tracks
-    const addTracks = (tracks: any[]) => {
+    const addTracks = (tracks: SearchResult[]) => {
         if (Array.isArray(tracks)) {
-            tracks.forEach((track: any) => {
+            tracks.forEach((track) => {
                 // Map search result to Track interface
                 const mappedTrack: Track = {
-                    id: track.id || track.videoId,
-                    title: track.title || track.name,
-                    artist: track.artist?.name || track.artist || 'Unknown',
-                    thumbnail: track.thumbnail?.url || track.thumbnail
+                    id: track.id,
+                    title: track.title,
+                    artist: track.artist,
+                    thumbnail: track.thumbnail
                 };
 
                 // Basic validation
@@ -176,7 +178,11 @@ async function generateCandidates(
         if (result.status === 'fulfilled' && result.value) {
             // result.value might be the array directly or wrapped object if we returned that
             // The .then() above wraps it.
-            const data = (result.value as any).data || result.value;
+            const val = result.value;
+            // check if val has data property
+            const data = 'data' in val
+                ? val.data
+                : val;
             addTracks(data); // Add valid tracks
         }
     });
@@ -193,9 +199,9 @@ async function rankCandidates(
     const scoredTracks: ScoredTrack[] = [];
 
     // Get user affinities if logged in
-    let userAffinities: Map<string, number> = new Map();
-    let likedVideoIds: Set<string> = new Set();
-    let recentlyPlayedIds: Set<string> = new Set();
+    const userAffinities: Map<string, number> = new Map();
+    const likedVideoIds: Set<string> = new Set();
+    const recentlyPlayedIds: Set<string> = new Set();
 
     if (userId) {
         // Load liked artists as a proxy for affinity

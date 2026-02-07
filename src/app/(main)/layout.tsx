@@ -1,12 +1,13 @@
 import { Sidebar } from '@/components/Sidebar';
 import { PlayerBar } from '@/components/PlayerBar';
 import { AudioProvider } from '@/components/AudioProvider';
-import { ExpandedPlayer } from '@/components/ExpandedPlayer';
 import { Header } from '@/components/Header';
 import { MobileNav } from '@/components/MobileNav';
+import dynamic from 'next/dynamic';
 
-import { SocialOverlay } from '@/components/SocialOverlay';
-import { AmbientBackground } from '@/components/AmbientBackground';
+const ExpandedPlayer = dynamic(() => import('@/components/ExpandedPlayer').then(mod => mod.ExpandedPlayer), { ssr: false });
+const SocialOverlay = dynamic(() => import('@/components/SocialOverlay').then(mod => mod.SocialOverlay), { ssr: false });
+const AmbientBackground = dynamic(() => import('@/components/AmbientBackground').then(mod => mod.AmbientBackground), { ssr: false });
 
 export default function MainLayout({
     children,

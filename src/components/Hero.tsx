@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Play, Pause, Heart } from 'lucide-react';
 import { useAudio } from '@/components/AudioProvider';
 import { AddToPlaylist } from './AddToPlaylist';
+import Image from 'next/image';
 
 export function Hero() {
     const { playTrack, currentTrack, isLiked, toggleLike, isPlaying, togglePlay, likedSongs, listeningHistory } = useAudio();
@@ -48,10 +49,14 @@ export function Hero() {
     return (
         <div className="relative w-full h-[400px] md:h-[450px] rounded-2xl md:rounded-[3rem] overflow-hidden shadow-2xl group border border-white/5 mx-auto max-w-7xl mt-4 md:mt-8">
             {/* Background Image with Blur */}
-            <div
-                className="absolute inset-0 bg-cover bg-center transition-all duration-1000 transform group-hover:scale-105"
-                style={{ backgroundImage: `url(${displayTrack.thumbnail})` }}
-            >
+            <div className="absolute inset-0">
+                <Image
+                    src={displayTrack.thumbnail}
+                    alt={displayTrack.title}
+                    fill
+                    priority
+                    className="object-cover transition-all duration-1000 transform group-hover:scale-105"
+                />
                 <div className="absolute inset-0 bg-black/60 backdrop-blur-[10px] group-hover:backdrop-blur-sm transition-all duration-700"></div>
 
                 {/* Gradient Overlays */}
@@ -120,7 +125,13 @@ export function Hero() {
 
             {/* Side Artwork Preview (Glassmorphism) */}
             <div className="absolute top-1/2 -right-12 -translate-y-1/2 w-80 h-80 rounded-[3rem] overflow-hidden border border-white/10 hidden xl:block shadow-2xl rotate-6 group-hover:rotate-3 transition-transform duration-1000">
-                <img src={displayTrack.thumbnail} className="w-full h-full object-cover" alt="" />
+                <Image
+                    src={displayTrack.thumbnail}
+                    alt={displayTrack.title}
+                    fill
+                    sizes="320px"
+                    className="object-cover"
+                />
                 <div className="absolute inset-0 bg-black/20 backdrop-blur-[2px]"></div>
                 {/* Glow behind the artwork */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>

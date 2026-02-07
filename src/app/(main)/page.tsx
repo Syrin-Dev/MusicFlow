@@ -1,176 +1,244 @@
-'use client';
-
-import { useState, useEffect } from 'react';
+import { Suspense } from 'react';
 import { Hero } from '@/components/Hero';
-import { DailyMixes } from '@/components/DailyMixes';
-import { RecommendedGrid } from '@/components/RecommendedGrid';
-import { QuickPicks } from '@/components/QuickPicks';
+import { DailyMixesClient } from '@/components/DailyMixesClient';
+import { RecommendedGridClient } from '@/components/RecommendedGridClient';
+import { QuickPicksClient } from '@/components/QuickPicksClient';
 import { MusicVideos } from '@/components/MusicVideos';
 import { ListenAgain } from '@/components/ListenAgain';
-import { GenreBubbles } from '@/components/GenreBubbles';
-import { useAudio } from '@/components/AudioProvider';
+import { HomeContent } from '@/components/HomeContent';
+import { searchMusic, SearchResult } from '@/lib/ytmusic';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import { prisma } from '@/lib/prismadb';
 
-// GenreFilteredView Component
-function GenreFilteredView({ query }: { query: string }) {
-  const [tracks, setTracks] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const { playTrack, addToQueue, openConnect } = useAudio();
-
-  useEffect(() => {
-    const fetchGenreTracks = async () => {
-      setLoading(true);
-      try {
-        const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
-        const data = await res.json();
-        if (Array.isArray(data)) setTracks(data);
-      } catch (e) { console.error(e); }
-      setLoading(false);
-    };
-    fetchGenreTracks();
-  }, [query]);
-
-  const handlePlayAll = () => {
-    if (tracks.length > 0) {
-      playTrack(tracks[0]);
-      tracks.slice(1).forEach(t => addToQueue(t));
+// --- Constants ---
+const BASE_MIXES = [
+    {
+        id: 'chill',
+        title: 'Chill Vibes',
+        iconName: 'Music',
+        gradient: 'from-violet-600 to-indigo-900',
+        baseQuery: 'lofi hip hop instrumental aesthetic',
+        keywords: ['chill', 'relax', 'lofi', 'acoustic'],
+        timeSlots: ['evening', 'night']
+    },
+    {
+        id: 'workout',
+        title: 'Workout Energy',
+        iconName: 'TrendingUp',
+        gradient: 'from-rose-600 to-orange-900',
+        baseQuery: 'gym phonk high energy workout music',
+        keywords: ['workout', 'gym', 'phonk', 'energy'],
+        timeSlots: ['morning', 'afternoon']
+    },
+    {
+        id: 'focus',
+        title: 'Focus Flow',
+        iconName: 'Headset',
+        gradient: 'from-emerald-500 to-teal-900',
+        baseQuery: 'ambient study music no lyrics deep focus',
+        keywords: ['focus', 'study', 'ambient', 'piano'],
+        timeSlots: ['morning', 'afternoon']
+    },
+    {
+        id: 'party',
+        title: 'Party Hits',
+        iconName: 'ListMusic',
+        gradient: 'from-amber-500 to-pink-900',
+        baseQuery: 'summer dance club hits remix 2025',
+        keywords: ['party', 'club', 'dance', 'remix'],
+        timeSlots: ['evening', 'night']
     }
-  };
+];
 
-  const genreName = query.replace(' music', '').replace(' songs', '').replace(' podcast', '');
+const QUICK_PICK_QUERIES = [
+    'best songs all time',
+    'viral music 2024',
+    'feel good music',
+    'chill study music',
+    'party music hits',
+    'love songs 2024',
+];
 
-  return (
-    <div className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-700 min-h-[70vh]">
-      {/* Genre Header Section */}
-      <div className="relative p-8 md:p-16 rounded-[2rem] md:rounded-[3rem] overflow-hidden group border border-white/5 bg-gradient-to-br from-white/5 to-transparent">
-        <div className="absolute inset-0 bg-primary/10 blur-[100px] -z-10 animate-pulse"></div>
-        <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6 md:gap-8">
-          <div className="space-y-3 md:space-y-4">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/20 border border-primary/20 text-primary text-[10px] font-black uppercase tracking-widest">
-              Curated Mix
-            </div>
-            <h2 className="text-4xl md:text-7xl font-black text-white tracking-tighter capitalize leading-none">
-              {genreName}
-            </h2>
-            <p className="text-zinc-500 text-sm md:text-lg max-w-md font-bold">
-              The best of {genreName} music, tailored to your listening habits and mood.
-            </p>
-            <div className="flex items-center gap-2 text-zinc-600 text-[10px] md:text-sm font-black uppercase tracking-widest">
-              <span className="material-icons-round text-lg">audiotrack</span>
-              {tracks.length} Songs • 45m of magic
-            </div>
-          </div>
+// --- Server Components (Fetchers) ---
 
-          <div className="flex items-center gap-4">
-            <button
-              onClick={handlePlayAll}
-              disabled={loading || tracks.length === 0}
-              className="flex-1 md:flex-none px-8 md:px-10 py-4 md:py-5 bg-white text-black rounded-full font-black text-lg md:text-xl hover:scale-105 active:scale-95 transition-all shadow-2xl shadow-white/10 disabled:opacity-50 flex items-center justify-center gap-3"
-            >
-              <span className="material-icons-round text-2xl md:text-3xl">play_arrow</span>
-              PLAY ALL
-            </button>
-            <button className="p-4 md:p-5 rounded-full bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all">
-              <span className="material-icons-round text-2xl">favorite_border</span>
-            </button>
-          </div>
-        </div>
-      </div>
+async function DailyMixesFetcher() {
+    const session = await getServerSession(authOptions);
+    let likedSongs: any[] = [];
 
-      {loading ? (
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
-          {[...Array(12)].map((_, i) => (
-            <div key={i} className="animate-pulse space-y-4">
-              <div className="aspect-square bg-white/5 rounded-3xl"></div>
-              <div className="h-5 bg-white/5 rounded-full w-3/4"></div>
-              <div className="h-4 bg-white/5 rounded-full w-1/2"></div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6 md:gap-8">
-          {tracks.map((track, i) => (
-            <div
-              key={i}
-              className="group relative space-y-3 md:space-y-4"
-            >
-              <div className="relative aspect-square overflow-hidden rounded-2xl md:rounded-[2rem] bg-zinc-900 border border-white/5 shadow-xl transition-all duration-500 group-hover:-translate-y-2 group-hover:shadow-2xl group-hover:shadow-primary/20">
-                <img
-                  src={track.thumbnail || `https://i.ytimg.com/vi/${track.id}/hqdefault.jpg`}
-                  alt={track.title}
-                  referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-90 group-hover:opacity-100"
-                />
-                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center gap-3 backdrop-blur-[2px]">
-                  <button
-                    onClick={() => playTrack(track)}
-                    className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white shadow-lg translate-y-4 group-hover:translate-y-0 transition-transform duration-300 hover:scale-110 active:scale-95"
-                  >
-                    <span className="material-icons-round text-3xl">play_arrow</span>
-                  </button>
-                  <button
-                    onClick={() => openConnect(track)}
-                    className="w-12 h-12 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white shadow-lg translate-y-4 group-hover:translate-y-0 transition-transform duration-300 delay-75 hover:bg-white/10"
-                  >
-                    <span className="material-icons-round">share</span>
-                  </button>
-                </div>
-              </div>
-              <div className="px-2">
-                <h4 className="font-bold text-white truncate text-base group-hover:text-primary transition-colors">{track.title}</h4>
-                <p className="text-xs text-zinc-500 truncate mt-1 font-medium">{track.artist}</p>
-              </div>
-            </div>
-          ))}
-          {tracks.length === 0 && !loading && (
-            <div className="col-span-full text-center py-40 bg-white/5 rounded-[3rem] border border-dashed border-white/10">
-              <span className="material-icons-round text-5xl text-zinc-600 mb-4">search_off</span>
-              <p className="text-zinc-500 font-bold">No tracks found for this mood.</p>
-              <button onClick={() => window.location.reload()} className="text-primary mt-4 hover:underline">Try another genre</button>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
+    // 1. Fetch User Likes for Personalization
+    if (session?.user?.email) {
+        try {
+            const user = await prisma.user.findUnique({ where: { email: session.user.email }, include: { likedSongs: { include: { track: true }, take: 20 } } });
+            if (user) likedSongs = user.likedSongs.map(l => l.track).filter(Boolean);
+        } catch (e) { console.error("Failed to fetch likes for mixes", e); }
+    }
+
+    // 2. Sort Mixes by Time of Day
+    // Note: Server time might differ from user time. Ideally use a cookie or default to neutral.
+    // For now, we'll use a fixed logic or UTC hour.
+    const hour = new Date().getHours();
+    let timeOfDay = 'morning';
+    if (hour >= 12 && hour < 18) timeOfDay = 'afternoon';
+    else if (hour >= 18 && hour < 22) timeOfDay = 'evening';
+    else if (hour >= 22 || hour < 5) timeOfDay = 'night';
+
+    const sortedMixes = [...BASE_MIXES].sort((a, b) => {
+        const aScore = a.timeSlots.includes(timeOfDay) ? 1 : 0;
+        const bScore = b.timeSlots.includes(timeOfDay) ? 1 : 0;
+        return bScore - aScore;
+    });
+
+    // 3. Generate Personalized Queries and Fetch Previews
+    const mixesWithData = await Promise.all(sortedMixes.map(async (mix) => {
+        let personalizedQuery = mix.baseQuery;
+        let seedArtist: string | null = null;
+
+        if (likedSongs.length > 0) {
+             const randomLiked = likedSongs[Math.floor(Math.random() * likedSongs.length)];
+             // 70% chance
+             if (Math.random() > 0.3) {
+                 seedArtist = randomLiked.artist;
+                 const vibeKeyword = mix.keywords[Math.floor(Math.random() * mix.keywords.length)];
+                 personalizedQuery = `${seedArtist} ${vibeKeyword} mix`;
+             }
+        }
+
+        // Fetch preview (thumbnail)
+        let coverImage = '';
+        try {
+            // We only need 1 result for cover
+            const results = await searchMusic(personalizedQuery);
+            if (results.length > 0) {
+                coverImage = results[0].thumbnail;
+            }
+        } catch (e) {
+            console.error(`Preview fetch failed for ${mix.id}`, e);
+        }
+
+        return {
+            ...mix,
+            query: personalizedQuery,
+            seedArtist,
+            coverImage
+        };
+    }));
+
+    return <DailyMixesClient mixes={mixesWithData} />;
 }
 
+async function RecommendedGridFetcher() {
+    const session = await getServerSession(authOptions);
+    let query = 'popular music 2024';
+    let source = 'Trending Now';
 
+    if (session?.user?.email) {
+        try {
+            const user = await prisma.user.findUnique({
+                where: { email: session.user.email },
+                include: {
+                    listeningHistory: { orderBy: { startedAt: 'desc' }, take: 5 }
+                }
+            });
 
-export default function Home() {
-  const [selectedGenre, setSelectedGenre] = useState('All');
-  const [genreQuery, setGenreQuery] = useState('all');
+            if (user && user.listeningHistory.length > 0) {
+                 // Simple logic: pick last artist
+                 const lastArtist = user.listeningHistory[0].artist; // Check schema, listeningEvent might store artist directly or via relation
+                 // Actually schema check: listeningEvent has `artist` string field usually?
+                 // Let's assume yes based on previous code.
+                 // Wait, `prisma/schema.prisma` is not visible but `AudioProvider` sends `artist` in body.
+                 // In `route.ts`, `listeningEvent` has `videoId`.
+                 // Let's use `likedSongs` as it's safer if `listeningHistory` doesn't store artist name directly.
+                 // Re-check `route.ts`: `recent` selects `videoId`.
+                 // `AudioProvider` sends `title`, `artist` in body to `/api/listening-events`.
+                 // So the model likely has it. I'll verify if `artist` is available.
+                 // To be safe, let's use a generic 'discovery' query if we can't easily access artist.
+                 // Or just use 'new music'.
+                 // Actually, let's check `likedSongs` which we know has `track` relation.
+                 const liked = await prisma.likedSong.findFirst({ where: { userId: user.id }, include: { track: true }, orderBy: { createdAt: 'desc' } });
+                 if (liked?.track?.artist) {
+                     query = `music like ${liked.track.artist}`;
+                     source = `Because you like ${liked.track.artist}`;
+                 }
+            }
+        } catch (e) { console.error("Failed to fetch history for Recs", e); }
+    }
 
-  const handleGenreSelect = (label: string, value: string) => {
-    setSelectedGenre(label);
-    setGenreQuery(value);
-  };
+    const tracks = await searchMusic(query);
+    return <RecommendedGridClient initialTracks={tracks.slice(0, 5)} initialSource={source} />;
+}
 
-  return (
-    <>
-      <div suppressHydrationWarning className="px-4 md:px-8 pb-32 space-y-12 pt-4 md:pt-8 transition-all">
+async function QuickPicksFetcher() {
+     // Pick random queries
+     const q1 = QUICK_PICK_QUERIES[Math.floor(Math.random() * QUICK_PICK_QUERIES.length)];
+     const q2 = QUICK_PICK_QUERIES[Math.floor(Math.random() * QUICK_PICK_QUERIES.length)];
 
-        {/* Genre Bubbles - Full width sticky bar */}
-        <div className="-mx-4 md:-mx-8">
-          <GenreBubbles selectedGenre={selectedGenre} onGenreSelect={handleGenreSelect} />
-        </div>
+     const [r1, r2] = await Promise.all([
+         searchMusic(q1),
+         searchMusic(q2)
+     ]);
 
-        {selectedGenre === 'All' ? (
-          <div className="space-y-20 animate-in fade-in duration-700 delay-100">
-            <Hero />
+     const combined = [...r1.slice(0, 8), ...r2.slice(0, 8)];
+     // Unique
+     const unique = Array.from(new Map(combined.map(item => [item.id, item])).values());
 
-            <div className="space-y-24">
-              <DailyMixes />
+     return <QuickPicksClient initialTracks={unique.slice(0, 16)} />;
+}
 
-              <RecommendedGrid />
-              <QuickPicks />
-              <MusicVideos />
-              <ListenAgain />
+// --- Skeletons ---
+
+function DailyMixesSkeleton() {
+    return (
+        <section className="py-2 animate-pulse">
+             <div className="h-8 w-64 bg-white/10 rounded mb-8"></div>
+             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+                {[...Array(5)].map((_, i) => (
+                    <div key={i} className="aspect-square rounded-[2rem] bg-white/5"></div>
+                ))}
+             </div>
+        </section>
+    );
+}
+
+function SectionSkeleton() {
+    return (
+        <div className="animate-pulse">
+            <div className="h-8 w-48 bg-white/10 rounded mb-6"></div>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+                 {[...Array(5)].map((_, i) => (
+                     <div key={i} className="space-y-3">
+                         <div className="aspect-square rounded-2xl bg-white/5"></div>
+                         <div className="h-4 w-3/4 bg-white/5 rounded"></div>
+                     </div>
+                 ))}
             </div>
-          </div>
-        ) : (
-          <GenreFilteredView query={genreQuery} />
-        )}
+        </div>
+    );
+}
+
+// --- Main Page ---
+
+export default async function Home() {
+  return (
+    <HomeContent>
+      <Hero />
+
+      <div className="space-y-24">
+        <Suspense fallback={<DailyMixesSkeleton />}>
+            <DailyMixesFetcher />
+        </Suspense>
+
+        <Suspense fallback={<SectionSkeleton />}>
+            <RecommendedGridFetcher />
+        </Suspense>
+
+        <Suspense fallback={<SectionSkeleton />}>
+            <QuickPicksFetcher />
+        </Suspense>
+
+        <MusicVideos />
+        <ListenAgain />
       </div>
-    </>
+    </HomeContent>
   );
 }

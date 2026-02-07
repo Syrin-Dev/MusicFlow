@@ -8,6 +8,7 @@ import {
     ListMusic, Volume2, Mic2, Maximize2, Minimize2, Languages, Globe,
     ArrowUp, ArrowDown, RefreshCw
 } from 'lucide-react';
+import Image from 'next/image';
 
 // Format seconds to mm:ss helper
 function formatTime(seconds: number): string {
@@ -294,10 +295,12 @@ export function ExpandedPlayer() {
                 {/* Album Art Container Mobile Optimized */}
                 <div className={`flex-shrink-0 flex flex-col items-center justify-center w-full md:w-auto md:flex-1 transition-opacity duration-500 ${videoMode ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
                     <div className="relative group w-[80vw] h-[80vw] max-w-[320px] max-h-[320px] md:max-w-[45vh] md:max-h-[45vh] md:w-full md:h-auto aspect-square">
-                        <img
+                        <Image
                             alt={currentTrack.title}
-                            className="w-full h-full object-cover rounded-[24px] shadow-[0_20px_50px_rgba(0,0,0,0.5)] md:shadow-[0_40px_100px_rgba(0,0,0,0.6)]"
+                            className="object-cover rounded-[24px] shadow-[0_20px_50px_rgba(0,0,0,0.5)] md:shadow-[0_40px_100px_rgba(0,0,0,0.6)]"
                             src={currentTrack.thumbnail || `https://i.ytimg.com/vi/${currentTrack.id}/hqdefault.jpg`}
+                            fill
+                            sizes="(max-width: 768px) 80vw, 45vh"
                         />
                     </div>
                     {/* Title and Artist for Mobile are better placed here or in footer depending on design. Let's keep desktop logic but ensure it fits */}
@@ -377,7 +380,7 @@ export function ExpandedPlayer() {
                                         queue.map((track, i) => (
                                             <div key={`${track.id}-${i}`} className="flex items-center gap-4 py-2 group" onClick={() => playTrack(track)}>
                                                 <div className="relative w-12 h-12 flex-shrink-0">
-                                                    <img src={track.thumbnail || `https://i.ytimg.com/vi/${track.id}/hqdefault.jpg`} className="w-full h-full rounded-xl object-cover" />
+                                                    <Image src={track.thumbnail || `https://i.ytimg.com/vi/${track.id}/hqdefault.jpg`} alt={track.title} fill className="rounded-xl object-cover" sizes="48px" />
                                                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center rounded-xl">
                                                         <Play size={16} fill="white" />
                                                     </div>
@@ -451,7 +454,9 @@ export function ExpandedPlayer() {
                                 <div className="space-y-4">
                                     {relatedTracks.map((track, i) => (
                                         <div key={`${track.id}-${i}`} className="flex items-center gap-4 py-2 group" onClick={() => playTrack(track)}>
-                                            <img src={track.thumbnail} className="w-12 h-12 rounded-xl object-cover" />
+                                            <div className="relative w-12 h-12 flex-shrink-0">
+                                                <Image src={track.thumbnail} alt={track.title} fill className="rounded-xl object-cover" sizes="48px" />
+                                            </div>
                                             <div className="flex-1 min-w-0">
                                                 <p className="text-sm font-bold text-white truncate">{track.title}</p>
                                                 <p className="text-xs text-zinc-500 truncate">{track.artist}</p>
@@ -503,7 +508,7 @@ export function ExpandedPlayer() {
                         <div className="flex-1 overflow-y-auto custom-scrollbar space-y-4 pr-2">
                             <div className="flex items-center gap-4 p-3 bg-white/10 rounded-2xl border border-[#8B5CF6]/20 flex-shrink-0">
                                 <div className="relative w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
-                                    <img alt="Current" className="w-full h-full object-cover" src={currentTrack.thumbnail || `https://i.ytimg.com/vi/${currentTrack.id}/hqdefault.jpg`} />
+                                    <Image alt="Current" className="object-cover" src={currentTrack.thumbnail || `https://i.ytimg.com/vi/${currentTrack.id}/hqdefault.jpg`} fill sizes="48px" />
                                     <div className="absolute inset-0 bg-[#8B5CF6]/40 flex items-center justify-center">
                                         <Volume2 size={20} className="text-white" />
                                     </div>
@@ -516,7 +521,9 @@ export function ExpandedPlayer() {
                             {queue.map((track, i) => (
                                 <div key={`${track.id}-${i}`} draggable onDragStart={(e) => handleDragStart(e, i)} onDragOver={handleDragOver} onDrop={(e) => handleDrop(e, i)} onClick={() => playTrack(track)}
                                     className={`flex items-center gap-4 p-3 hover:bg-white/5 rounded-2xl transition-colors cursor-pointer group ${draggedIndex === i ? 'opacity-50 ring-2 ring-[#8B5CF6] ring-inset' : ''}`}>
-                                    <img alt={track.title} className="w-12 h-12 rounded-lg object-cover flex-shrink-0" src={track.thumbnail || `https://i.ytimg.com/vi/${track.id}/hqdefault.jpg`} />
+                                    <div className="relative w-12 h-12 flex-shrink-0">
+                                        <Image alt={track.title} className="rounded-lg object-cover" src={track.thumbnail || `https://i.ytimg.com/vi/${track.id}/hqdefault.jpg`} fill sizes="48px" />
+                                    </div>
                                     <div className="flex-1 min-w-0">
                                         <h4 className="text-sm font-semibold truncate group-hover:text-[#8B5CF6] transition-colors">{track.title}</h4>
                                         <p className="text-xs text-slate-400 truncate">{track.artist}</p>

@@ -1,8 +1,10 @@
 'use client';
 
-import { useEffect, useState, useCallback, useRef } from 'react';
-import { useAudio } from './AudioProvider';
+import { useState, useCallback, useRef } from 'react';
+import { useAudio } from '@/components/AudioProvider';
 import { generateSmartDiscoveryQueries } from '@/lib/algorithm';
+import Image from 'next/image';
+import { memo } from 'react';
 
 interface Track {
     id: string;
@@ -11,14 +13,58 @@ interface Track {
     thumbnail: string;
 }
 
-export function RecommendedGrid() {
-    const [tracks, setTracks] = useState<Track[]>([]);
-    const [loading, setLoading] = useState(true);
+interface RecommendedGridClientProps {
+    initialTracks: Track[];
+    initialSource: string;
+}
+
+// Memoized Track Item
+const TrackItem = memo(({ track, index, onClick, onShare }: { track: Track, index: number, onClick: () => void, onShare: (e: any) => void }) => {
+    return (
+        <div
+            className="group cursor-pointer"
+            onClick={onClick}
+        >
+            <div className="relative aspect-square rounded-2xl overflow-hidden mb-3 bg-[#18181b] shadow-lg ring-1 ring-white/5">
+                <Image
+                    src={track.thumbnail || `https://i.ytimg.com/vi/${track.id}/hqdefault.jpg`}
+                    alt={track.title}
+                    fill
+                    sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
+                    className="object-cover transition-transform duration-500 group-hover:scale-110 opacity-90 group-hover:opacity-100"
+                />
+                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-3 backdrop-blur-[2px]">
+                    <button
+                        onClick={(e) => { e.stopPropagation(); onClick(); }}
+                        className="w-12 h-12 rounded-full bg-[#8B5CF6] flex items-center justify-center text-white shadow-lg translate-y-4 group-hover:translate-y-0 transition-transform duration-300 hover:scale-110 active:scale-95"
+                    >
+                        <svg className="w-6 h-6 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M8 5v14l11-7L8 5z" />
+                        </svg>
+                    </button>
+                    <button
+                        onClick={onShare}
+                        className="w-12 h-12 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white shadow-lg translate-y-4 group-hover:translate-y-0 transition-transform duration-300 delay-75 hover:bg-white/20 hover:scale-110 active:scale-95"
+                        title="Share with friends"
+                    >
+                        <span className="material-icons-round text-xl">share</span>
+                    </button>
+                </div>
+            </div>
+            <h4 className="font-semibold text-sm truncate text-gray-100">{track.title}</h4>
+            <p className="text-xs text-gray-400 truncate">{track.artist}</p>
+        </div>
+    );
+});
+
+TrackItem.displayName = 'TrackItem';
+
+export function RecommendedGridClient({ initialTracks, initialSource }: RecommendedGridClientProps) {
+    const [tracks, setTracks] = useState<Track[]>(initialTracks);
+    const [loading, setLoading] = useState(false);
     const [isTransitioning, setIsTransitioning] = useState(false);
     const [historyStack, setHistoryStack] = useState<Track[][]>([]);
-    // If you want to show what the recommendation is based on, you can keep this, 
-    // or just say "Based on your taste"
-    const [recSource, setRecSource] = useState('Based on your taste');
+    const [recSource, setRecSource] = useState(initialSource);
 
     // Track which query index we're on for variety
     const queryIndexRef = useRef(0);
@@ -26,6 +72,7 @@ export function RecommendedGrid() {
     const { playTrack, addToQueue, listeningHistory, openConnect } = useAudio();
 
     const fetchRecommendations = useCallback(async (saveToHistory = false) => {
+        setLoading(true);
         // Use our new smart algorithm
         const queries = generateSmartDiscoveryQueries(listeningHistory);
 
@@ -58,12 +105,9 @@ export function RecommendedGrid() {
         setLoading(false);
     }, [tracks, listeningHistory]);
 
-    useEffect(() => {
-        fetchRecommendations(false);
-    }, []);
-
     const handleNext = async () => {
         setIsTransitioning(true);
+        // Wait for animation
         setTimeout(async () => {
             await fetchRecommendations(true);
             setIsTransitioning(false);
@@ -82,19 +126,15 @@ export function RecommendedGrid() {
         }, 300);
     };
 
-    const handlePlayTrack = (track: Track, index: number) => {
+    const handlePlayTrack = useCallback((track: Track, index: number) => {
         playTrack(track);
         tracks.slice(index + 1).forEach(t => addToQueue(t));
-    };
+    }, [playTrack, addToQueue, tracks]);
 
-    const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>, track: Track) => {
-        const img = e.currentTarget;
-        if (img.src.includes('hqdefault')) {
-            img.src = `https://i.ytimg.com/vi/${track.id}/mqdefault.jpg`;
-        } else {
-            img.src = `https://i.ytimg.com/vi/${track.id}/default.jpg`;
-        }
-    };
+    const handleShare = useCallback((e: any, track: Track) => {
+        e.stopPropagation();
+        openConnect(track);
+    }, [openConnect]);
 
     return (
         <section>
@@ -136,39 +176,13 @@ export function RecommendedGrid() {
                     ))
                 ) : (
                     tracks.map((track, index) => (
-                        <div
+                        <TrackItem
                             key={track.id}
-                            className="group cursor-pointer"
+                            track={track}
+                            index={index}
                             onClick={() => handlePlayTrack(track, index)}
-                        >
-                            <div className="relative aspect-square rounded-2xl overflow-hidden mb-3 bg-[#18181b] shadow-lg ring-1 ring-white/5">
-                                <img
-                                    src={track.thumbnail || `https://i.ytimg.com/vi/${track.id}/hqdefault.jpg`}
-                                    alt={track.title}
-                                    onError={(e) => handleImageError(e, track)}
-                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 opacity-90 group-hover:opacity-100"
-                                />
-                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-3 backdrop-blur-[2px]">
-                                    <button
-                                        onClick={(e) => { e.stopPropagation(); handlePlayTrack(track, index); }}
-                                        className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white shadow-lg translate-y-4 group-hover:translate-y-0 transition-transform duration-300 hover:scale-110 active:scale-95"
-                                    >
-                                        <svg className="w-6 h-6 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
-                                            <path d="M8 5v14l11-7L8 5z" />
-                                        </svg>
-                                    </button>
-                                    <button
-                                        onClick={(e) => { e.stopPropagation(); openConnect(track); }}
-                                        className="w-12 h-12 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white shadow-lg translate-y-4 group-hover:translate-y-0 transition-transform duration-300 delay-75 hover:bg-white/20 hover:scale-110 active:scale-95"
-                                        title="Share with friends"
-                                    >
-                                        <span className="material-icons-round text-xl">share</span>
-                                    </button>
-                                </div>
-                            </div>
-                            <h4 className="font-semibold text-sm truncate text-gray-100">{track.title}</h4>
-                            <p className="text-xs text-gray-400 truncate">{track.artist}</p>
-                        </div>
+                            onShare={(e) => handleShare(e, track)}
+                        />
                     ))
                 )}
             </div>

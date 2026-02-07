@@ -4,15 +4,7 @@ import { AudioProvider } from '@/components/AudioProvider';
 import { Header } from '@/components/Header';
 import { MobileNav } from '@/components/MobileNav';
 import { AmbientBackground } from '@/components/AmbientBackground';
-import dynamic from 'next/dynamic';
-
-const ExpandedPlayer = dynamic(() => import('@/components/ExpandedPlayer').then(mod => mod.ExpandedPlayer), {
-    ssr: false
-});
-
-const SocialOverlay = dynamic(() => import('@/components/SocialOverlay').then(mod => mod.SocialOverlay), {
-    ssr: false
-});
+import { DynamicOverlays } from '@/components/DynamicOverlays';
 
 export default function MainLayout({
     children,
@@ -34,8 +26,7 @@ export default function MainLayout({
 
             <PlayerBar />
             <MobileNav />
-            <ExpandedPlayer />
-            <SocialOverlay />
+            <DynamicOverlays />
         </AudioProvider>
     );
 }

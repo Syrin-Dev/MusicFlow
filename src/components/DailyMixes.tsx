@@ -16,6 +16,14 @@ interface DailyMix {
     seedArtist?: string;
 }
 
+const MIX_GRADIENTS = [
+    'from-pink-500 to-rose-500',
+    'from-indigo-500 to-cyan-500',
+    'from-emerald-500 to-teal-500',
+    'from-amber-500 to-orange-500',
+    'from-violet-600 to-fuchsia-600',
+];
+
 export function DailyMixes() {
     const { listeningHistory, likedSongs, playTrack, addToQueue } = useAudio();
     const [personalizedMixes, setPersonalizedMixes] = useState<DailyMix[]>([]);
@@ -24,7 +32,18 @@ export function DailyMixes() {
 
     useEffect(() => {
         // Generate mixes only on client side to avoid hydration mismatch
-        const mixes = generateSmartDiscoveryQueries(listeningHistory);
+        const queries = generateSmartDiscoveryQueries(listeningHistory);
+
+        const mixes: DailyMix[] = queries.map((query, index) => ({
+            id: `daily-mix-${index}`,
+            title: `Daily Mix ${index + 1}`,
+            description: `Based on your recent listening`,
+            gradient: MIX_GRADIENTS[index % MIX_GRADIENTS.length],
+            icon: Play,
+            query: query,
+            seedArtist: query.includes('like') ? query.split('like ')[1] : undefined
+        }));
+
         setPersonalizedMixes(mixes);
 
         // Fetch previews for each mix

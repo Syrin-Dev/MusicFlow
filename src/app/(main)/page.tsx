@@ -137,24 +137,21 @@ async function RecommendedGridFetcher() {
             const user = await prisma.user.findUnique({
                 where: { email: session.user.email },
                 include: {
-                    listeningHistory: { orderBy: { startedAt: 'desc' }, take: 5 }
+                    history: { include: { track: true }, orderBy: { playedAt: 'desc' }, take: 5 }
                 }
             });
 
-            if (user && user.listeningHistory.length > 0) {
-                 // Simple logic: pick last artist
-                 const lastArtist = user.listeningHistory[0].artist; // Check schema, listeningEvent might store artist directly or via relation
-                 // Actually schema check: listeningEvent has `artist` string field usually?
-                 // Let's assume yes based on previous code.
-                 // Wait, `prisma/schema.prisma` is not visible but `AudioProvider` sends `artist` in body.
-                 // In `route.ts`, `listeningEvent` has `videoId`.
-                 // Let's use `likedSongs` as it's safer if `listeningHistory` doesn't store artist name directly.
-                 // Re-check `route.ts`: `recent` selects `videoId`.
-                 // `AudioProvider` sends `title`, `artist` in body to `/api/listening-events`.
-                 // So the model likely has it. I'll verify if `artist` is available.
-                 // To be safe, let's use a generic 'discovery' query if we can't easily access artist.
-                 // Or just use 'new music'.
-                 // Actually, let's check `likedSongs` which we know has `track` relation.
+            if (user && user.history.length > 0) {
+                 // Use the first track from history
+                 const lastPlayed = user.history[0];
+                 const artist = lastPlayed.track?.artist;
+
+                 if (artist) {
+                     query = `music like ${artist}`;
+                     source = `Because you like ${artist}`;
+                 }
+            } else if (user) {
+                 // Fallback to likes if history is empty
                  const liked = await prisma.likedSong.findFirst({ where: { userId: user.id }, include: { track: true }, orderBy: { createdAt: 'desc' } });
                  if (liked?.track?.artist) {
                      query = `music like ${liked.track.artist}`;

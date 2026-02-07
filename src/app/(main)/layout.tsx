@@ -1,10 +1,12 @@
 import { Sidebar } from '@/components/Sidebar';
 import { PlayerBar } from '@/components/PlayerBar';
 import { AudioProvider } from '@/components/AudioProvider';
+import { ExpandedPlayer } from '@/components/ExpandedPlayer';
 import { Header } from '@/components/Header';
 import { MobileNav } from '@/components/MobileNav';
+
+import { SocialOverlay } from '@/components/SocialOverlay';
 import { AmbientBackground } from '@/components/AmbientBackground';
-import { DynamicOverlays } from '@/components/DynamicOverlays';
 
 export default function MainLayout({
     children,
@@ -26,7 +28,8 @@ export default function MainLayout({
 
             <PlayerBar />
             <MobileNav />
-            <DynamicOverlays />
+            <ExpandedPlayer />
+            <SocialOverlay />
         </AudioProvider>
     );
 }

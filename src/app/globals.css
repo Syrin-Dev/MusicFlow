@@ -33,6 +33,13 @@ body {
   -webkit-user-select: none;
 }
 
+/* GPU Accelerated Ambient Background */
+.ambient-glow {
+  will-change: transform, opacity;
+  transform: translate3d(0, 0, 0);
+  transition: opacity 1.5s ease-in-out;
+}
+
 .glass-panel {
   background: rgba(255, 255, 255, 0.03);
   backdrop-filter: blur(24px);
@@ -106,11 +113,4 @@ body {
 }
 .animate-pulse-slow {
   animation: pulse-slow 8s ease-in-out infinite;
-}
-
-/* Ambient Background Optimization */
-.ambient-glow {
-  will-change: transform, opacity;
-  transform: translate3d(0, 0, 0);
-  transition: opacity 1.5s ease-in-out;
 }

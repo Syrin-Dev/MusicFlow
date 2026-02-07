@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { Play, Pause, Heart } from 'lucide-react';
-import Image from 'next/image';
 import { useAudio } from '@/components/AudioProvider';
 import { AddToPlaylist } from './AddToPlaylist';
+import Image from 'next/image';
 
 export function Hero() {
     const { playTrack, currentTrack, isLiked, toggleLike, isPlaying, togglePlay, likedSongs, listeningHistory } = useAudio();
@@ -56,7 +56,8 @@ export function Hero() {
                     fill
                     priority
                     className="object-cover"
-                    unoptimized={!displayTrack.thumbnail?.includes('i.ytimg.com')}
+                    sizes="100vw"
+                    unoptimized={!displayTrack.thumbnail.includes('i.ytimg.com')}
                 />
                 <div className="absolute inset-0 bg-black/60 backdrop-blur-[10px] group-hover:backdrop-blur-sm transition-all duration-700"></div>
 
@@ -128,10 +129,11 @@ export function Hero() {
             <div className="absolute top-1/2 -right-12 -translate-y-1/2 w-80 h-80 rounded-[3rem] overflow-hidden border border-white/10 hidden xl:block shadow-2xl rotate-6 group-hover:rotate-3 transition-transform duration-1000">
                 <Image
                     src={displayTrack.thumbnail}
-                    alt="Album Art"
+                    alt={displayTrack.title}
                     fill
                     className="object-cover"
-                    unoptimized={!displayTrack.thumbnail?.includes('i.ytimg.com')}
+                    sizes="320px"
+                    unoptimized={!displayTrack.thumbnail.includes('i.ytimg.com')}
                 />
                 <div className="absolute inset-0 bg-black/20 backdrop-blur-[2px]"></div>
                 {/* Glow behind the artwork */}

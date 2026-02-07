@@ -55,7 +55,7 @@ export function FriendActivity() {
                     <p className="text-[10px] text-zinc-500 font-black uppercase tracking-[0.2em] mt-0.5">Live from your circle</p>
                 </div>
                 <button
-                    onClick={() => openConnect()}
+                    onClick={() => openConnect(null)}
                     className="text-xs font-bold text-primary hover:underline uppercase tracking-wider"
                 >
                     View All
@@ -129,7 +129,7 @@ export function FriendActivity() {
 
                             {/* Track Metadata */}
                             <div className="space-y-1">
-                                <h4 className="text-sm font-bold text-zinc-100 truncate group-hover:text-primary transition-colors cursor-pointer" onClick={() => openConnect()}>
+                                <h4 className="text-sm font-bold text-zinc-100 truncate group-hover:text-primary transition-colors cursor-pointer" onClick={() => openConnect(null)}>
                                     {friend.lastTrack?.title}
                                 </h4>
                                 <p className="text-xs text-zinc-500 truncate">{friend.lastTrack?.artist}</p>
@@ -137,7 +137,7 @@ export function FriendActivity() {
 
                             {/* Conversation Trigger */}
                             <button
-                                onClick={() => openConnect()}
+                                onClick={() => openConnect(null)}
                                 className="absolute top-6 right-6 w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-zinc-400 opacity-0 group-hover:opacity-100 transition-all hover:bg-primary hover:text-white"
                             >
                                 <span className="material-icons-round text-lg">chat</span>

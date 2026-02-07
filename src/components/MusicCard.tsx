@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, memo } from 'react';
-import Image from 'next/image';
+import { useState } from 'react';
 import { useAudio } from '@/components/AudioProvider';
 
 interface MusicCardProps {
@@ -9,7 +8,7 @@ interface MusicCardProps {
     currentUserId: string;
 }
 
-function MusicCard({ message, currentUserId }: MusicCardProps) {
+export default function MusicCard({ message, currentUserId }: MusicCardProps) {
     const { playTrack } = useAudio();
     const isMe = message.senderId === currentUserId;
 
@@ -32,15 +31,8 @@ function MusicCard({ message, currentUserId }: MusicCardProps) {
             >
                 {/* Album Art with Play Overlay */}
                 <div className="relative w-16 h-16 rounded-xl overflow-hidden shadow-lg mr-4 flex-shrink-0">
-                    <Image
-                        src={message.sharedMusicImg}
-                        alt={message.sharedMusicTitle}
-                        fill
-                        sizes="64px"
-                        className="object-cover"
-                        unoptimized={!message.sharedMusicImg?.includes('i.ytimg.com')}
-                    />
-                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                    <img src={message.sharedMusicImg} alt={message.sharedMusicTitle} className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                         <span className="material-icons-round text-white text-2xl">play_arrow</span>
                     </div>
                 </div>
@@ -58,5 +50,3 @@ function MusicCard({ message, currentUserId }: MusicCardProps) {
         </div>
     );
 }
-
-export default memo(MusicCard);

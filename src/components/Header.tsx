@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useSession, signIn, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import { SearchBar } from './SearchBar';
 import { Bell, User, Settings, LogOut, Users, Menu } from 'lucide-react';
 import { useAudio } from '@/components/AudioProvider';
@@ -59,7 +58,7 @@ export function Header() {
 
                     {/* Activity Button (Desktop) */}
                     <button
-                        onClick={() => openConnect()}
+                        onClick={() => openConnect(null)}
                         className="hidden md:flex p-2.5 rounded-full text-zinc-400 hover:bg-white/10 hover:text-white transition-all duration-300 group"
                         title="Friend Activity"
                     >
@@ -79,15 +78,13 @@ export function Header() {
                             <>
                                 <button
                                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                                    className="relative w-10 h-10 rounded-full overflow-hidden ring-2 ring-transparent hover:ring-[#8B5CF6]/50 transition-all duration-300 transform hover:scale-105 shadow-lg"
+                                    className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-transparent hover:ring-[#8B5CF6]/50 transition-all duration-300 transform hover:scale-105 shadow-lg"
                                 >
                                     {userImage ? (
-                                        <Image
+                                        <img
                                             src={userImage}
                                             alt={userName}
-                                            fill
-                                            sizes="40px"
-                                            className="object-cover"
+                                            className="w-full h-full object-cover"
                                         />
                                     ) : (
                                         <div className="w-full h-full bg-gradient-to-br from-[#8B5CF6] to-indigo-600 flex items-center justify-center text-white font-bold text-sm">

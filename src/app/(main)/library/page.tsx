@@ -102,9 +102,9 @@ export default function LibraryPage() {
     const showLikedSongs = filter === 'all' || filter === 'liked';
 
     return (
-        <div className="flex-1 overflow-y-auto bg-[#0A0A0B] pb-32">
+        <div className="flex-1 overflow-y-auto bg-transparent pb-32">
             {/* Header */}
-            <div className="sticky top-0 z-10 bg-[#0A0A0B]/90 backdrop-blur-xl px-4 md:px-8 py-4 md:py-6 border-b border-white/5">
+            <div className="sticky top-0 z-10 bg-black/20 backdrop-blur-xl px-4 md:px-8 py-4 md:py-6 border-b border-white/5">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="flex items-center gap-4 md:gap-6">
                         <h1 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tighter">Library</h1>

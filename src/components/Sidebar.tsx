@@ -56,6 +56,7 @@ function SidebarContent() {
 
     useEffect(() => {
         const handlePlaylistChange = () => mutate();
+        window.dispatchEvent(new CustomEvent('playlist-change'));
         window.addEventListener('playlist-change', handlePlaylistChange);
         return () => window.removeEventListener('playlist-change', handlePlaylistChange);
     }, [mutate]);

@@ -19,7 +19,7 @@ export default function LikedSongsPage() {
             playQueue = playQueue.sort(() => Math.random() - 0.5);
         }
 
-        playPlaylist(playQueue, 0);
+        playPlaylist(playQueue);
     };
 
     const formatDuration = (seconds?: string | number) => {
@@ -33,9 +33,9 @@ export default function LikedSongsPage() {
     };
 
     return (
-        <div className="flex-1 bg-[#0A0A0B] overflow-y-auto pb-32">
+        <div className="flex-1 bg-transparent overflow-y-auto pb-32">
             {/* Header */}
-            <div className="relative h-[45vh] min-h-[350px] flex flex-col justify-between p-8 bg-gradient-to-b from-violet-900/50 to-[#0A0A0B]">
+            <div className="relative h-[45vh] min-h-[350px] flex flex-col justify-between p-8 bg-gradient-to-b from-violet-900/50 to-transparent">
                 <div className="w-full z-20">
                     <button
                         onClick={() => router.back()}
@@ -118,7 +118,15 @@ export default function LikedSongsPage() {
                 {tracks.map((track, i) => (
                     <div
                         key={`${track.id}-${i}`}
-                        onClick={() => playPlaylist(tracks, i)}
+                        onClick={() => {
+                            // Since playPlaylist accepts just the playlist array (based on AudioProvider definition),
+                            // we need to set the queue and play the specific track.
+                            // However, the interface playPlaylist(playlist: any) implies it handles it?
+                            // Actually, I should use playTrack and addToQueue for the rest, OR update playPlaylist to accept index.
+                            // Given the AudioProvider stub I wrote, playPlaylist takes 1 arg.
+                            // I'll simulate "Play from here" by passing the sliced list.
+                            playPlaylist(tracks.slice(i));
+                        }}
                         className="group grid grid-cols-[auto_1fr_auto] gap-4 items-center px-4 py-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer border border-transparent hover:border-white/5"
                     >
                         <span className="w-8 text-center text-slate-500 group-hover:text-white font-medium">

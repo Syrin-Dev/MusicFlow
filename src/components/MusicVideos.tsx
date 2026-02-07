@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAudio } from './AudioProvider';
 import { generateSmartDiscoveryQueries } from '@/lib/algorithm';
-import Image from 'next/image';
 
 interface Video {
     id: string;
@@ -53,12 +52,21 @@ export function MusicVideos() {
 
     useEffect(() => {
         fetchVideos();
-    }, [fetchVideos]);
+    }, []); // Run only on mount
 
     const handlePlayVideo = (video: Video, index: number) => {
         playTrack(video);
         // Add remaining to queue
         videos.slice(index + 1).forEach(v => addToQueue(v));
+    };
+
+    const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>, video: Video) => {
+        const img = e.currentTarget;
+        if (img.src.includes('maxresdefault')) {
+            img.src = `https://i.ytimg.com/vi/${video.id}/hqdefault.jpg`;
+        } else if (img.src.includes('hqdefault')) {
+            img.src = `https://i.ytimg.com/vi/${video.id}/mqdefault.jpg`;
+        }
     };
 
     return (
@@ -90,22 +98,11 @@ export function MusicVideos() {
                             onClick={() => handlePlayVideo(video, index)}
                         >
                             <div className="relative aspect-video rounded-2xl overflow-hidden mb-3 bg-[#18181b] shadow-lg ring-1 ring-white/5">
-                                <Image
+                                <img
                                     src={video.thumbnail || `https://i.ytimg.com/vi/${video.id}/hqdefault.jpg`}
                                     alt={video.title}
-                                    fill
-                                    className="object-cover group-hover:scale-105 transition-transform duration-500 opacity-80 group-hover:opacity-100"
-                                    unoptimized
-                                    onError={(e) => {
-                                        const img = e.currentTarget;
-                                        // Simple fallback logic
-                                        if (img.src.includes('maxresdefault')) {
-                                            img.src = `https://i.ytimg.com/vi/${video.id}/hqdefault.jpg`;
-                                        } else if (img.src.includes('hqdefault')) {
-                                            img.src = `https://i.ytimg.com/vi/${video.id}/mqdefault.jpg`;
-                                        }
-                                    }}
-                                    sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
+                                    onError={(e) => handleImageError(e, video)}
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-80 group-hover:opacity-100"
                                 />
                                 <div className="absolute inset-0 flex items-center justify-center">
                                     <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center border border-white/30 group-hover:bg-[#8B5CF6] group-hover:border-[#8B5CF6] transition-colors duration-300 shadow-xl">

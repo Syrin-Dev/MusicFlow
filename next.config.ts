@@ -26,7 +26,7 @@ const nextConfig: NextConfig = {
     ],
   },
   experimental: {
-    ppr: true,
+    // ppr: 'incremental', // Attempt to fix ppr
   },
 };
 

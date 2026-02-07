@@ -21,8 +21,8 @@ export function GenreBubbles({ onGenreSelect, selectedGenre = 'All' }: GenreBubb
 
     return (
         // Removed dark background/gradient and backdrop blur from container
-        <div className="sticky top-[72px] z-30 pt-2 pb-6 -mb-2">
-            <div className="flex gap-3 overflow-x-auto hide-scrollbar px-8">
+        <div className="sticky top-[72px] z-30 -mb-2">
+            <div className="flex gap-3 overflow-x-auto hide-scrollbar px-8 py-4">
                 {/* Added px-1 to avoid clipping active shadow */}
                 <div className="px-1 flex gap-3">
                     {GENRES.map((genre) => (

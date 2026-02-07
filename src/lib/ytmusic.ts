@@ -253,24 +253,27 @@ export async function getArtistData(name: string) {
 
         // Real Events from Bandsintown (Working App ID found)
         let realEvents: any[] = [];
+        const bandsintownAppId = process.env.BANDSINTOWN_APP_ID;
         try {
-            const bitRes = await fetch(`https://rest.bandsintown.com/artists/${encodeURIComponent(artistInfo.name)}/events?app_id=squarespace-tours-v6&date=upcoming`);
-            if (bitRes.ok) {
-                const bitData = await bitRes.json();
-                if (Array.isArray(bitData)) {
-                    realEvents = bitData.slice(0, 5).map((evt: any) => {
-                        const dateObj = new Date(evt.datetime);
-                        const month = dateObj.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
-                        const day = dateObj.getDate().toString().padStart(2, '0');
+            if (bandsintownAppId) {
+                const bitRes = await fetch(`https://rest.bandsintown.com/artists/${encodeURIComponent(artistInfo.name)}/events?app_id=${bandsintownAppId}&date=upcoming`);
+                if (bitRes.ok) {
+                    const bitData = await bitRes.json();
+                    if (Array.isArray(bitData)) {
+                        realEvents = bitData.slice(0, 5).map((evt: any) => {
+                            const dateObj = new Date(evt.datetime);
+                            const month = dateObj.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
+                            const day = dateObj.getDate().toString().padStart(2, '0');
 
-                        return {
-                            id: evt.id,
-                            date: `${month} ${day}`,
-                            venue: evt.venue?.name || 'Unknown Venue',
-                            location: `${evt.venue?.city || ''}, ${evt.venue?.country || ''}`,
-                            url: evt.url
-                        };
-                    });
+                            return {
+                                id: evt.id,
+                                date: `${month} ${day}`,
+                                venue: evt.venue?.name || 'Unknown Venue',
+                                location: `${evt.venue?.city || ''}, ${evt.venue?.country || ''}`,
+                                url: evt.url
+                            };
+                        });
+                    }
                 }
             }
         } catch (e) {

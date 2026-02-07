@@ -82,11 +82,6 @@ export async function searchPlaylists(query: string): Promise<SearchResult[]> {
         await ensureInitialized();
         const results = await ytmusic.searchPlaylists(query) as any[];
 
-        // Debug: log first result to see structure
-        if (results.length > 0) {
-            console.log('Playlist search result sample:', JSON.stringify(results[0], null, 2));
-        }
-
         return results.slice(0, 10)
             .map((item: any) => {
                 // Try all possible ID properties
@@ -120,11 +115,6 @@ export async function searchAlbums(query: string): Promise<SearchResult[]> {
     try {
         await ensureInitialized();
         const results = await ytmusic.searchAlbums(query) as any[];
-
-        // Debug: log first result
-        if (results.length > 0) {
-            console.log('Album search result sample:', JSON.stringify(results[0], null, 2));
-        }
 
         return results.slice(0, 10)
             .map((item: any) => {
@@ -180,7 +170,7 @@ export async function getPlaylistDetails(id: string) {
                     };
                 }
             } catch (e) {
-                console.log("Failed as album, trying playlist fallback...", e);
+                // Fail silently, try playlist fallback
             }
         }
 
@@ -190,8 +180,6 @@ export async function getPlaylistDetails(id: string) {
         // IMPORTANT: getPlaylist only returns metadata, NOT tracks!
         // We need to call getPlaylistVideos separately to get the tracks
         const playlistVideos = await ytmusic.getPlaylistVideos(id) as any[];
-
-        console.log('Playlist videos count:', playlistVideos?.length || 0);
 
         return {
             id: playlist.playlistId || id,
@@ -220,14 +208,11 @@ export async function getArtistData(name: string) {
         // 1. Search for the artist to get the ID
         const searchResults = await ytmusic.searchArtists(name);
         if (!searchResults || searchResults.length === 0) {
-            console.log(`No artist found for: ${name}`);
             return null;
         }
 
         const artistInfo = searchResults[0];
         const artistId = (artistInfo as any).browseId || (artistInfo as any).artistId;
-
-        console.log(`Found artist: ${artistInfo.name} (${artistId})`);
 
         // 2. Get full artist details
         const artistDetails = await ytmusic.getArtist(artistId) as any;

@@ -70,6 +70,20 @@ export async function POST(req: Request) {
         const user = await prisma.user.findUnique({ where: { email: session.user.email } });
         if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
+        // Check for accepted friendship
+        const friendship = await prisma.friendship.findUnique({
+            where: {
+                userId_friendId: {
+                    userId: user.id,
+                    friendId: receiverId
+                }
+            }
+        });
+
+        if (!friendship || friendship.status !== 'ACCEPTED') {
+            return NextResponse.json({ error: 'You must be friends to send messages' }, { status: 403 });
+        }
+
         const messageData: any = {
             senderId: user.id,
             receiverId: receiverId,

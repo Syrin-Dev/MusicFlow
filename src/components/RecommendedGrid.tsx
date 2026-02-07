@@ -1,6 +1,8 @@
 'use client';
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useMemo } from 'react';
+import Image from 'next/image';
+import useSWR from 'swr';
 import { useAudio } from './AudioProvider';
 import { generateSmartDiscoveryQueries } from '@/lib/algorithm';
 
@@ -11,89 +13,79 @@ interface Track {
     thumbnail: string;
 }
 
-export function RecommendedGrid() {
-    const [tracks, setTracks] = useState<Track[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [isTransitioning, setIsTransitioning] = useState(false);
-    const [historyStack, setHistoryStack] = useState<Track[][]>([]);
-    // If you want to show what the recommendation is based on, you can keep this, 
-    // or just say "Based on your taste"
-    const [recSource, setRecSource] = useState('Based on your taste');
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
-    // Track which query index we're on for variety
-    const queryIndexRef = useRef(0);
+// Helper function outside component
+function getQueryData(history: any[], index: number) {
+    const queries = generateSmartDiscoveryQueries(history);
+    // Ensure we have at least one query
+    const safeQueries = queries.length > 0 ? queries : ['new music'];
+    const query = safeQueries[index % safeQueries.length];
+
+    let source = 'Recommended for you';
+    if (query.includes('like')) {
+        source = `Because you like ${query.replace('people like ', '').replace('artists like ', '').replace('music like ', '')}`;
+    } else if (query.includes('mix')) {
+        source = 'Mix for you';
+    }
+
+    return {
+        url: `/api/search?q=${encodeURIComponent(query)}`,
+        source
+    };
+}
+
+export function RecommendedGrid() {
+    // State for navigation
+    const [queryStack, setQueryStack] = useState<{ url: string, source: string }[]>([]);
 
     const { playTrack, addToQueue, listeningHistory, openConnect } = useAudio();
+    const queryIndexRef = useRef(0);
 
-    const fetchRecommendations = useCallback(async (saveToHistory = false) => {
-        // Use our new smart algorithm
-        const queries = generateSmartDiscoveryQueries(listeningHistory);
+    // Initialize state lazily
+    const [{ currentQueryUrl, recSource }, setQueryState] = useState(() => {
+        const data = getQueryData(listeningHistory, 0);
+        return {
+            currentQueryUrl: data.url,
+            recSource: data.source
+        };
+    });
 
-        // Rotate through queries for variety
-        const queryIndex = queryIndexRef.current % queries.length;
-        const query = queries[queryIndex];
+    // Helper to update
+    const updateToNextQuery = useCallback(() => {
+        // Increment index
         queryIndexRef.current += 1;
+        const { url, source } = getQueryData(listeningHistory, queryIndexRef.current);
 
-        // Update the "Based on..." text
-        if (query.includes('like')) {
-            setRecSource(`Because you like ${query.replace('people like ', '').replace('artists like ', '').replace('music like ', '')}`);
-        } else if (query.includes('mix')) {
-            setRecSource('Mix for you');
-        } else {
-            setRecSource('Recommended for you');
-        }
+        setQueryStack(prev => [...prev, { url: currentQueryUrl, source: recSource }]);
+        setQueryState({ currentQueryUrl: url, recSource: source });
+    }, [listeningHistory, currentQueryUrl, recSource]);
 
-        try {
-            const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
-            const data = await res.json();
-            if (Array.isArray(data) && data.length > 0) {
-                if (saveToHistory && tracks.length > 0) {
-                    setHistoryStack(prev => [...prev, tracks]);
-                }
-                setTracks(data.slice(0, 5));
-            }
-        } catch (e) {
-            console.error('Failed to fetch recommendations:', e);
-        }
-        setLoading(false);
-    }, [tracks, listeningHistory]);
+    // SWR Fetching
+    const { data: tracksData, isLoading: loading } = useSWR(currentQueryUrl, fetcher, {
+        revalidateOnFocus: false,
+        dedupingInterval: 60000,
+        keepPreviousData: true,
+    });
 
-    useEffect(() => {
-        fetchRecommendations(false);
-    }, []);
+    const tracks = useMemo(() => {
+        return Array.isArray(tracksData) ? tracksData.slice(0, 5) : [];
+    }, [tracksData]);
 
-    const handleNext = async () => {
-        setIsTransitioning(true);
-        setTimeout(async () => {
-            await fetchRecommendations(true);
-            setIsTransitioning(false);
-        }, 300);
+    const handleNext = () => {
+        updateToNextQuery();
     };
 
     const handlePrevious = () => {
-        if (historyStack.length === 0) return;
-
-        setIsTransitioning(true);
-        setTimeout(() => {
-            const previousTracks = historyStack[historyStack.length - 1];
-            setHistoryStack(prev => prev.slice(0, -1));
-            setTracks(previousTracks);
-            setIsTransitioning(false);
-        }, 300);
+        if (queryStack.length === 0) return;
+        const previous = queryStack[queryStack.length - 1];
+        setQueryStack(prev => prev.slice(0, -1));
+        setQueryState({ currentQueryUrl: previous.url, recSource: previous.source });
     };
 
     const handlePlayTrack = (track: Track, index: number) => {
         playTrack(track);
-        tracks.slice(index + 1).forEach(t => addToQueue(t));
-    };
-
-    const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>, track: Track) => {
-        const img = e.currentTarget;
-        if (img.src.includes('hqdefault')) {
-            img.src = `https://i.ytimg.com/vi/${track.id}/mqdefault.jpg`;
-        } else {
-            img.src = `https://i.ytimg.com/vi/${track.id}/default.jpg`;
-        }
+        tracks.slice(index + 1).forEach((t: Track) => addToQueue(t));
     };
 
     return (
@@ -106,7 +98,7 @@ export function RecommendedGrid() {
                 <div className="flex gap-2">
                     <button
                         onClick={handlePrevious}
-                        disabled={loading || historyStack.length === 0}
+                        disabled={loading || queryStack.length === 0}
                         className="w-9 h-9 rounded-full border border-white/10 flex items-center justify-center hover:bg-white/10 text-gray-300 hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                     >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -125,8 +117,8 @@ export function RecommendedGrid() {
                 </div>
             </div>
 
-            <div className={`grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6 transition-all duration-300 ${isTransitioning ? 'opacity-0 translate-x-4' : 'opacity-100 translate-x-0'}`}>
-                {loading ? (
+            <div className={`grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6 transition-opacity duration-300 ${loading && !tracks.length ? 'opacity-50' : 'opacity-100'}`}>
+                {loading && !tracks.length ? (
                     Array.from({ length: 5 }).map((_, i) => (
                         <div key={i} className="animate-pulse">
                             <div className="aspect-square rounded-2xl bg-[#18181b] mb-3"></div>
@@ -135,23 +127,25 @@ export function RecommendedGrid() {
                         </div>
                     ))
                 ) : (
-                    tracks.map((track, index) => (
+                    tracks.map((track: Track, index: number) => (
                         <div
                             key={track.id}
                             className="group cursor-pointer"
                             onClick={() => handlePlayTrack(track, index)}
                         >
                             <div className="relative aspect-square rounded-2xl overflow-hidden mb-3 bg-[#18181b] shadow-lg ring-1 ring-white/5">
-                                <img
+                                <Image
                                     src={track.thumbnail || `https://i.ytimg.com/vi/${track.id}/hqdefault.jpg`}
                                     alt={track.title}
-                                    onError={(e) => handleImageError(e, track)}
-                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 opacity-90 group-hover:opacity-100"
+                                    fill
+                                    sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 20vw"
+                                    className="object-cover transition-transform duration-500 group-hover:scale-110 opacity-90 group-hover:opacity-100"
+                                    unoptimized={!track.thumbnail?.includes('i.ytimg.com')}
                                 />
                                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-3 backdrop-blur-[2px]">
                                     <button
                                         onClick={(e) => { e.stopPropagation(); handlePlayTrack(track, index); }}
-                                        className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white shadow-lg translate-y-4 group-hover:translate-y-0 transition-transform duration-300 hover:scale-110 active:scale-95"
+                                        className="relative z-10 w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white shadow-lg translate-y-4 group-hover:translate-y-0 transition-transform duration-300 hover:scale-110 active:scale-95"
                                     >
                                         <svg className="w-6 h-6 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
                                             <path d="M8 5v14l11-7L8 5z" />
@@ -159,7 +153,7 @@ export function RecommendedGrid() {
                                     </button>
                                     <button
                                         onClick={(e) => { e.stopPropagation(); openConnect(track); }}
-                                        className="w-12 h-12 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white shadow-lg translate-y-4 group-hover:translate-y-0 transition-transform duration-300 delay-75 hover:bg-white/20 hover:scale-110 active:scale-95"
+                                        className="relative z-10 w-12 h-12 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white shadow-lg translate-y-4 group-hover:translate-y-0 transition-transform duration-300 delay-75 hover:bg-white/20 hover:scale-110 active:scale-95"
                                         title="Share with friends"
                                     >
                                         <span className="material-icons-round text-xl">share</span>

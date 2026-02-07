@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useAudio } from './AudioProvider';
 import { Play, RotateCcw } from 'lucide-react';
+import Image from 'next/image';
 
 interface Track {
     id: string;
@@ -61,12 +62,18 @@ export function ListenAgain() {
         <section suppressHydrationWarning className="animate-in fade-in duration-700">
             <div className="flex items-center gap-4 mb-8">
                 <div className="relative group">
-                    <div className="w-14 h-14 rounded-full overflow-hidden p-[2px] bg-gradient-to-tr from-[#8B5CF6] to-[#D946EF] shadow-lg">
-                        <div className="w-full h-full rounded-full overflow-hidden bg-black">
+                    <div className="w-14 h-14 rounded-full overflow-hidden p-[2px] bg-gradient-to-tr from-[#8B5CF6] to-[#D946EF] shadow-lg relative">
+                        <div className="w-full h-full rounded-full overflow-hidden bg-black relative">
                             {session?.user?.image ? (
-                                <img src={session.user.image} alt={userName} className="w-full h-full object-cover" />
+                                <Image
+                                    src={session.user.image}
+                                    alt={userName}
+                                    fill
+                                    className="object-cover"
+                                    unoptimized
+                                />
                             ) : (
-                                <div suppressHydrationWarning className="w-full h-full bg-zinc-800 flex items-center justify-center text-white font-bold text-xl uppercase">
+                                <div suppressHydrationWarning className="w-full h-full bg-zinc-800 flex items-center justify-center text-white font-bold text-xl uppercase absolute inset-0">
                                     {userName.charAt(0)}
                                 </div>
                             )}
@@ -105,11 +112,15 @@ export function ListenAgain() {
                                 tracks.slice(index + 1).forEach(t => addToQueue(t));
                             }}
                         >
-                            <div className="relative rounded-3xl overflow-hidden shadow-2xl transition-all duration-500 group-hover:-translate-y-2 group-hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] bg-zinc-900 border border-white/5">
-                                <img
+                            <div className="relative rounded-3xl overflow-hidden shadow-2xl transition-all duration-500 group-hover:-translate-y-2 group-hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] bg-zinc-900 border border-white/5 aspect-[16/10]">
+                                <Image
                                     src={track.thumbnail || `https://i.ytimg.com/vi/${track.id}/hqdefault.jpg`}
                                     alt={track.title}
+                                    fill
                                     referrerPolicy="no-referrer"
+                                    className="object-cover transition-transform duration-700 group-hover:scale-110 opacity-80 group-hover:opacity-100"
+                                    unoptimized
+                                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
                                     onError={(e) => {
                                         const img = e.currentTarget;
                                         // Try different quality thumbnails before giving up
@@ -123,7 +134,6 @@ export function ListenAgain() {
                                             img.parentElement?.classList.add('bg-gradient-to-br', 'from-zinc-800', 'to-zinc-900');
                                         }
                                     }}
-                                    className="w-full aspect-[16/10] object-cover transition-transform duration-700 group-hover:scale-110 opacity-80 group-hover:opacity-100"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
 

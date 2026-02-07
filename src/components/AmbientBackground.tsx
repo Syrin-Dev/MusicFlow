@@ -15,6 +15,9 @@ function getSaturation(r: number, g: number, b: number) {
 
 const DEFAULT_COLOR = [139, 92, 246]; // #8B5CF6 (Vivid Purple)
 
+// Global cache for extracted colors to avoid re-processing
+const colorCache = new Map<string, number[][]>();
+
 export function AmbientBackground() {
     const { currentTrack } = useAudio();
     const [colors, setColors] = useState<number[][]>([DEFAULT_COLOR, DEFAULT_COLOR]);
@@ -29,6 +32,12 @@ export function AmbientBackground() {
 
     useEffect(() => {
         if (!currentTrack?.thumbnail || !colorThiefRef.current) return;
+
+        // Check cache first
+        if (colorCache.has(currentTrack.thumbnail)) {
+            setColors(colorCache.get(currentTrack.thumbnail)!);
+            return;
+        }
 
         const img = new Image();
         img.crossOrigin = 'Anonymous';
@@ -46,16 +55,22 @@ export function AmbientBackground() {
                     const [r, g, b] = palette[0];
                     const saturation = getSaturation(r, g, b);
 
+                    let newColors = [DEFAULT_COLOR, DEFAULT_COLOR, DEFAULT_COLOR];
+
                     // The 'Saturation Floor' Rule
                     // If saturation is too low (grayscale/muddy), force Vivid Purple
                     if (saturation < 0.25) { // Adjusted threshold for better feel
-                        setColors([DEFAULT_COLOR, DEFAULT_COLOR, DEFAULT_COLOR]);
+                        newColors = [DEFAULT_COLOR, DEFAULT_COLOR, DEFAULT_COLOR];
                     } else {
                         // Pick 2-3 vibrant colors.
                         // Sometimes the first one is dark/black, so we might want to skip it if it's too dark.
                         // But let's trust ColorThief's ranking for now, or filter for brightness.
-                        setColors(palette.slice(0, 3));
+                        newColors = palette.slice(0, 3);
                     }
+
+                    // Update cache and state
+                    colorCache.set(currentTrack.thumbnail, newColors);
+                    setColors(newColors);
                 }
             } catch (e) {
                 console.warn('Color extraction failed, using default.', e);

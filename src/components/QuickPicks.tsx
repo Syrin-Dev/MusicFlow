@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import Image from 'next/image';
 import { useAudio } from './AudioProvider';
 import { Play } from 'lucide-react';
 
@@ -24,21 +25,19 @@ export function QuickPicks() {
     const [tracks, setTracks] = useState<Track[]>([]);
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
-    const [hasMore, setHasMore] = useState(true);
     const { playTrack, addToQueue, listeningHistory } = useAudio();
 
     const fetchTracks = useCallback(async () => {
         let queries = QUICK_PICK_QUERIES;
 
         // Smart discovery based on history if available
-        // Note: Simple heuristic for now, assuming similar genres/artists
         if (listeningHistory && listeningHistory.length > 0) {
             const artists = listeningHistory.slice(0, 3).map(t => t.artist);
             queries = [...artists, ...QUICK_PICK_QUERIES];
         }
 
         const query1 = queries[Math.floor(Math.random() * queries.length)];
-        let query2 = queries[Math.floor(Math.random() * queries.length)];
+        const query2 = queries[Math.floor(Math.random() * queries.length)];
 
         try {
             const [res1, res2] = await Promise.all([
@@ -80,7 +79,7 @@ export function QuickPicks() {
             const data1 = await res1.json();
             const data2 = await res2.json();
 
-            let newTracks: Track[] = [];
+            const newTracks: Track[] = [];
             if (Array.isArray(data1)) newTracks.push(...data1.slice(0, 8));
             if (Array.isArray(data2)) newTracks.push(...data2.slice(0, 8));
 
@@ -97,7 +96,7 @@ export function QuickPicks() {
 
     useEffect(() => {
         fetchTracks();
-    }, []);
+    }, [fetchTracks]);
 
     const handlePlayAll = () => {
         if (tracks.length === 0) return;
@@ -131,12 +130,13 @@ export function QuickPicks() {
                         className="group flex items-center gap-3 p-2 pr-4 rounded-xl hover:bg-white/10 transition-all duration-200 cursor-pointer border border-transparent hover:border-white/5 active:scale-[0.98]"
                     >
                         <div className="relative w-14 h-14 flex-shrink-0">
-                            <img
+                            <Image
                                 src={track.thumbnail || `https://i.ytimg.com/vi/${track.id}/hqdefault.jpg`}
                                 alt={track.title}
-                                referrerPolicy="no-referrer"
-                                className="w-full h-full rounded-md object-cover shadow-lg group-hover:shadow-xl transition-shadow"
-                                loading="lazy"
+                                fill
+                                className="rounded-md object-cover shadow-lg group-hover:shadow-xl transition-shadow"
+                                unoptimized={!track.thumbnail?.includes('i.ytimg.com')}
+                                sizes="56px"
                             />
                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-md flex items-center justify-center backdrop-blur-[1px]">
                                 <Play size={20} className="text-white fill-white ml-0.5" />

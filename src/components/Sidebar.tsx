@@ -1,18 +1,28 @@
 'use client';
 
-import { useState, useEffect, ElementType } from 'react';
+import { ElementType, useEffect, useMemo, memo } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
+import useSWR from 'swr';
 import {
     Home, Compass, Library, Heart, ListMusic, Pin, Sparkles
 } from 'lucide-react';
 
-const NavItem = ({ href, icon: Icon, label }: { href: string; icon: ElementType; label: string }) => {
+interface Playlist {
+    id: string;
+    name: string;
+}
+
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
+
+const NavItem = memo(function NavItem({ href, icon: Icon, label }: { href: string; icon: ElementType; label: string }) {
     const pathname = usePathname();
     const active = pathname === href;
     return (
         <Link
             href={href}
+            prefetch={true}
             className={`
                 group flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-300 relative overflow-hidden
                 ${active
@@ -31,31 +41,24 @@ const NavItem = ({ href, icon: Icon, label }: { href: string; icon: ElementType;
             <span className="relative z-10">{label}</span>
         </Link>
     );
-};
+});
 
-export function Sidebar() {
+function SidebarContent() {
     const pathname = usePathname();
-    const [playlists, setPlaylists] = useState<{ id: string; name: string }[]>([]);
+
+    // SWR for caching playlists
+    const { data: playlistsData, mutate } = useSWR('/api/playlists', fetcher, {
+        revalidateOnFocus: false, // Don't revalidate too aggressively
+        dedupingInterval: 60000 // Cache for 1 minute
+    });
+
+    const playlists = useMemo(() => Array.isArray(playlistsData) ? playlistsData : [], [playlistsData]);
 
     useEffect(() => {
-        const fetchPlaylists = () => {
-            fetch(`/api/playlists?t=${Date.now()}`)
-                .then(res => res.json())
-                .then(data => {
-                    if (Array.isArray(data)) {
-                        setPlaylists(data);
-                    } else {
-                        setPlaylists([]);
-                    }
-                })
-                .catch(console.error);
-        };
-
-        fetchPlaylists();
-        window.addEventListener('playlist-change', fetchPlaylists);
-
-        return () => window.removeEventListener('playlist-change', fetchPlaylists);
-    }, []);
+        const handlePlaylistChange = () => mutate();
+        window.addEventListener('playlist-change', handlePlaylistChange);
+        return () => window.removeEventListener('playlist-change', handlePlaylistChange);
+    }, [mutate]);
 
     const isActive = (path: string) => pathname === path;
 
@@ -65,10 +68,13 @@ export function Sidebar() {
             {/* Logo */}
             <div suppressHydrationWarning className="flex items-center gap-3 px-2 mb-8 mt-2">
                 <div suppressHydrationWarning className="relative w-12 h-12 flex items-center justify-center overflow-hidden rounded-xl bg-white/5 border border-white/10 shadow-[0_0_20px_rgba(139,92,246,0.3)]">
-                    <img
+                    <Image
                         src="/logo.png"
                         alt="Hievly"
-                        className="w-full h-full object-contain scale-[3.2] transition-transform brightness-110 filter invert-[1] hue-rotate-[180deg] drop-shadow-[0_0_5px_rgba(139,92,246,0.8)]"
+                        fill
+                        priority
+                        sizes="48px"
+                        className="object-contain scale-[3.2] transition-transform brightness-110 filter invert-[1] hue-rotate-[180deg] drop-shadow-[0_0_5px_rgba(139,92,246,0.8)]"
                     />
                 </div>
                 <div>
@@ -100,6 +106,7 @@ export function Sidebar() {
                         {/* Liked Songs - Pinned Effect */}
                         <Link
                             href="/library/liked"
+                            prefetch={true}
                             className={`
                                 flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group relative overflow-hidden border border-transparent
                                 ${isActive('/library/liked') ? 'bg-gradient-to-r from-purple-500/10 to-transparent border-white/5' : 'hover:bg-white/5'}
@@ -123,10 +130,11 @@ export function Sidebar() {
                         </Link>
 
                         {/* User Playlists */}
-                        {playlists.map((playlist) => (
+                        {playlists.map((playlist: Playlist) => (
                             <Link
                                 key={playlist.id}
                                 href={`/library/playlist/${playlist.id}`}
+                                prefetch={true}
                                 className={`
                                     flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200 group
                                     ${isActive(`/library/playlist/${playlist.id}`) ? 'text-white bg-white/5 shadow-[0_0_15px_rgba(255,255,255,0.05)]' : 'text-zinc-500 hover:text-white hover:bg-white/5'}
@@ -146,3 +154,6 @@ export function Sidebar() {
         </aside>
     );
 }
+
+// Memoized Sidebar to prevent re-renders from parent
+export const Sidebar = memo(SidebarContent);

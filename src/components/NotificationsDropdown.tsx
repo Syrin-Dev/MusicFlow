@@ -20,21 +20,21 @@ export function NotificationsDropdown() {
     const [unreadCount, setUnreadCount] = useState(0);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
-    const fetchNotifications = async () => {
-        try {
-            const res = await fetch('/api/notifications');
-            if (!res.ok) return;
-            const data = await res.json();
-            if (Array.isArray(data)) {
-                setNotifications(data);
-                setUnreadCount(data.filter(n => !n.read).length);
-            }
-        } catch (e) {
-            console.error(e);
-        }
-    };
-
     useEffect(() => {
+        const fetchNotifications = async () => {
+            try {
+                const res = await fetch('/api/notifications');
+                if (!res.ok) return;
+                const data = await res.json();
+                if (Array.isArray(data)) {
+                    setNotifications(data);
+                    setUnreadCount(data.filter(n => !n.read).length);
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        };
+
         fetchNotifications();
         // Optional: Poll every minute
         const interval = setInterval(fetchNotifications, 60000);

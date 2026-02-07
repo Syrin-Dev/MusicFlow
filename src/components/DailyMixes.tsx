@@ -1,156 +1,67 @@
 'use client';
 
-import { Play, TrendingUp, Music, ListMusic, Headset, Moon, Sun, Coffee } from 'lucide-react';
-import { useAudio } from '@/components/AudioProvider';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { Play } from 'lucide-react';
+import Image from 'next/image';
+import { useAudio } from './AudioProvider';
+import { generateSmartDiscoveryQueries } from '@/lib/algorithm';
 
-// Base definitions for mixes
-const BASE_MIXES = [
-    {
-        id: 'chill',
-        title: 'Chill Vibes',
-        icon: Music,
-        gradient: 'from-violet-600 to-indigo-900',
-        baseQuery: 'lofi hip hop instrumental aesthetic',
-        keywords: ['chill', 'relax', 'lofi', 'acoustic'],
-        timeSlots: ['evening', 'night'] // Preferred times
-    },
-    {
-        id: 'workout',
-        title: 'Workout Energy',
-        icon: TrendingUp,
-        gradient: 'from-rose-600 to-orange-900',
-        baseQuery: 'gym phonk high energy workout music',
-        keywords: ['workout', 'gym', 'phonk', 'energy'],
-        timeSlots: ['morning', 'afternoon']
-    },
-    {
-        id: 'focus',
-        title: 'Focus Flow',
-        icon: Headset,
-        gradient: 'from-emerald-500 to-teal-900',
-        baseQuery: 'ambient study music no lyrics deep focus',
-        keywords: ['focus', 'study', 'ambient', 'piano'],
-        timeSlots: ['morning', 'afternoon']
-    },
-    {
-        id: 'party',
-        title: 'Party Hits',
-        icon: ListMusic,
-        gradient: 'from-amber-500 to-pink-900',
-        baseQuery: 'summer dance club hits remix 2025',
-        keywords: ['party', 'club', 'dance', 'remix'],
-        timeSlots: ['evening', 'night']
-    }
-];
+interface DailyMix {
+    id: string;
+    title: string;
+    description: string;
+    gradient: string;
+    icon: any;
+    query: string;
+    seedArtist?: string;
+}
 
 export function DailyMixes() {
-    const { playPlaylist, likedSongs } = useAudio();
+    const { listeningHistory, likedSongs, playTrack, addToQueue } = useAudio();
+    const [personalizedMixes, setPersonalizedMixes] = useState<DailyMix[]>([]);
+    const [previews, setPreviews] = useState<{ [key: number]: any[] }>({});
     const [loadingMix, setLoadingMix] = useState<number | null>(null);
 
-    // State to hold the final personalized mix configurations
-    const [personalizedMixes, setPersonalizedMixes] = useState<any[]>([]);
-    const [hasMounted, setHasMounted] = useState(false);
-
     useEffect(() => {
-        setHasMounted(true);
-    }, []);
+        // Generate mixes only on client side to avoid hydration mismatch
+        const mixes = generateSmartDiscoveryQueries(listeningHistory);
+        setPersonalizedMixes(mixes);
 
-    // Previews for the UI (Images)
-    const [previews, setPreviews] = useState<{ [key: string]: any[] }>({});
-
-    useEffect(() => {
-        // 1. Determine Time of Day
-        const hour = new Date().getHours();
-        let timeOfDay = 'morning';
-        if (hour >= 12 && hour < 18) timeOfDay = 'afternoon';
-        else if (hour >= 18 && hour < 22) timeOfDay = 'evening';
-        else if (hour >= 22 || hour < 5) timeOfDay = 'night';
-
-        // 2. Sort Mixes based on Time of Day Relevance
-        const sortedMixes = [...BASE_MIXES].sort((a, b) => {
-            const aScore = a.timeSlots.includes(timeOfDay) ? 1 : 0;
-            const bScore = b.timeSlots.includes(timeOfDay) ? 1 : 0;
-            return bScore - aScore; // Higher score comes first
+        // Fetch previews for each mix
+        mixes.forEach((mix, index) => {
+            fetch(`/api/search?q=${encodeURIComponent(mix.query)}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (Array.isArray(data)) {
+                        setPreviews(prev => ({ ...prev, [index]: data.slice(0, 1) }));
+                    }
+                })
+                .catch(err => console.error('Failed to load preview', err));
         });
-
-        // 3. Personalize Queries using Liked Songs (Smart Seeds)
-        const generatePersonalizedMixes = async () => {
-            const newMixes = sortedMixes.map(mix => {
-                let personalizedQuery = mix.baseQuery;
-                let seedArtist = null;
-
-                // Try to find a liked artist that fits the vibe
-                // This is a naive heuristic: pick random artist from likes
-                if (likedSongs.length > 0) {
-                    const randomLiked = likedSongs[Math.floor(Math.random() * likedSongs.length)];
-                    // Just purely seeding with an artist often gives great results for that vibe
-                    // e.g. "The Weeknd chill mix" or "The Weeknd party remix"
-                    if (Math.random() > 0.3) { // 70% chance to personlize
-                        seedArtist = randomLiked.artist;
-                        // Construct query: "[Artist] [Vibe Keywords]"
-                        // e.g. "Drake workout energy"
-                        const vibeKeyword = mix.keywords[Math.floor(Math.random() * mix.keywords.length)];
-                        personalizedQuery = `${seedArtist} ${vibeKeyword} mix`;
-                    }
-                }
-
-                return {
-                    ...mix,
-                    query: personalizedQuery,
-                    seedArtist // Store to show "Inspired by..."
-                };
-            });
-
-            setPersonalizedMixes(newMixes);
-
-            // 4. Fetch Previews (Thumbnails)
-            newMixes.forEach(async (mix, index) => {
-                try {
-                    const res = await fetch(`/api/search?q=${encodeURIComponent(mix.query)}`);
-                    const tracks = await res.json();
-                    if (Array.isArray(tracks)) {
-                        setPreviews(prev => ({ ...prev, [index]: tracks.slice(0, 4) }));
-                    }
-                } catch (e) {
-                    console.error("Preview failed", e);
-                }
-            });
-        };
-
-        generatePersonalizedMixes();
-    }, []); // Run only on mount
+    }, [listeningHistory]);
 
     const handlePlayMix = async (index: number, query: string) => {
         setLoadingMix(index);
         try {
             const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
             const tracks = await res.json();
+
             if (Array.isArray(tracks) && tracks.length > 0) {
-                const playTracks = tracks.map((t: any) => ({
-                    id: t.id,
-                    title: t.title,
-                    artist: t.artist,
-                    thumbnail: t.thumbnail || `https://i.ytimg.com/vi/${t.id}/hqdefault.jpg`
-                }));
-                playPlaylist(playTracks, 0);
+                playTrack(tracks[0]);
+                tracks.slice(1).forEach(track => addToQueue(track));
             }
-        } catch (error) { console.error(error); }
-        setLoadingMix(null);
+        } catch (error) {
+            console.error("Failed to play mix", error);
+        } finally {
+            setLoadingMix(null);
+        }
     };
 
-    if (!hasMounted || personalizedMixes.length === 0) return (
-        <div suppressHydrationWarning className="h-64 flex items-center justify-center animate-pulse">
-            <div className="w-12 h-12 rounded-full border-4 border-white/10 border-t-white/40 animate-spin"></div>
-        </div>
-    );
+    if (personalizedMixes.length === 0) return null;
 
     return (
-        <section suppressHydrationWarning className="py-2">
-            <div className="flex flex-col mb-8 px-1">
-                <div className="flex items-center gap-2 mb-2">
-                    {/* Icon based on time? Optional polish */}
-                </div>
+        <section className="mb-12">
+            <div className="mb-6">
                 <h2 className="text-3xl font-black text-white tracking-tight">Your Daily Mixes</h2>
                 <p className="text-zinc-500 text-sm font-medium mt-1">
                     {likedSongs.length > 0 ? "Curated based on your listening history" : "Tailored soundtracks for every moment"}
@@ -175,11 +86,13 @@ export function DailyMixes() {
                             {/* Main Cover Image */}
                             <div className="absolute inset-0 bg-zinc-900">
                                 {coverImage ? (
-                                    <img
+                                    <Image
                                         src={coverImage}
-                                        referrerPolicy="no-referrer"
-                                        className="w-full h-full object-cover opacity-60 group-hover:opacity-40 transition-all duration-700 group-hover:scale-110"
-                                        alt=""
+                                        alt={mix.title}
+                                        fill
+                                        className="object-cover opacity-60 group-hover:opacity-40 transition-all duration-700 group-hover:scale-110"
+                                        unoptimized={!coverImage?.includes('i.ytimg.com')}
+                                        sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
                                     />
                                 ) : (
                                     <div className={`w-full h-full bg-gradient-to-br ${mix.gradient} opacity-20`}></div>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { Hero } from '@/components/Hero';
 import { DailyMixes } from '@/components/DailyMixes';
 import { RecommendedGrid } from '@/components/RecommendedGrid';
@@ -94,16 +95,18 @@ function GenreFilteredView({ query }: { query: string }) {
               className="group relative space-y-3 md:space-y-4"
             >
               <div className="relative aspect-square overflow-hidden rounded-2xl md:rounded-[2rem] bg-zinc-900 border border-white/5 shadow-xl transition-all duration-500 group-hover:-translate-y-2 group-hover:shadow-2xl group-hover:shadow-primary/20">
-                <img
+                <Image
                   src={track.thumbnail || `https://i.ytimg.com/vi/${track.id}/hqdefault.jpg`}
                   alt={track.title}
-                  referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-90 group-hover:opacity-100"
+                  fill
+                  sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 20vw"
+                  className="object-cover transition-transform duration-700 group-hover:scale-110 opacity-90 group-hover:opacity-100"
+                  unoptimized={!track.thumbnail?.includes('i.ytimg.com')}
                 />
                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center gap-3 backdrop-blur-[2px]">
                   <button
                     onClick={() => playTrack(track)}
-                    className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white shadow-lg translate-y-4 group-hover:translate-y-0 transition-transform duration-300 hover:scale-110 active:scale-95"
+                    className="relative z-10 w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white shadow-lg translate-y-4 group-hover:translate-y-0 transition-transform duration-300 hover:scale-110 active:scale-95"
                   >
                     <span className="material-icons-round text-3xl">play_arrow</span>
                   </button>

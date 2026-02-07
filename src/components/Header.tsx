@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useSession, signIn, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { SearchBar } from './SearchBar';
 import { Bell, User, Settings, LogOut, Users, Menu } from 'lucide-react';
 import { useAudio } from '@/components/AudioProvider';
@@ -78,13 +79,15 @@ export function Header() {
                             <>
                                 <button
                                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                                    className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-transparent hover:ring-[#8B5CF6]/50 transition-all duration-300 transform hover:scale-105 shadow-lg"
+                                    className="relative w-10 h-10 rounded-full overflow-hidden ring-2 ring-transparent hover:ring-[#8B5CF6]/50 transition-all duration-300 transform hover:scale-105 shadow-lg"
                                 >
                                     {userImage ? (
-                                        <img
+                                        <Image
                                             src={userImage}
                                             alt={userName}
-                                            className="w-full h-full object-cover"
+                                            fill
+                                            sizes="40px"
+                                            className="object-cover"
                                         />
                                     ) : (
                                         <div className="w-full h-full bg-gradient-to-br from-[#8B5CF6] to-indigo-600 flex items-center justify-center text-white font-bold text-sm">

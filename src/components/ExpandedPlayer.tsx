@@ -1,8 +1,9 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useAudio } from './AudioProvider';
-import { useEffect, useState, useRef } from 'react';
+import Image from 'next/image';
+import { useAudio, useAudioProgress } from './AudioProvider';
+import { useEffect, useState, useRef, memo } from 'react';
 import {
     ChevronDown, Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Heart,
     ListMusic, Volume2, Mic2, Maximize2, Minimize2, Languages, Globe,
@@ -17,6 +18,209 @@ function formatTime(seconds: number): string {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
+// Extracted Components to isolate re-renders
+
+const ExpandedProgressBar = memo(function ExpandedProgressBar() {
+    const { seekTo } = useAudio();
+    const { currentTime, duration } = useAudioProgress();
+    const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+
+    const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
+        if (!duration) return;
+        const rect = e.currentTarget.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const percentage = x / rect.width;
+        seekTo(percentage * duration);
+    };
+
+    return (
+        <div className="h-1.5 w-full bg-white/10 cursor-pointer group" onClick={handleSeek}>
+            <div className="absolute top-0 left-0 h-full bg-[#8B5CF6] shadow-[0_0_15px_rgba(139,92,246,0.6)]" style={{ width: `${progress}%` }}>
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-lg scale-0 group-hover:scale-100 transition-transform"></div>
+            </div>
+        </div>
+    );
+});
+
+const CenterTimeDisplay = memo(function CenterTimeDisplay() {
+    const { currentTime, duration } = useAudioProgress();
+    return (
+        <div className="flex gap-4 text-xs font-bold text-slate-400 tabular-nums">
+            <span>{formatTime(currentTime)}</span><span>/</span><span>{formatTime(duration)}</span>
+        </div>
+    );
+});
+
+const MobileScrubber = memo(function MobileScrubber() {
+    const { seekTo } = useAudio();
+    const { currentTime, duration } = useAudioProgress();
+    const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+
+    const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
+        if (!duration) return;
+        const rect = e.currentTarget.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const percentage = x / rect.width;
+        seekTo(percentage * duration);
+    };
+
+    return (
+        <div className="w-full space-y-2 mb-8 px-2">
+            <div className="group relative w-full h-4 flex items-center" onClick={handleSeek}>
+                <div className="w-full h-1 bg-white/20 rounded-full overflow-hidden">
+                    <div className="h-full bg-primary" style={{ width: `${progress}%` }}></div>
+                </div>
+                <div className="absolute h-4 w-4 bg-white rounded-full shadow-lg" style={{ left: `calc(${progress}% - 8px)` }}></div>
+            </div>
+             <div className="flex justify-between text-[10px] text-zinc-500 font-bold -mt-2 uppercase tracking-widest">
+                <span>{formatTime(currentTime)}</span>
+                <span>{formatTime(duration)}</span>
+            </div>
+        </div>
+    );
+});
+
+interface LyricsContainerProps {
+    originalLyrics: { time: number, text: string }[] | null;
+    translatedLyrics: string[] | null;
+    showTranslated: boolean;
+    isLoadingLyrics: boolean;
+}
+
+const LyricsContainer = memo(function LyricsContainer({ originalLyrics, translatedLyrics, showTranslated, isLoadingLyrics }: LyricsContainerProps) {
+    const { seekTo } = useAudio();
+    const { currentTime } = useAudioProgress();
+    const [activeLineIndex, setActiveLineIndex] = useState<number>(-1);
+    const activeLineRef = useRef<HTMLParagraphElement>(null);
+
+    // Track Active Line based on currentTime (Synced Scrolling)
+    useEffect(() => {
+        if (!originalLyrics) return;
+
+        // Find the last line where time <= currentTime
+        const index = originalLyrics.findLastIndex(line => line.time <= currentTime);
+
+        if (index !== -1 && index !== activeLineIndex) {
+            setActiveLineIndex(index);
+            // Auto scroll to active line
+            if (activeLineRef.current) {
+                activeLineRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+    }, [currentTime, originalLyrics, activeLineIndex]);
+
+    const getLineText = (index: number) => {
+        if (showTranslated && translatedLyrics && translatedLyrics[index]) {
+            return translatedLyrics[index];
+        }
+        return originalLyrics ? originalLyrics[index].text : '';
+    };
+
+    if (isLoadingLyrics) {
+        return <div className="flex items-center justify-center h-full"> <div className="w-8 h-8 border-2 border-[#8B5CF6] border-t-transparent rounded-full animate-spin"></div> </div>;
+    }
+
+    if (!originalLyrics || originalLyrics.length === 0) {
+        return (
+            <div className="flex flex-col items-center justify-center h-full text-center"> <Mic2 size={48} className="text-slate-600 mb-4" /> <h3 className="text-xl font-bold text-slate-300 mb-2">Lyrics Unavailable</h3> </div>
+        );
+    }
+
+    return (
+        <div className="text-left w-full space-y-4 pb-20">
+            {originalLyrics.map((line, idx) => {
+                const isActive = idx === activeLineIndex;
+                const text = getLineText(idx);
+                if (!text) return null;
+                return (<p key={idx} ref={isActive ? activeLineRef : null} onClick={() => line.time > 0 && seekTo(line.time)} className={`cursor-pointer transition-all duration-300 ease-out leading-relaxed max-w-[90%] ${isActive ? 'text-white text-2xl font-bold opacity-100 scale-105 origin-left' : 'text-slate-400 text-lg font-medium opacity-50 hover:opacity-80'}`}>{text}</p>)
+            })}
+        </div>
+    );
+});
+
+// Mobile Version of Lyrics needs slightly different layout handling but same logic
+const MobileLyricsContainer = memo(function MobileLyricsContainer({ originalLyrics, translatedLyrics, showTranslated, isLoadingLyrics, handleTranslate, isTranslating, targetLang, setTargetLang, LANGUAGES }: any) {
+    const { seekTo } = useAudio();
+    const { currentTime } = useAudioProgress();
+    const [activeLineIndex, setActiveLineIndex] = useState<number>(-1);
+    const activeLineRef = useRef<HTMLParagraphElement>(null);
+
+    useEffect(() => {
+        if (!originalLyrics) return;
+        const index = originalLyrics.findLastIndex((line: any) => line.time <= currentTime);
+        if (index !== -1 && index !== activeLineIndex) {
+            setActiveLineIndex(index);
+            if (activeLineRef.current) activeLineRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }, [currentTime, originalLyrics, activeLineIndex]);
+
+    const getLineText = (index: number) => {
+        if (showTranslated && translatedLyrics && translatedLyrics[index]) {
+            return translatedLyrics[index];
+        }
+        return originalLyrics ? originalLyrics[index].text : '';
+    };
+
+    if (isLoadingLyrics) {
+         return (
+            <div className="flex items-center justify-center py-20">
+                <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+            </div>
+        );
+    }
+
+    if (!originalLyrics) {
+         return (
+            <div className="text-center py-20 bg-white/5 rounded-3xl border border-white/5">
+                <Mic2 size={48} className="mx-auto text-zinc-800 mb-4" />
+                <p className="text-zinc-500 font-bold uppercase tracking-widest text-xs">No lyrics found</p>
+            </div>
+        );
+    }
+
+    return (
+        <div className="py-4">
+            <div className="space-y-6">
+                <div className="flex justify-between items-center bg-white/5 p-3 rounded-2xl border border-white/5">
+                    <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Translation</span>
+                        <select
+                            value={targetLang}
+                            onChange={(e) => setTargetLang(e.target.value)}
+                            className="bg-transparent text-white text-[10px] font-black uppercase tracking-widest outline-none"
+                        >
+                            {LANGUAGES.map((l: any) => <option key={l.code} value={l.code} className="bg-[#18181b]">{l.label}</option>)}
+                        </select>
+                    </div>
+                    <button
+                        onClick={handleTranslate}
+                        disabled={isTranslating}
+                        className={`p-2 rounded-xl transition-all ${showTranslated ? 'bg-primary text-white' : 'bg-white/10 text-zinc-400'}`}
+                    >
+                        {isTranslating ? <RefreshCw size={16} className="animate-spin" /> : <Languages size={16} />}
+                    </button>
+                </div>
+                <div className="space-y-4">
+                    {originalLyrics.map((line: any, idx: number) => {
+                        const isActive = idx === activeLineIndex;
+                        const text = getLineText(idx);
+                        return (
+                            <p
+                                key={idx}
+                                ref={isActive ? activeLineRef : null}
+                                className={`transition-all duration-500 text-lg leading-relaxed ${isActive ? 'text-white font-black scale-105 origin-left' : 'text-zinc-600 font-bold opacity-40'}`}
+                            >
+                                {text}
+                            </p>
+                        );
+                    })}
+                </div>
+            </div>
+        </div>
+    );
+});
+
+
 export function ExpandedPlayer() {
     const router = useRouter();
     const {
@@ -25,8 +229,6 @@ export function ExpandedPlayer() {
         togglePlay,
         playNext,
         playPrevious,
-        currentTime,
-        duration,
         seekTo,
         isPlayerExpanded,
         togglePlayerExpansion,
@@ -76,10 +278,6 @@ export function ExpandedPlayer() {
     const [isLoadingLyrics, setIsLoadingLyrics] = useState(false);
     const [isTranslating, setIsTranslating] = useState(false);
 
-    // Synced Lyrics Logic
-    const [activeLineIndex, setActiveLineIndex] = useState<number>(-1);
-    const activeLineRef = useRef<HTMLParagraphElement>(null);
-
     // Translation Language State
     const [targetLang, setTargetLang] = useState('bg');
     const [showLangMenu, setShowLangMenu] = useState(false);
@@ -103,22 +301,6 @@ export function ExpandedPlayer() {
         }
     }, [isPlayerExpanded]);
 
-    // Track Active Line based on currentTime (Synced Scrolling)
-    useEffect(() => {
-        if (!originalLyrics || activeTab !== 'lyrics') return;
-
-        // Find the active line: the last line where time <= currentTime
-        const index = originalLyrics.findLastIndex(line => line.time <= currentTime);
-
-        if (index !== -1 && index !== activeLineIndex) {
-            setActiveLineIndex(index);
-            // Auto scroll to active line
-            if (activeLineRef.current) {
-                activeLineRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-        }
-    }, [currentTime, originalLyrics, activeTab]);
-
     // Data Fetching based on Tab
     useEffect(() => {
         if (!currentTrack) return;
@@ -139,7 +321,6 @@ export function ExpandedPlayer() {
             setTranslatedLyrics(null);
             setShowTranslated(false);
             setTranslatedLyrics(null);
-            setActiveLineIndex(-1);
 
             fetch(`/api/lyrics?artist=${encodeURIComponent(currentTrack.artist)}&title=${encodeURIComponent(currentTrack.title)}&videoId=${currentTrack.id}`)
                 .then(res => res.json())
@@ -164,6 +345,7 @@ export function ExpandedPlayer() {
         }
 
         if (translatedLyrics && showTranslated === false) {
+             // If already translated, just toggle
         }
 
         setIsTranslating(true);
@@ -194,27 +376,11 @@ export function ExpandedPlayer() {
 
     if (!currentTrack) return null;
 
-    const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
     const liked = isLiked(currentTrack.id);
-
-    const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
-        if (!duration) return;
-        const rect = e.currentTarget.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const percentage = x / rect.width;
-        seekTo(percentage * duration);
-    };
 
     const navigateToArtist = () => {
         togglePlayerExpansion();
         router.push(`/search?q=${encodeURIComponent(currentTrack.artist)}`);
-    };
-
-    const getLineText = (index: number) => {
-        if (showTranslated && translatedLyrics && translatedLyrics[index]) {
-            return translatedLyrics[index];
-        }
-        return originalLyrics ? originalLyrics[index].text : '';
     };
 
     const styles = {
@@ -294,10 +460,14 @@ export function ExpandedPlayer() {
                 {/* Album Art Container Mobile Optimized */}
                 <div className={`flex-shrink-0 flex flex-col items-center justify-center w-full md:w-auto md:flex-1 transition-opacity duration-500 ${videoMode ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
                     <div className="relative group w-[80vw] h-[80vw] max-w-[320px] max-h-[320px] md:max-w-[45vh] md:max-h-[45vh] md:w-full md:h-auto aspect-square">
-                        <img
+                        <Image
                             alt={currentTrack.title}
-                            className="w-full h-full object-cover rounded-[24px] shadow-[0_20px_50px_rgba(0,0,0,0.5)] md:shadow-[0_40px_100px_rgba(0,0,0,0.6)]"
-                            src={currentTrack.thumbnail || `https://i.ytimg.com/vi/${currentTrack.id}/hqdefault.jpg`}
+                            fill
+                            priority
+                            sizes="(max-width: 768px) 80vw, 45vh"
+                            className="object-cover rounded-[24px] shadow-[0_20px_50px_rgba(0,0,0,0.5)] md:shadow-[0_40px_100px_rgba(0,0,0,0.6)]"
+                            src={currentTrack.thumbnail || `https://i.ytimg.com/vi/${currentTrack.id}/maxresdefault.jpg`}
+                            unoptimized={!currentTrack.thumbnail?.includes('i.ytimg.com')}
                         />
                     </div>
                     {/* Title and Artist for Mobile are better placed here or in footer depending on design. Let's keep desktop logic but ensure it fits */}
@@ -328,16 +498,7 @@ export function ExpandedPlayer() {
                 {/* Mobile Scrubber & Controls */}
                 <div className="block md:hidden w-full space-y-6 mb-8 px-2">
                     {/* Scrubber */}
-                    <div className="group relative w-full h-4 flex items-center" onClick={handleSeek}>
-                        <div className="w-full h-1 bg-white/20 rounded-full overflow-hidden">
-                            <div className="h-full bg-primary" style={{ width: `${progress}%` }}></div>
-                        </div>
-                        <div className="absolute h-4 w-4 bg-white rounded-full shadow-lg" style={{ left: `calc(${progress}% - 8px)` }}></div>
-                    </div>
-                    <div className="flex justify-between text-[10px] text-zinc-500 font-bold -mt-2 uppercase tracking-widest">
-                        <span>{formatTime(currentTime)}</span>
-                        <span>{formatTime(duration)}</span>
-                    </div>
+                    <MobileScrubber />
 
                     {/* Controls */}
                     <div className="flex items-center justify-between px-4">
@@ -377,8 +538,15 @@ export function ExpandedPlayer() {
                                         queue.map((track, i) => (
                                             <div key={`${track.id}-${i}`} className="flex items-center gap-4 py-2 group" onClick={() => playTrack(track)}>
                                                 <div className="relative w-12 h-12 flex-shrink-0">
-                                                    <img src={track.thumbnail || `https://i.ytimg.com/vi/${track.id}/hqdefault.jpg`} className="w-full h-full rounded-xl object-cover" />
-                                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center rounded-xl">
+                                                    <Image
+                                                        src={track.thumbnail || `https://i.ytimg.com/vi/${track.id}/hqdefault.jpg`}
+                                                        alt={track.title}
+                                                        fill
+                                                        sizes="48px"
+                                                        className="rounded-xl object-cover"
+                                                        unoptimized={!track.thumbnail?.includes('i.ytimg.com')}
+                                                    />
+                                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center rounded-xl z-10">
                                                         <Play size={16} fill="white" />
                                                     </div>
                                                 </div>
@@ -396,62 +564,33 @@ export function ExpandedPlayer() {
                             )}
 
                             {activeTab === 'lyrics' && (
-                                <div className="py-4">
-                                    {isLoadingLyrics ? (
-                                        <div className="flex items-center justify-center py-20">
-                                            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-                                        </div>
-                                    ) : originalLyrics ? (
-                                        <div className="space-y-6">
-                                            <div className="flex justify-between items-center bg-white/5 p-3 rounded-2xl border border-white/5">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Translation</span>
-                                                    <select
-                                                        value={targetLang}
-                                                        onChange={(e) => setTargetLang(e.target.value)}
-                                                        className="bg-transparent text-white text-[10px] font-black uppercase tracking-widest outline-none"
-                                                    >
-                                                        {LANGUAGES.map(l => <option key={l.code} value={l.code} className="bg-[#18181b]">{l.label}</option>)}
-                                                    </select>
-                                                </div>
-                                                <button
-                                                    onClick={handleTranslate}
-                                                    disabled={isTranslating}
-                                                    className={`p-2 rounded-xl transition-all ${showTranslated ? 'bg-primary text-white' : 'bg-white/10 text-zinc-400'}`}
-                                                >
-                                                    {isTranslating ? <RefreshCw size={16} className="animate-spin" /> : <Languages size={16} />}
-                                                </button>
-                                            </div>
-                                            <div className="space-y-4">
-                                                {originalLyrics.map((line, idx) => {
-                                                    const isActive = idx === activeLineIndex;
-                                                    const text = getLineText(idx);
-                                                    return (
-                                                        <p
-                                                            key={idx}
-                                                            ref={isActive ? activeLineRef : null}
-                                                            className={`transition-all duration-500 text-lg leading-relaxed ${isActive ? 'text-white font-black scale-105 origin-left' : 'text-zinc-600 font-bold opacity-40'}`}
-                                                        >
-                                                            {text}
-                                                        </p>
-                                                    );
-                                                })}
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <div className="text-center py-20 bg-white/5 rounded-3xl border border-white/5">
-                                            <Mic2 size={48} className="mx-auto text-zinc-800 mb-4" />
-                                            <p className="text-zinc-500 font-bold uppercase tracking-widest text-xs">No lyrics found</p>
-                                        </div>
-                                    )}
-                                </div>
+                                <MobileLyricsContainer
+                                    originalLyrics={originalLyrics}
+                                    translatedLyrics={translatedLyrics}
+                                    showTranslated={showTranslated}
+                                    isLoadingLyrics={isLoadingLyrics}
+                                    handleTranslate={handleTranslate}
+                                    isTranslating={isTranslating}
+                                    targetLang={targetLang}
+                                    setTargetLang={setTargetLang}
+                                    LANGUAGES={LANGUAGES}
+                                />
                             )}
 
                             {activeTab === 'related' && (
                                 <div className="space-y-4">
                                     {relatedTracks.map((track, i) => (
                                         <div key={`${track.id}-${i}`} className="flex items-center gap-4 py-2 group" onClick={() => playTrack(track)}>
-                                            <img src={track.thumbnail} className="w-12 h-12 rounded-xl object-cover" />
+                                            <div className="relative w-12 h-12 flex-shrink-0">
+                                                <Image
+                                                    src={track.thumbnail || `https://i.ytimg.com/vi/${track.id}/hqdefault.jpg`}
+                                                    alt={track.title}
+                                                    fill
+                                                    sizes="48px"
+                                                    className="rounded-xl object-cover"
+                                                    unoptimized={!track.thumbnail?.includes('i.ytimg.com')}
+                                                />
+                                            </div>
                                             <div className="flex-1 min-w-0">
                                                 <p className="text-sm font-bold text-white truncate">{track.title}</p>
                                                 <p className="text-xs text-zinc-500 truncate">{track.artist}</p>
@@ -503,8 +642,15 @@ export function ExpandedPlayer() {
                         <div className="flex-1 overflow-y-auto custom-scrollbar space-y-4 pr-2">
                             <div className="flex items-center gap-4 p-3 bg-white/10 rounded-2xl border border-[#8B5CF6]/20 flex-shrink-0">
                                 <div className="relative w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
-                                    <img alt="Current" className="w-full h-full object-cover" src={currentTrack.thumbnail || `https://i.ytimg.com/vi/${currentTrack.id}/hqdefault.jpg`} />
-                                    <div className="absolute inset-0 bg-[#8B5CF6]/40 flex items-center justify-center">
+                                    <Image
+                                        alt="Current"
+                                        src={currentTrack.thumbnail || `https://i.ytimg.com/vi/${currentTrack.id}/hqdefault.jpg`}
+                                        fill
+                                        sizes="48px"
+                                        className="object-cover"
+                                        unoptimized={!currentTrack.thumbnail?.includes('i.ytimg.com')}
+                                    />
+                                    <div className="absolute inset-0 bg-[#8B5CF6]/40 flex items-center justify-center z-10">
                                         <Volume2 size={20} className="text-white" />
                                     </div>
                                 </div>
@@ -516,7 +662,16 @@ export function ExpandedPlayer() {
                             {queue.map((track, i) => (
                                 <div key={`${track.id}-${i}`} draggable onDragStart={(e) => handleDragStart(e, i)} onDragOver={handleDragOver} onDrop={(e) => handleDrop(e, i)} onClick={() => playTrack(track)}
                                     className={`flex items-center gap-4 p-3 hover:bg-white/5 rounded-2xl transition-colors cursor-pointer group ${draggedIndex === i ? 'opacity-50 ring-2 ring-[#8B5CF6] ring-inset' : ''}`}>
-                                    <img alt={track.title} className="w-12 h-12 rounded-lg object-cover flex-shrink-0" src={track.thumbnail || `https://i.ytimg.com/vi/${track.id}/hqdefault.jpg`} />
+                                    <div className="relative w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
+                                        <Image
+                                            alt={track.title}
+                                            src={track.thumbnail || `https://i.ytimg.com/vi/${track.id}/hqdefault.jpg`}
+                                            fill
+                                            sizes="48px"
+                                            className="object-cover"
+                                            unoptimized={!track.thumbnail?.includes('i.ytimg.com')}
+                                        />
+                                    </div>
                                     <div className="flex-1 min-w-0">
                                         <h4 className="text-sm font-semibold truncate group-hover:text-[#8B5CF6] transition-colors">{track.title}</h4>
                                         <p className="text-xs text-slate-400 truncate">{track.artist}</p>
@@ -534,20 +689,12 @@ export function ExpandedPlayer() {
                     {/* LYRICS DESKTOP */}
                     {activeTab === 'lyrics' && (
                         <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col p-4 mask-gradient">
-                            {isLoadingLyrics ? (
-                                <div className="flex items-center justify-center h-full"> <div className="w-8 h-8 border-2 border-[#8B5CF6] border-t-transparent rounded-full animate-spin"></div> </div>
-                            ) : originalLyrics && originalLyrics.length > 0 ? (
-                                <div className="text-left w-full space-y-4 pb-20">
-                                    {originalLyrics.map((line, idx) => {
-                                        const isActive = idx === activeLineIndex;
-                                        const text = getLineText(idx);
-                                        if (!text) return null;
-                                        return (<p key={idx} ref={isActive ? activeLineRef : null} onClick={() => line.time > 0 && seekTo(line.time)} className={`cursor-pointer transition-all duration-300 ease-out leading-relaxed max-w-[90%] ${isActive ? 'text-white text-2xl font-bold opacity-100 scale-105 origin-left' : 'text-slate-400 text-lg font-medium opacity-50 hover:opacity-80'}`}>{text}</p>)
-                                    })}
-                                </div>
-                            ) : (
-                                <div className="flex flex-col items-center justify-center h-full text-center"> <Mic2 size={48} className="text-slate-600 mb-4" /> <h3 className="text-xl font-bold text-slate-300 mb-2">Lyrics Unavailable</h3> </div>
-                            )}
+                            <LyricsContainer
+                                originalLyrics={originalLyrics}
+                                translatedLyrics={translatedLyrics}
+                                showTranslated={showTranslated}
+                                isLoadingLyrics={isLoadingLyrics}
+                            />
                         </div>
                     )}
                 </aside>
@@ -555,14 +702,12 @@ export function ExpandedPlayer() {
 
             {/* Desktop Footer (Hidden on Mobile, as Mobile has inline controls) */}
             <footer className={`hidden md:flex relative z-[70] h-28 flex-shrink-0 border-t border-white/10 px-12 flex-col justify-center transition-colors duration-500 ${videoMode ? 'bg-[#0A0A0B]' : 'bg-[#0A0A0B]/80 backdrop-blur-md'}`}>
-                {/* Scrubber */}
-                <div className="absolute top-0 left-0 right-0 h-1.5 w-full bg-white/10 cursor-pointer group" onClick={handleSeek}>
-                    <div className="absolute top-0 left-0 h-full bg-[#8B5CF6] shadow-[0_0_15px_rgba(139,92,246,0.6)]" style={{ width: `${progress}%` }}>
-                        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-lg scale-0 group-hover:scale-100 transition-transform"></div>
-                    </div>
+                {/* Scrubber - Extracted to component */}
+                <div className="absolute top-0 left-0 right-0 w-full">
+                    <ExpandedProgressBar />
                 </div>
 
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between pt-2">
                     <div className="flex items-center gap-4 w-1/4">
                         <div className="min-w-0">
                             <h3 className="font-bold truncate text-white">{currentTrack.title}</h3>
@@ -588,9 +733,7 @@ export function ExpandedPlayer() {
                                 {repeat === 'one' && <span className="absolute top-0 right-0 text-[10px font-bold]">1</span>}
                             </button>
                         </div>
-                        <div className="flex gap-4 text-xs font-bold text-slate-400 tabular-nums">
-                            <span>{formatTime(currentTime)}</span><span>/</span><span>{formatTime(duration)}</span>
-                        </div>
+                        <CenterTimeDisplay />
                     </div>
 
                     <div className="flex items-center justify-end gap-6 w-1/4">

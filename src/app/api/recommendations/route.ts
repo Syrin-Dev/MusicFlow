@@ -193,24 +193,42 @@ async function rankCandidates(
     const scoredTracks: ScoredTrack[] = [];
 
     // Get user affinities if logged in
-    let userAffinities: Map<string, number> = new Map();
-    let likedVideoIds: Set<string> = new Set();
-    let recentlyPlayedIds: Set<string> = new Set();
+    const userAffinities: Map<string, number> = new Map();
+    const likedVideoIds: Set<string> = new Set();
+    const recentlyPlayedIds: Set<string> = new Set();
 
     if (userId) {
-        // Load liked artists as a proxy for affinity
-        const liked = await prisma.likedSong.findMany({
+        // Optimized: Load recent liked artists as a proxy for affinity (limit 500)
+        const recentLiked = await prisma.likedSong.findMany({
             where: { userId },
-            include: { track: true }
+            orderBy: { createdAt: 'desc' },
+            take: 500,
+            select: {
+                track: {
+                    select: { artist: true }
+                }
+            }
         });
 
-        liked.forEach(l => {
-            likedVideoIds.add(l.videoId);
+        recentLiked.forEach(l => {
             if (l.track?.artist) {
                 const artist = l.track.artist.toLowerCase();
                 userAffinities.set(artist, (userAffinities.get(artist) || 0) + 1);
             }
         });
+
+        // Optimized: Check if candidates are liked (targeted query)
+        const candidateIds = candidates.map(c => c.id);
+        if (candidateIds.length > 0) {
+            const likedCandidates = await prisma.likedSong.findMany({
+                where: {
+                    userId,
+                    videoId: { in: candidateIds }
+                },
+                select: { videoId: true }
+            });
+            likedCandidates.forEach(l => likedVideoIds.add(l.videoId));
+        }
 
         // Load recently played (to potentially demote for freshness)
         const recent = await prisma.listeningEvent.findMany({

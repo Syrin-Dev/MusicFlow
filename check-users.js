@@ -4,9 +4,9 @@ const prisma = new PrismaClient();
 async function main() {
     try {
         const users = await prisma.user.findMany({
-            select: { email: true, password: true }
+            select: { email: true }
         });
-        console.log('Users found:', users.map(u => ({ email: u.email, hasPassword: !!u.password })));
+        console.log('Users found:', users.map(u => ({ email: u.email })));
     } catch (e) {
         console.error('Prisma test error:', e);
     } finally {

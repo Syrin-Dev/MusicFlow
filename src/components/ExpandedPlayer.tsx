@@ -47,6 +47,51 @@ export function ExpandedPlayer() {
     } = useAudio();
 
     const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+    const [isDragging, setIsDragging] = useState(false);
+    const [localProgress, setLocalProgress] = useState(0);
+    const progressBarRef = useRef<HTMLDivElement>(null);
+    const mobileProgressBarRef = useRef<HTMLDivElement>(null);
+
+    // Sync local progress when not dragging
+    useEffect(() => {
+        if (!isDragging && duration > 0) {
+            setLocalProgress((currentTime / duration) * 100);
+        } else if (!isDragging && duration === 0) {
+            setLocalProgress(0);
+        }
+    }, [currentTime, duration, isDragging]);
+
+    const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+        if (!duration) return;
+        setIsDragging(true);
+        e.currentTarget.setPointerCapture(e.pointerId);
+
+        const rect = e.currentTarget.getBoundingClientRect();
+        const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
+        const percentage = (x / rect.width) * 100;
+        setLocalProgress(percentage);
+    };
+
+    const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+        if (!isDragging || !duration) return;
+
+        const rect = e.currentTarget.getBoundingClientRect();
+        const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
+        const percentage = (x / rect.width) * 100;
+        setLocalProgress(percentage);
+    };
+
+    const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+        if (!isDragging || !duration) return;
+
+        setIsDragging(false);
+        e.currentTarget.releasePointerCapture(e.pointerId);
+
+        const rect = e.currentTarget.getBoundingClientRect();
+        const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
+        const percentage = x / rect.width;
+        seekTo(percentage * duration);
+    };
 
     const handleDragStart = (e: React.DragEvent, index: number) => {
         setDraggedIndex(index);
@@ -194,16 +239,8 @@ export function ExpandedPlayer() {
 
     if (!currentTrack) return null;
 
-    const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+    const progress = isDragging ? localProgress : (duration > 0 ? (currentTime / duration) * 100 : 0);
     const liked = isLiked(currentTrack.id);
-
-    const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
-        if (!duration) return;
-        const rect = e.currentTarget.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const percentage = x / rect.width;
-        seekTo(percentage * duration);
-    };
 
     const navigateToArtist = () => {
         togglePlayerExpansion();
@@ -328,14 +365,24 @@ export function ExpandedPlayer() {
                 {/* Mobile Scrubber & Controls */}
                 <div className="block md:hidden w-full space-y-6 mb-8 px-2">
                     {/* Scrubber */}
-                    <div className="group relative w-full h-4 flex items-center" onClick={handleSeek}>
-                        <div className="w-full h-1 bg-white/20 rounded-full overflow-hidden">
+                    <div
+                        ref={mobileProgressBarRef}
+                        className="group relative w-full h-8 flex items-center touch-none"
+                        onPointerDown={handlePointerDown}
+                        onPointerMove={handlePointerMove}
+                        onPointerUp={handlePointerUp}
+                        onPointerLeave={handlePointerUp}
+                    >
+                        <div className="w-full h-1 bg-white/20 rounded-full overflow-hidden pointer-events-none">
                             <div className="h-full bg-primary" style={{ width: `${progress}%` }}></div>
                         </div>
-                        <div className="absolute h-4 w-4 bg-white rounded-full shadow-lg" style={{ left: `calc(${progress}% - 8px)` }}></div>
+                        <div
+                            className={`absolute h-4 w-4 bg-white rounded-full shadow-lg pointer-events-none transition-transform ${isDragging ? 'scale-125' : 'scale-100'}`}
+                            style={{ left: `calc(${progress}% - 8px)` }}
+                        ></div>
                     </div>
                     <div className="flex justify-between text-[10px] text-zinc-500 font-bold -mt-2 uppercase tracking-widest">
-                        <span>{formatTime(currentTime)}</span>
+                        <span>{formatTime(isDragging ? (localProgress / 100) * duration : currentTime)}</span>
                         <span>{formatTime(duration)}</span>
                     </div>
 
@@ -556,9 +603,18 @@ export function ExpandedPlayer() {
             {/* Desktop Footer (Hidden on Mobile, as Mobile has inline controls) */}
             <footer className={`hidden md:flex relative z-[70] h-28 flex-shrink-0 border-t border-white/10 px-12 flex-col justify-center transition-colors duration-500 ${videoMode ? 'bg-[#0A0A0B]' : 'bg-[#0A0A0B]/80 backdrop-blur-md'}`}>
                 {/* Scrubber */}
-                <div className="absolute top-0 left-0 right-0 h-1.5 w-full bg-white/10 cursor-pointer group" onClick={handleSeek}>
-                    <div className="absolute top-0 left-0 h-full bg-[#8B5CF6] shadow-[0_0_15px_rgba(139,92,246,0.6)]" style={{ width: `${progress}%` }}>
-                        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-lg scale-0 group-hover:scale-100 transition-transform"></div>
+                <div
+                    ref={progressBarRef}
+                    className="absolute top-0 left-0 right-0 h-4 -mt-2 w-full cursor-pointer group z-50 flex items-center touch-none"
+                    onPointerDown={handlePointerDown}
+                    onPointerMove={handlePointerMove}
+                    onPointerUp={handlePointerUp}
+                    onPointerLeave={handlePointerUp}
+                >
+                    <div className="w-full h-1.5 bg-white/10 relative pointer-events-none">
+                        <div className="absolute top-0 left-0 h-full bg-[#8B5CF6] shadow-[0_0_15px_rgba(139,92,246,0.6)]" style={{ width: `${progress}%` }}>
+                            <div className={`absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-lg transition-transform ${isDragging ? 'scale-100' : 'scale-0 group-hover:scale-100'}`}></div>
+                        </div>
                     </div>
                 </div>
 
@@ -589,7 +645,7 @@ export function ExpandedPlayer() {
                             </button>
                         </div>
                         <div className="flex gap-4 text-xs font-bold text-slate-400 tabular-nums">
-                            <span>{formatTime(currentTime)}</span><span>/</span><span>{formatTime(duration)}</span>
+                            <span>{formatTime(isDragging ? (localProgress / 100) * duration : currentTime)}</span><span>/</span><span>{formatTime(duration)}</span>
                         </div>
                     </div>
 

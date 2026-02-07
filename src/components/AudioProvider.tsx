@@ -106,6 +106,9 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         duration: number;
     } | null>(null);
 
+    // Error Tracking to prevent infinite loops
+    const errorCountRef = useRef(0);
+
     // Dynamic Refs to solve stale closure issues in YouTube API callbacks
     const onPlayerErrorRef = useRef((e: any) => { });
     const onPlayerStateChangeRef = useRef((e: any) => { });
@@ -366,6 +369,11 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
 
     // Audio Control Logic
     const playTrackInternal = (track: Track, previousTrack?: Track | null) => {
+        // Reset error count on new track
+        if (currentTrack?.id !== track.id) {
+            errorCountRef.current = 0;
+        }
+
         if (previousTrack && trackingRef.current && trackingRef.current.trackId === previousTrack.id) {
             const playDuration = (Date.now() - trackingRef.current.startTime) / 1000;
             const totalDuration = trackingRef.current.duration || duration;
@@ -640,6 +648,15 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     const onPlayerError = useCallback((event: any) => {
         console.error("YouTube Player Error:", event.data);
         setIsLoading(false);
+        errorCountRef.current += 1;
+
+        // Prevent infinite loops
+        if (errorCountRef.current > 1) {
+            console.warn("Max retries reached for track. Skipping.");
+            errorCountRef.current = 0;
+            playNext();
+            return;
+        }
 
         // 100: Video not found
         // 101: Not allowed in embedded player
@@ -649,7 +666,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
                 console.log(`Track ${currentTrack.title} restricted/error. Attempting fallback...`);
                 toast.promise(
                     findFallbackTrack(currentTrack).then(fallback => {
-                        if (fallback) {
+                        if (fallback && fallback.id !== currentTrack.id) {
                             console.log("Found fallback:", fallback.title, fallback.id);
                             playTrack(fallback);
                             return "Playing alternative version...";
@@ -670,7 +687,8 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
                 playNext();
             }
         } else {
-            toast.error("Playback error occurred.");
+            // Unknown error, try next
+            playNext();
         }
     }, [playNext, currentTrack, playTrack]);
 

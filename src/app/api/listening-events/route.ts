@@ -6,14 +6,8 @@ import { authOptions } from '@/lib/auth';
 // Helper to get user email with dev fallback
 async function getUserEmail() {
     const session = await getServerSession(authOptions);
-    let email = session?.user?.email;
+    const email = session?.user?.email;
 
-    if (!email && process.env.NODE_ENV !== 'production') {
-        const firstUser = await prisma.user.findFirst();
-        if (firstUser?.email) {
-            email = firstUser.email;
-        }
-    }
     return email;
 }
 

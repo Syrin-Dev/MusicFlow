@@ -769,6 +769,9 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         let interval: any;
 
         const sync = async () => {
+            // Use live time from player to avoid closure staleness
+            const liveTime = playerRef.current?.getCurrentTime ? playerRef.current.getCurrentTime() : currentTime;
+
             if (isHostingRoom && currentTrack) {
                 await fetch('/api/rooms', {
                     method: 'POST',
@@ -776,7 +779,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
                     body: JSON.stringify({
                         action: 'CREATE_ROOM',
                         trackId: currentTrack.id,
-                        progress: Math.floor(currentTime)
+                        progress: Math.floor(liveTime)
                     })
                 });
             } else if (currentRoomId && !isHostingRoom) {
@@ -788,7 +791,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
                     if (data.activeTrack && (!currentTrack || currentTrack.id !== data.activeTrack.id)) {
                         playTrackInternal(data.activeTrack);
                         setTimeout(() => seekTo(data.progress), 1000);
-                    } else if (data.activeTrack && Math.abs(currentTime - data.progress) > 4) {
+                    } else if (data.activeTrack && Math.abs(liveTime - data.progress) > 10) {
                         seekTo(data.progress);
                     }
                 }
@@ -797,7 +800,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
 
         if (currentRoomId || isHostingRoom) {
             sync();
-            interval = setInterval(sync, 4000);
+            interval = setInterval(sync, 8000);
         }
 
         return () => clearInterval(interval);

@@ -611,16 +611,68 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         }
     }, [handleTrackEnd]);
 
+    const findFallbackTrack = async (track: Track): Promise<Track | null> => {
+        try {
+            // Try searching for lyrics version first as it's often available when official is not
+            const query = `${track.title} ${track.artist} lyrics`;
+            const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+            const results = await res.json();
+
+            if (Array.isArray(results) && results.length > 0) {
+                // Find first track that isn't the current restricted one
+                const fallback = results.find(t => t.id !== track.id);
+                if (fallback) {
+                    // Preserve original metadata if possible, but use new ID
+                    return {
+                        ...track,
+                        id: fallback.id,
+                        thumbnail: fallback.thumbnail || track.thumbnail // Use new thumb if needed
+                    };
+                }
+            }
+            return null;
+        } catch (e) {
+            console.error("Fallback search failed", e);
+            return null;
+        }
+    };
+
     const onPlayerError = useCallback((event: any) => {
         console.error("YouTube Player Error:", event.data);
         setIsLoading(false);
-        if (event.data === 150 || event.data === 101) {
-            toast.error("Song unavailable (restricted). Skipping...");
-            playNext(); // Use playNext
+
+        // 100: Video not found
+        // 101: Not allowed in embedded player
+        // 150: Same as 101
+        if (event.data === 150 || event.data === 101 || event.data === 100) {
+            if (currentTrack) {
+                console.log(`Track ${currentTrack.title} restricted/error. Attempting fallback...`);
+                toast.promise(
+                    findFallbackTrack(currentTrack).then(fallback => {
+                        if (fallback) {
+                            console.log("Found fallback:", fallback.title, fallback.id);
+                            playTrack(fallback);
+                            return "Playing alternative version...";
+                        } else {
+                            throw new Error("No fallback found");
+                        }
+                    }),
+                    {
+                        loading: 'Song unavailable. Searching for alternative...',
+                        success: (msg) => msg,
+                        error: () => {
+                            playNext();
+                            return 'Song unavailable. Skipping to next...';
+                        }
+                    }
+                );
+            } else {
+                playNext();
+            }
         } else {
             toast.error("Playback error occurred.");
         }
-    }, [playNext]);
+    }, [playNext, currentTrack, playTrack]);
 
     // Update refs with fresh closures
     useEffect(() => {

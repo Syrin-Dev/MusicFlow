@@ -85,15 +85,15 @@ export function SearchBar() {
 
             {/* Suggestions Dropdown */}
             {showSuggestions && suggestions.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-2 glass-panel bg-[#0d0d0f]/95 rounded-2xl shadow-2xl overflow-hidden py-2 backdrop-blur-xl z-50">
+                <div className="absolute top-full left-0 right-0 mt-2 bg-zinc-900/95 backdrop-blur-md border border-white/10 rounded-2xl shadow-xl overflow-hidden py-2 z-50">
                     {suggestions.map((suggestion, index) => (
                         <button
                             key={index}
                             onClick={() => performSearch(suggestion)}
-                            className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-white/5 transition-colors group"
+                            className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-white/10 transition-colors group"
                         >
-                            <Search size={16} className="text-zinc-500 group-hover:text-[#8B5CF6] transition-colors" />
-                            <span className="text-zinc-300 group-hover:text-white font-medium transition-colors">{suggestion}</span>
+                            <Search size={16} className="text-zinc-400 group-hover:text-[#8B5CF6] transition-colors" />
+                            <span className="text-zinc-200 group-hover:text-white font-medium transition-colors">{suggestion}</span>
                         </button>
                     ))}
                 </div>

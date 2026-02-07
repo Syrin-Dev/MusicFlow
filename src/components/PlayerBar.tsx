@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useAudio } from './AudioProvider';
 import { AddToPlaylist } from './AddToPlaylist';
 import { useRouter } from 'next/navigation';
@@ -41,14 +41,50 @@ export function PlayerBar() {
     } = useAudio();
 
     const router = useRouter();
+    const [isDragging, setIsDragging] = useState(false);
+    const [localProgress, setLocalProgress] = useState(0);
+    const progressBarRef = useRef<HTMLDivElement>(null);
+
+    // Sync local progress when not dragging
+    useEffect(() => {
+        if (!isDragging && duration > 0) {
+            setLocalProgress((currentTime / duration) * 100);
+        } else if (!isDragging && duration === 0) {
+            setLocalProgress(0);
+        }
+    }, [currentTime, duration, isDragging]);
 
     const liked = currentTrack ? isLiked(currentTrack.id) : false;
-    const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+    const progress = isDragging ? localProgress : (duration > 0 ? (currentTime / duration) * 100 : 0);
 
-    const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
-        if (!duration) return;
-        const rect = e.currentTarget.getBoundingClientRect();
-        const x = e.clientX - rect.left;
+    const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+        if (!duration || !progressBarRef.current) return;
+        setIsDragging(true);
+        e.currentTarget.setPointerCapture(e.pointerId);
+
+        const rect = progressBarRef.current.getBoundingClientRect();
+        const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
+        const percentage = (x / rect.width) * 100;
+        setLocalProgress(percentage);
+    };
+
+    const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+        if (!isDragging || !duration || !progressBarRef.current) return;
+
+        const rect = progressBarRef.current.getBoundingClientRect();
+        const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
+        const percentage = (x / rect.width) * 100;
+        setLocalProgress(percentage);
+    };
+
+    const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+        if (!isDragging || !duration || !progressBarRef.current) return;
+
+        setIsDragging(false);
+        e.currentTarget.releasePointerCapture(e.pointerId);
+
+        const rect = progressBarRef.current.getBoundingClientRect();
+        const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
         const percentage = x / rect.width;
         seekTo(percentage * duration);
     };
@@ -165,18 +201,22 @@ export function PlayerBar() {
                         </div>
 
                         <div className="w-full flex items-center gap-3 text-xs font-medium text-gray-400">
-                            <span>{formatTime(currentTime)}</span>
+                            <span>{formatTime(isDragging ? (localProgress / 100) * duration : currentTime)}</span>
                             <div
-                                className="flex-1 h-1 bg-white/10 rounded-full cursor-pointer group relative overflow-hidden"
-                                onClick={handleSeek}
+                                ref={progressBarRef}
+                                className="flex-1 h-1 bg-white/10 rounded-full cursor-pointer group relative touch-none py-2 bg-clip-content"
+                                onPointerDown={handlePointerDown}
+                                onPointerMove={handlePointerMove}
+                                onPointerUp={handlePointerUp}
+                                onPointerLeave={handlePointerUp}
                             >
                                 {/* Progress bar with Purple Glow */}
                                 <div
-                                    className="absolute top-0 left-0 h-full bg-[#8B5CF6] rounded-full group-hover:bg-[#7c3aed] transition-colors shadow-[0_0_10px_#8B5CF6]"
+                                    className="absolute top-0 bottom-0 my-auto h-1 bg-[#8B5CF6] rounded-full group-hover:bg-[#7c3aed] transition-colors shadow-[0_0_10px_#8B5CF6] pointer-events-none"
                                     style={{ width: `${progress}%` }}
                                 ></div>
                                 <div
-                                    className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full opacity-0 group-hover:opacity-100 shadow shadow-black/50 transition-opacity"
+                                    className={`absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow shadow-black/50 transition-opacity pointer-events-none ${isDragging ? 'opacity-100 scale-125' : 'opacity-0 group-hover:opacity-100'}`}
                                     style={{ left: `calc(${progress}% - 6px)` }}
                                 ></div>
                             </div>

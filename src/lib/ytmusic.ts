@@ -53,12 +53,18 @@ export const searchMusic = unstable_cache(
 
             const results = await ytmusic.searchSongs(query);
 
-            const mapped = results.slice(0, 20).map((song: any) => ({
-                id: song.videoId,
-                title: song.name || song.title || 'Unknown',
-                artist: song.artist?.name || song.artists?.[0]?.name || 'Unknown Artist',
-                thumbnail: getHighQualityThumbnail(song.videoId, song.thumbnails),
-            })).filter(song =>
+            // Return up to 50 results for pagination
+            const mapped = results.slice(0, 50).map((song: any) => {
+                const videoId = song.videoId || '';
+                return {
+                    id: videoId,
+                    title: song.name || song.title || 'Unknown',
+                    artist: song.artist?.name || song.artists?.[0]?.name || 'Unknown Artist',
+                    // Always ensure thumbnail exists with YouTube fallback
+                    thumbnail: getHighQualityThumbnail(videoId, song.thumbnails) ||
+                        `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
+                };
+            }).filter(song =>
                 song.id &&
                 song.title !== 'Unknown' &&
                 song.artist !== 'Unknown Artist'
@@ -71,7 +77,7 @@ export const searchMusic = unstable_cache(
         }
     },
     ['search-music'],
-    { revalidate: CACHE_TTL }
+    { revalidate: CACHE_TTL, tags: ['ytmusic'] }
 );
 
 export const searchPlaylists = unstable_cache(

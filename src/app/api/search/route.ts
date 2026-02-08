@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import { searchUnified } from '@/lib/aggregator';
-import { searchPlaylists } from '@/lib/ytmusic';
+import { searchMusic, searchPlaylists } from '@/lib/ytmusic';
 import { prisma } from '@/lib/prismadb';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -9,12 +8,14 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const q = searchParams.get('q');
     const type = searchParams.get('type') || 'video';
+    const offset = parseInt(searchParams.get('offset') || '0');
+    const limit = parseInt(searchParams.get('limit') || '30');
 
     if (!q) {
         return NextResponse.json({ error: 'Query required' }, { status: 400 });
     }
 
-    // Log search query for personalization (Fire and forget - don't await)
+    // Log search query for personalization (Fire and forget)
     getServerSession(authOptions).then(async (session) => {
         if (session?.user?.email) {
             try {
@@ -36,12 +37,22 @@ export async function GET(request: Request) {
         let results;
 
         if (type === 'playlist') {
-            // Playlists use ytmusic directly
             results = await searchPlaylists(q);
         } else {
-            // Tracks use multi-source aggregator (Piped + SoundCloud + Audius)
-            // Falls back to ytmusic if all external sources fail
-            results = await searchUnified(q);
+            // Use reliable YouTube Music API (works correctly for artist searches)
+            const allResults = await searchMusic(q);
+
+            // Apply pagination
+            results = allResults.slice(offset, offset + limit);
+
+            // Return with pagination metadata
+            return NextResponse.json({
+                results,
+                total: allResults.length,
+                offset,
+                limit,
+                hasMore: offset + limit < allResults.length
+            });
         }
 
         return NextResponse.json(results);

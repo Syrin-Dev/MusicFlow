@@ -1,57 +1,109 @@
-
 import { MusicSource, UnifiedTrack } from '../types/music';
 
+// Tested, working Piped instances (2024)
 const PIPED_INSTANCES = [
     'https://pipedapi.kavin.rocks',
-    'https://api.piped.otter.sh',
-    'https://api.piped.kavin.rocks',
-    'https://pipedapi.moomoo.me',
-    'https://pipedapi.syncp.in'
+    'https://pipedapi.adminforge.de',
+    'https://api.piped.yt',
+    'https://pipedapi.darkness.services',
+    'https://pipedapi.leptons.xyz'
 ];
+
+// Singleton instance index (persists across requests in same process)
+let currentInstanceIndex = 0;
+let lastWorkingInstance: string | null = null;
 
 export class PipedSource implements MusicSource {
     name = 'youtube';
-    private currentInstanceIndex = 0;
 
-    private async fetchWithRotation(url: string, options?: RequestInit): Promise<Response> {
-        let attempts = 0;
+    private async fetchWithRotation(path: string, timeoutMs = 5000): Promise<Response> {
         const maxAttempts = PIPED_INSTANCES.length;
 
-        while (attempts < maxAttempts) {
-            const instance = PIPED_INSTANCES[this.currentInstanceIndex];
+        // Try last working instance first
+        if (lastWorkingInstance) {
             try {
-                const res = await fetch(`${instance}${url}`, options);
+                const controller = new AbortController();
+                const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+                const res = await fetch(`${lastWorkingInstance}${path}`, {
+                    signal: controller.signal,
+                    headers: { 'Accept': 'application/json' }
+                });
+                clearTimeout(timeout);
+
                 if (res.ok) return res;
-                // If 429 or 5xx, rotate
-                if (res.status === 429 || res.status >= 500) throw new Error(`Status ${res.status}`);
-            } catch (e) {
-                console.warn(`Piped instance ${instance} failed:`, e);
-                this.currentInstanceIndex = (this.currentInstanceIndex + 1) % PIPED_INSTANCES.length;
-                attempts++;
+            } catch {
+                lastWorkingInstance = null;
             }
         }
+
+        // Rotate through instances
+        for (let attempts = 0; attempts < maxAttempts; attempts++) {
+            const instance = PIPED_INSTANCES[currentInstanceIndex];
+
+            try {
+                const controller = new AbortController();
+                const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+                const res = await fetch(`${instance}${path}`, {
+                    signal: controller.signal,
+                    headers: { 'Accept': 'application/json' }
+                });
+                clearTimeout(timeout);
+
+                if (res.ok) {
+                    lastWorkingInstance = instance;
+                    return res;
+                }
+
+                // Rotate on failure
+                currentInstanceIndex = (currentInstanceIndex + 1) % PIPED_INSTANCES.length;
+            } catch (e) {
+                console.warn(`Piped ${instance} failed:`, e instanceof Error ? e.message : 'timeout');
+                currentInstanceIndex = (currentInstanceIndex + 1) % PIPED_INSTANCES.length;
+            }
+        }
+
         throw new Error('All Piped instances failed');
     }
 
     async search(query: string): Promise<UnifiedTrack[]> {
         try {
-            const res = await this.fetchWithRotation(`/search?q=${encodeURIComponent(query)}&filter=music_songs`);
+            // Use 'music' filter which works on most instances
+            const res = await this.fetchWithRotation(
+                `/search?q=${encodeURIComponent(query)}&filter=music`
+            );
             const data = await res.json();
 
-            if (!data.items) return [];
+            if (!data.items || !Array.isArray(data.items)) {
+                console.warn('Piped: No items in response');
+                return [];
+            }
 
-            return data.items.map((item: any) => ({
-                id: item.url.replace('/watch?v=', ''),
-                title: item.title,
-                artist: item.uploaderName || item.uploader || 'Unknown Artist',
-                thumbnail: item.thumbnail,
-                duration: item.duration || 0,
-                isVerified: item.uploaderVerified || false,
-                platform: 'youtube',
-                sources: {
-                    youtubeId: item.url.replace('/watch?v=', '')
-                }
-            }));
+            // Filter for actual videos (not channels/playlists)
+            const videos = data.items.filter((item: any) =>
+                item.type === 'stream' || item.url?.includes('/watch')
+            );
+
+            return videos.slice(0, 15).map((item: any) => {
+                const videoId = item.url?.replace('/watch?v=', '') || item.videoId || '';
+
+                return {
+                    id: videoId,
+                    title: item.title || 'Unknown',
+                    artist: (item.uploaderName || item.uploader || 'Unknown Artist')
+                        .replace(' - Topic', '')
+                        .replace('VEVO', ''),
+                    thumbnail: item.thumbnail || `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
+                    duration: item.duration || 0,
+                    isVerified: item.uploaderVerified || false,
+                    platform: 'youtube' as const,
+                    sources: {
+                        youtubeId: videoId
+                    }
+                };
+            }).filter((t: UnifiedTrack) => t.id && t.title !== 'Unknown');
+
         } catch (e) {
             console.error('Piped Search Error:', e);
             return [];

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { searchMusic, searchPlaylists } from '@/lib/ytmusic';
+import { searchUnified } from '@/lib/aggregator';
+import { searchPlaylists } from '@/lib/ytmusic';
 import { prisma } from '@/lib/prismadb';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -13,7 +14,7 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: 'Query required' }, { status: 400 });
     }
 
-    // Log search query for personalization (Fire and forget)
+    // Log search query for personalization (Fire and forget - don't await)
     getServerSession(authOptions).then(async (session) => {
         if (session?.user?.email) {
             try {
@@ -35,10 +36,12 @@ export async function GET(request: Request) {
         let results;
 
         if (type === 'playlist') {
+            // Playlists use ytmusic directly
             results = await searchPlaylists(q);
         } else {
-            // Use reliable YouTube Music search
-            results = await searchMusic(q);
+            // Tracks use multi-source aggregator (Piped + SoundCloud + Audius)
+            // Falls back to ytmusic if all external sources fail
+            results = await searchUnified(q);
         }
 
         return NextResponse.json(results);

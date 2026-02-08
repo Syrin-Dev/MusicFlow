@@ -1,73 +1,122 @@
-
 import { MusicSource, UnifiedTrack } from '../types/music';
 
-// Fallback client ID if scraping fails (often changes, but good to have one)
-const FALLBACK_CLIENT_ID = 'your_client_id_here';
+// Known working SoundCloud client IDs (scraped from their public JS)
+// These rotate periodically but usually last weeks/months
+const SOUNDCLOUD_CLIENT_IDS = [
+    'iZIs9mchVcX5lhVRyQGGAYlNPVldzAoX',
+    'a3e059563d7fd3372b49b37f00a00bcf',
+    '2t9loNQH90kzJcsFCODdigxfp325aq4z'
+];
+
+let workingClientId: string | null = null;
 
 export class SoundCloudSource implements MusicSource {
     name = 'soundcloud';
-    private clientId: string | null = null;
 
-    private async getClientId(): Promise<string> {
-        if (this.clientId) return this.clientId;
+    private async getWorkingClientId(): Promise<string | null> {
+        if (workingClientId) return workingClientId;
 
-        try {
-            // Scrape logic: fetch SC homepage, find script src, fetch script, extract client_id
-            // Simplified for now: just return a known ID or fail gracefully if we can't scrape
-            // Real implementation requires fetching https://soundcloud.com/discover, parsing HTML for <script src="...">,
-            // fetching the JS file, and regexing for client_id:"..."
+        // Try each known client ID
+        for (const clientId of SOUNDCLOUD_CLIENT_IDS) {
+            try {
+                const controller = new AbortController();
+                const timeout = setTimeout(() => controller.abort(), 3000);
 
-            // For this environment without full browser context, direct scraping is hard.
-            // We'll rely on a known public client_id or a service if available.
-            // Let's assume we can fetch the main page.
+                const res = await fetch(
+                    `https://api-v2.soundcloud.com/search/tracks?q=test&client_id=${clientId}&limit=1`,
+                    { signal: controller.signal }
+                );
+                clearTimeout(timeout);
 
-            const res = await fetch('https://soundcloud.com/discover');
-            const text = await res.text();
-            const scriptMatches = text.match(/<script crossorigin src="(https:\/\/a-v2\.sndcdn\.com\/assets\/[^"]+)">/g);
-
-            if (scriptMatches) {
-                 for (const match of scriptMatches) {
-                     const url = match.match(/src="([^"]+)"/)?.[1];
-                     if (url) {
-                         const jsRes = await fetch(url);
-                         const jsText = await jsRes.text();
-                         const idMatch = jsText.match(/client_id:"([^"]+)"/);
-                         if (idMatch) {
-                             this.clientId = idMatch[1];
-                             return this.clientId;
-                         }
-                     }
-                 }
+                if (res.ok) {
+                    workingClientId = clientId;
+                    return clientId;
+                }
+            } catch {
+                continue;
             }
-        } catch (e) {
-            console.warn('SoundCloud Client ID scraping failed:', e);
         }
 
-        return FALLBACK_CLIENT_ID;
+        // Try to scrape a fresh one from SC website
+        try {
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 5000);
+
+            const pageRes = await fetch('https://soundcloud.com', { signal: controller.signal });
+            clearTimeout(timeout);
+
+            const html = await pageRes.text();
+
+            // Find script URLs
+            const scriptUrls = html.match(/https:\/\/a-v2\.sndcdn\.com\/assets\/[^"]+\.js/g);
+
+            if (scriptUrls) {
+                for (const url of scriptUrls.slice(0, 3)) {
+                    try {
+                        const jsRes = await fetch(url);
+                        const js = await jsRes.text();
+                        const match = js.match(/client_id:"([a-zA-Z0-9]+)"/);
+                        if (match) {
+                            workingClientId = match[1];
+                            return workingClientId;
+                        }
+                    } catch {
+                        continue;
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn('SoundCloud scraping failed:', e);
+        }
+
+        return null;
     }
 
     async search(query: string): Promise<UnifiedTrack[]> {
         try {
-            const clientId = await this.getClientId();
-            if (!clientId || clientId === 'your_client_id_here') return []; // scraping failed
+            const clientId = await this.getWorkingClientId();
+            if (!clientId) {
+                console.warn('SoundCloud: No working client_id');
+                return [];
+            }
 
-            const res = await fetch(`https://api-v2.soundcloud.com/search/tracks?q=${encodeURIComponent(query)}&client_id=${clientId}&limit=10`);
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 5000);
+
+            const res = await fetch(
+                `https://api-v2.soundcloud.com/search/tracks?q=${encodeURIComponent(query)}&client_id=${clientId}&limit=10`,
+                { signal: controller.signal }
+            );
+            clearTimeout(timeout);
+
+            if (!res.ok) {
+                // Invalidate client ID on failure
+                if (res.status === 401 || res.status === 403) {
+                    workingClientId = null;
+                }
+                return [];
+            }
+
             const data = await res.json();
 
-            if (!data.collection) return [];
+            if (!data.collection || !Array.isArray(data.collection)) {
+                return [];
+            }
 
             return data.collection.map((item: any) => ({
                 id: `sc-${item.id}`,
-                title: item.title,
+                title: item.title || 'Unknown',
                 artist: item.user?.username || 'Unknown Artist',
-                thumbnail: item.artwork_url?.replace('large', 't500x500') || '', // Upgrade quality
-                duration: Math.floor(item.duration / 1000),
+                thumbnail: item.artwork_url
+                    ? item.artwork_url.replace('-large', '-t500x500')
+                    : (item.user?.avatar_url?.replace('-large', '-t500x500') || ''),
+                duration: Math.floor((item.duration || 0) / 1000),
                 isVerified: item.user?.verified || false,
-                platform: 'soundcloud',
+                platform: 'soundcloud' as const,
                 sources: {
-                    soundcloudId: item.id.toString()
+                    soundcloudId: item.id?.toString()
                 }
-            }));
+            })).filter((t: UnifiedTrack) => t.title !== 'Unknown');
 
         } catch (e) {
             console.error('SoundCloud Search Error:', e);

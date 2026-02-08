@@ -1,18 +1,21 @@
-
-import { MusicSource, UnifiedTrack, TrackSources } from './types/music';
+import { MusicSource, UnifiedTrack } from './types/music';
 import { PipedSource } from './sources/piped';
 import { SoundCloudSource } from './sources/soundcloud';
 import { AudiusSource } from './sources/audius';
+import { searchMusic } from './ytmusic';
 
-const defaultSources: MusicSource[] = [
-    new PipedSource(),
-    new SoundCloudSource(),
-    new AudiusSource()
-];
+// Singleton instances to reuse connections
+const pipedSource = new PipedSource();
+const soundcloudSource = new SoundCloudSource();
+const audiusSource = new AudiusSource();
 
-// Helper: Levenshtein Distance for fuzzy matching
+// Levenshtein distance for fuzzy matching
 function levenshtein(a: string, b: string): number {
-    const matrix = Array.from({ length: a.length + 1 }, (_, i) => [i]);
+    if (a.length === 0) return b.length;
+    if (b.length === 0) return a.length;
+
+    const matrix: number[][] = [];
+    for (let i = 0; i <= a.length; i++) matrix[i] = [i];
     for (let j = 0; j <= b.length; j++) matrix[0][j] = j;
 
     for (let i = 1; i <= a.length; i++) {
@@ -28,93 +31,130 @@ function levenshtein(a: string, b: string): number {
     return matrix[a.length][b.length];
 }
 
+// Clean title/artist for comparison
 function cleanString(str: string): string {
-    let s = str.toLowerCase();
-    // Remove common suffixes/prefixes
-    const garbage = [
-        /\(official\s+video\)/g,
-        /\(official\s+audio\)/g,
-        /\(lyrics\)/g,
-        /\(lyric\s+video\)/g,
-        /official\s+video/g,
-        /official\s+audio/g,
-        /music\s+video/g,
-        /ft\./g,
-        /feat\./g,
-        /featuring/g,
-        /prod\./g,
-        /with/g,
-        /hd/g,
-        /hq/g,
-        /4k/g
-    ];
-
-    garbage.forEach(regex => {
-        s = s.replace(regex, '');
-    });
-
-    return s.replace(/[^a-z0-9]/g, '');
+    return str
+        .toLowerCase()
+        .replace(/\(official.*?\)/gi, '')
+        .replace(/\[official.*?\]/gi, '')
+        .replace(/official\s*(video|audio|music\s*video)/gi, '')
+        .replace(/\(lyrics.*?\)/gi, '')
+        .replace(/\(.*?remix.*?\)/gi, '')
+        .replace(/ft\.?|feat\.?|featuring/gi, '')
+        .replace(/prod\.?/gi, '')
+        .replace(/\bhd\b|\bhq\b|\b4k\b|\bremaster(ed)?\b/gi, '')
+        .replace(/[^\w\s]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
 }
 
-function isSimilar(trackA: UnifiedTrack, trackB: UnifiedTrack): boolean {
-    const titleA = cleanString(trackA.title);
-    const titleB = cleanString(trackB.title);
-    const artistA = cleanString(trackA.artist);
-    const artistB = cleanString(trackB.artist);
+// Check if two tracks are similar enough to merge
+function areSimilar(a: UnifiedTrack, b: UnifiedTrack): boolean {
+    const titleA = cleanString(a.title);
+    const titleB = cleanString(b.title);
+    const artistA = cleanString(a.artist);
+    const artistB = cleanString(b.artist);
 
-    // Strict Check: Artist must be very similar
-    const artistDist = levenshtein(artistA, artistB);
+    // Artist similarity (must be >= 70%)
     const artistMax = Math.max(artistA.length, artistB.length);
-    const artistScore = artistMax === 0 ? 1 : 1 - (artistDist / artistMax);
+    if (artistMax > 0) {
+        const artistSimilarity = 1 - (levenshtein(artistA, artistB) / artistMax);
+        if (artistSimilarity < 0.7) return false;
+    }
 
-    if (artistScore < 0.8) return false; // Artists differ too much
-
-    // Title Check: Allow fuzzy match
-    const titleDist = levenshtein(titleA, titleB);
+    // Title similarity (must be >= 80%)
     const titleMax = Math.max(titleA.length, titleB.length);
-    const titleScore = titleMax === 0 ? 1 : 1 - (titleDist / titleMax);
+    if (titleMax > 0) {
+        const titleSimilarity = 1 - (levenshtein(titleA, titleB) / titleMax);
+        return titleSimilarity >= 0.8;
+    }
 
-    return titleScore > 0.85; // Slightly relaxed threshold after cleaning
+    return false;
 }
 
-export async function searchUnified(query: string, injectedSources?: MusicSource[]): Promise<UnifiedTrack[]> {
-    const sourcesToUse = injectedSources || defaultSources;
+// Convert ytmusic SearchResult to UnifiedTrack
+function toUnifiedFromYTMusic(track: any): UnifiedTrack {
+    return {
+        id: track.id,
+        title: track.title,
+        artist: track.artist,
+        thumbnail: track.thumbnail || `https://i.ytimg.com/vi/${track.id}/hqdefault.jpg`,
+        duration: 0,
+        isVerified: false,
+        platform: 'youtube',
+        sources: { youtubeId: track.id }
+    };
+}
 
-    // 1. Parallel Fetch
-    const results = await Promise.allSettled(sourcesToUse.map(s => s.search(query)));
+export async function searchUnified(query: string): Promise<UnifiedTrack[]> {
+    // Parallel fetch from all sources with individual timeouts
+    const [pipedResult, scResult, audiusResult] = await Promise.allSettled([
+        pipedSource.search(query),
+        soundcloudSource.search(query),
+        audiusSource.search(query)
+    ]);
 
     const allTracks: UnifiedTrack[] = [];
-    results.forEach(res => {
-        if (res.status === 'fulfilled' && Array.isArray(res.value)) {
-            allTracks.push(...res.value);
-        }
-    });
 
-    // 2. Merge Strategy
-    // Sort by priority before merging: Verified > Platform (YT > SC > Audius)
-    allTracks.sort((a, b) => {
-        if (a.isVerified !== b.isVerified) return b.isVerified ? 1 : -1;
-        const score = (p: string) => p === 'youtube' ? 3 : p === 'soundcloud' ? 2 : 1;
-        return score(b.platform as any) - score(a.platform as any);
-    });
+    // Collect successful results
+    if (pipedResult.status === 'fulfilled') {
+        allTracks.push(...pipedResult.value);
+    }
+    if (scResult.status === 'fulfilled') {
+        allTracks.push(...scResult.value);
+    }
+    if (audiusResult.status === 'fulfilled') {
+        allTracks.push(...audiusResult.value);
+    }
 
-    const mergedTracks: UnifiedTrack[] = [];
-
-    // Simple O(N^2) merge loop - fine for search results (usually < 50 items)
-    for (const track of allTracks) {
-        // Find existing match in merged list
-        const match = mergedTracks.find(t => isSimilar(t, track));
-
-        if (match) {
-            // MERGE
-            match.sources = { ...match.sources, ...track.sources };
-            if (track.isVerified) match.isVerified = true;
-            // Keep platform of the primary (first added) track
-        } else {
-            // NEW ENTRY
-            mergedTracks.push(track);
+    // CRITICAL: If multi-source returned nothing, fallback to ytmusic (direct API)
+    if (allTracks.length === 0) {
+        console.warn('All multi-source APIs failed, falling back to ytmusic');
+        try {
+            const ytResults = await searchMusic(query);
+            return ytResults.slice(0, 20).map(toUnifiedFromYTMusic);
+        } catch (e) {
+            console.error('YTMusic fallback also failed:', e);
+            return [];
         }
     }
 
-    return mergedTracks;
+    // Sort by quality: Verified > YouTube > SoundCloud > Audius
+    allTracks.sort((a, b) => {
+        // Verified artists first
+        if (a.isVerified !== b.isVerified) return b.isVerified ? 1 : -1;
+
+        // Then by platform priority
+        const platformScore = (p: string) => {
+            if (p === 'youtube') return 3;
+            if (p === 'soundcloud') return 2;
+            return 1;
+        };
+        return platformScore(b.platform) - platformScore(a.platform);
+    });
+
+    // Merge duplicates
+    const merged: UnifiedTrack[] = [];
+
+    for (const track of allTracks) {
+        const existing = merged.find(t => areSimilar(t, track));
+
+        if (existing) {
+            // Merge sources from duplicate
+            existing.sources = { ...existing.sources, ...track.sources };
+            // Upgrade to verified if duplicate is verified
+            if (track.isVerified) existing.isVerified = true;
+            // Keep better thumbnail
+            if (!existing.thumbnail && track.thumbnail) {
+                existing.thumbnail = track.thumbnail;
+            }
+        } else {
+            merged.push({ ...track });
+        }
+    }
+
+    return merged;
 }
+
+// Export sources for testing
+export { pipedSource, soundcloudSource, audiusSource };

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { searchMusic, searchPlaylists } from '@/lib/ytmusic';
+import { searchUnified } from '@/lib/aggregator';
 import { prisma } from '@/lib/prismadb';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -7,13 +7,17 @@ import { authOptions } from '@/lib/auth';
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const q = searchParams.get('q');
+
+    // Type is mostly used for playlists vs songs. Unified search currently focuses on tracks (songs).
+    // If type is playlist, we might fallback to just YouTube or implement playlist aggregation later.
+    // For now, if type=video (default) or undefined, we use unified.
     const type = searchParams.get('type') || 'video';
 
     if (!q) {
         return NextResponse.json({ error: 'Query required' }, { status: 400 });
     }
 
-    // Log search query for personalization (Fire and forget, don't block response)
+    // Log search query for personalization (Fire and forget)
     getServerSession(authOptions).then(async (session) => {
         if (session?.user?.email) {
             try {
@@ -35,9 +39,13 @@ export async function GET(request: Request) {
         let results;
 
         if (type === 'playlist') {
+            // Fallback to legacy behavior for playlists until aggregated playlists are supported
+            // We need to dynamically import to avoid circular deps if any, or just import normally
+            const { searchPlaylists } = await import('@/lib/ytmusic');
             results = await searchPlaylists(q);
         } else {
-            results = await searchMusic(q);
+            // Use new Unified Aggregator
+            results = await searchUnified(q);
         }
 
         return NextResponse.json(results);

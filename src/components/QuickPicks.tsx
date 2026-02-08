@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAudio } from './AudioProvider';
 import { Play } from 'lucide-react';
-import Image from 'next/image';
 import { toUnifiedTrack } from '@/lib/types/music';
 
 interface Track {
@@ -55,9 +54,16 @@ export function QuickPicks({ initialTracks }: QuickPicksProps) {
             const data1 = await res1.json();
             const data2 = await res2.json();
 
+            // Handle both paginated and legacy array responses
+            const getResults = (data: any): Track[] => {
+                if (data.results && Array.isArray(data.results)) return data.results;
+                if (Array.isArray(data)) return data;
+                return [];
+            };
+
             let combined: Track[] = [];
-            if (Array.isArray(data1)) combined.push(...data1.slice(0, 8));
-            if (Array.isArray(data2)) combined.push(...data2.slice(0, 8));
+            combined.push(...getResults(data1).slice(0, 8));
+            combined.push(...getResults(data2).slice(0, 8));
 
             combined = combined.sort(() => Math.random() - 0.5);
 
@@ -139,14 +145,17 @@ export function QuickPicks({ initialTracks }: QuickPicksProps) {
                         className="group flex items-center gap-3 p-2 pr-4 rounded-xl hover:bg-white/10 transition-all duration-200 cursor-pointer border border-transparent hover:border-white/5 active:scale-[0.98]"
                     >
                         <div className="relative w-14 h-14 flex-shrink-0">
-                            <Image
+                            <img
                                 src={track.thumbnail || `https://i.ytimg.com/vi/${track.id}/hqdefault.jpg`}
                                 alt={track.title}
-                                fill
-                                sizes="56px"
-                                quality={75}
-                                className="rounded-md object-cover shadow-lg group-hover:shadow-xl transition-shadow"
                                 loading="lazy"
+                                onError={(e) => {
+                                    const img = e.currentTarget;
+                                    if (!img.src.includes('mqdefault')) {
+                                        img.src = `https://i.ytimg.com/vi/${track.id}/mqdefault.jpg`;
+                                    }
+                                }}
+                                className="w-full h-full rounded-md object-cover shadow-lg group-hover:shadow-xl transition-shadow"
                             />
                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-md flex items-center justify-center backdrop-blur-[1px]">
                                 <Play size={20} className="text-white fill-white ml-0.5" />

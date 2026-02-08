@@ -1,9 +1,8 @@
 'use client';
 
-import { Play, TrendingUp, Music, ListMusic, Headset, Moon, Sun, Coffee } from 'lucide-react';
+import { Play, TrendingUp, Music, ListMusic, Headset } from 'lucide-react';
 import { useAudio } from '@/components/AudioProvider';
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
 import { toUnifiedTrack } from '@/lib/types/music';
 
 // Base definitions for mixes
@@ -121,8 +120,10 @@ export function DailyMixes({ prefetchedPreviews }: DailyMixesProps) {
                 newMixes.forEach(async (mix) => {
                     try {
                         const res = await fetch(`/api/search?q=${encodeURIComponent(mix.query)}`);
-                        const tracks = await res.json();
-                        if (Array.isArray(tracks)) {
+                        const data = await res.json();
+                        // Handle both paginated and array responses
+                        const tracks = data.results || (Array.isArray(data) ? data : []);
+                        if (tracks.length > 0) {
                             setPreviews(prev => ({ ...prev, [mix.id]: tracks.slice(0, 4) }));
                         }
                     } catch (e) {
@@ -139,8 +140,10 @@ export function DailyMixes({ prefetchedPreviews }: DailyMixesProps) {
         setLoadingMix(id);
         try {
             const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
-            const tracks = await res.json();
-            if (Array.isArray(tracks) && tracks.length > 0) {
+            const data = await res.json();
+            // Handle both paginated and array responses
+            const tracks = data.results || (Array.isArray(data) ? data : []);
+            if (tracks.length > 0) {
                 const playTracks = tracks.map((t: any) => toUnifiedTrack({
                     id: t.id,
                     title: t.title,
@@ -194,13 +197,18 @@ export function DailyMixes({ prefetchedPreviews }: DailyMixesProps) {
                             {/* Main Cover Image */}
                             <div className="absolute inset-0 bg-zinc-900">
                                 {coverImage ? (
-                                    <Image
+                                    <img
                                         src={coverImage}
-                                        fill
-                                        sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
-                                        quality={75}
-                                        className="object-cover opacity-60 group-hover:opacity-40 transition-all duration-700 group-hover:scale-110"
                                         alt=""
+                                        loading="lazy"
+                                        onError={(e) => {
+                                            const img = e.currentTarget;
+                                            const trackId = mixTracks[0]?.id;
+                                            if (trackId && !img.src.includes('mqdefault')) {
+                                                img.src = `https://i.ytimg.com/vi/${trackId}/mqdefault.jpg`;
+                                            }
+                                        }}
+                                        className="w-full h-full object-cover opacity-60 group-hover:opacity-40 transition-all duration-700 group-hover:scale-110"
                                     />
                                 ) : (
                                     <div className={`w-full h-full bg-gradient-to-br ${mix.gradient} opacity-20`}></div>

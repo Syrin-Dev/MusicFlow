@@ -42,8 +42,15 @@ export function MusicVideos() {
         try {
             const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
             const data = await res.json();
-            if (Array.isArray(data)) {
-                setVideos(data.slice(0, 5));
+            // Handle both paginated and array responses
+            const results = data.results || (Array.isArray(data) ? data : []);
+            if (results.length > 0) {
+                // Ensure thumbnails have fallbacks
+                const videosWithThumbnails = results.slice(0, 5).map((v: any) => ({
+                    ...v,
+                    thumbnail: v.thumbnail || `https://i.ytimg.com/vi/${v.id}/hqdefault.jpg`
+                }));
+                setVideos(videosWithThumbnails);
             }
         } catch (e) {
             console.error('Failed to fetch videos:', e);

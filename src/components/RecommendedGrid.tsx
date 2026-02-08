@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useAudio } from './AudioProvider';
 import { generateSmartDiscoveryQueries } from '@/lib/algorithm';
-import Image from 'next/image';
 import { toUnifiedTrack } from '@/lib/types/music';
 
 interface Track {
@@ -51,11 +50,26 @@ export function RecommendedGrid({ initialTracks }: RecommendedGridProps) {
         try {
             const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
             const data = await res.json();
-            if (Array.isArray(data) && data.length > 0) {
+
+            // Handle both paginated response and legacy array response
+            let results: Track[] = [];
+            if (data.results && Array.isArray(data.results)) {
+                results = data.results;
+            } else if (Array.isArray(data)) {
+                results = data;
+            }
+
+            if (results.length > 0) {
+                // Ensure thumbnails have fallbacks
+                const tracksWithThumbnails = results.slice(0, 5).map(t => ({
+                    ...t,
+                    thumbnail: t.thumbnail || `https://i.ytimg.com/vi/${t.id}/hqdefault.jpg`
+                }));
+
                 if (saveToHistory && tracks.length > 0) {
                     setHistoryStack(prev => [...prev, tracks]);
                 }
-                setTracks(data.slice(0, 5));
+                setTracks(tracksWithThumbnails);
             }
         } catch (e) {
             console.error('Failed to fetch recommendations:', e);
@@ -140,13 +154,21 @@ export function RecommendedGrid({ initialTracks }: RecommendedGridProps) {
                             onClick={() => handlePlayTrack(track, index)}
                         >
                             <div className="relative aspect-square rounded-2xl overflow-hidden mb-3 bg-[#18181b] shadow-lg ring-1 ring-white/5">
-                                <Image
+                                <img
                                     src={track.thumbnail || `https://i.ytimg.com/vi/${track.id}/hqdefault.jpg`}
                                     alt={track.title}
-                                    fill
-                                    sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
-                                    quality={75}
-                                    className="object-cover transition-transform duration-500 group-hover:scale-110 opacity-90 group-hover:opacity-100"
+                                    loading="lazy"
+                                    onError={(e) => {
+                                        const img = e.currentTarget;
+                                        if (img.src.includes('maxresdefault')) {
+                                            img.src = `https://i.ytimg.com/vi/${track.id}/hqdefault.jpg`;
+                                        } else if (img.src.includes('hqdefault')) {
+                                            img.src = `https://i.ytimg.com/vi/${track.id}/mqdefault.jpg`;
+                                        } else if (!img.src.includes('mqdefault')) {
+                                            img.src = `https://i.ytimg.com/vi/${track.id}/default.jpg`;
+                                        }
+                                    }}
+                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 opacity-90 group-hover:opacity-100"
                                 />
                                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-3 backdrop-blur-[2px]">
                                     <button

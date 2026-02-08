@@ -23,9 +23,6 @@ export interface MusicSource {
 
 // Helper to convert legacy/partial track objects to UnifiedTrack
 export function toUnifiedTrack(track: any): UnifiedTrack {
-    // If it's already a UnifiedTrack (has sources), return it
-    if (track.sources) return track as UnifiedTrack;
-
     // Handle string duration "MM:SS" -> seconds
     let duration = 0;
     if (typeof track.duration === 'string') {
@@ -36,15 +33,39 @@ export function toUnifiedTrack(track: any): UnifiedTrack {
         duration = track.duration;
     }
 
-    // Default to YouTube if unknown
+    // Get the track ID
+    const trackId = track.id || track.videoId || '';
+
+    // Check if sources already has a valid youtubeId
+    const hasValidSources = track.sources && (
+        track.sources.youtubeId ||
+        track.sources.soundcloudId ||
+        track.sources.audiusId
+    );
+
+    // Build sources - ALWAYS ensure youtubeId is set if track.id looks like a YouTube ID
+    let sources: TrackSources;
+    if (hasValidSources) {
+        sources = track.sources;
+    } else {
+        // Default: assume the track.id IS a YouTube video ID
+        sources = { youtubeId: trackId };
+    }
+
+    // Ensure thumbnail has fallback
+    let thumbnail = track.thumbnail || '';
+    if (!thumbnail && trackId && !trackId.startsWith('sc-') && !trackId.startsWith('audius-')) {
+        thumbnail = `https://i.ytimg.com/vi/${trackId}/hqdefault.jpg`;
+    }
+
     return {
-        id: track.id,
-        title: track.title,
-        artist: track.artist,
-        thumbnail: track.thumbnail || '',
-        duration: duration,
-        sources: { youtubeId: track.id }, // Assume ID is YouTube ID
-        isVerified: false,
-        platform: 'youtube'
+        id: trackId,
+        title: track.title || track.name || 'Unknown',
+        artist: track.artist || track.artists?.[0]?.name || 'Unknown Artist',
+        thumbnail,
+        duration: duration || track.duration || 0,
+        sources,
+        isVerified: track.isVerified || false,
+        platform: track.platform || 'youtube'
     };
 }

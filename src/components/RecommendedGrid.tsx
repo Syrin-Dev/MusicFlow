@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useAudio } from './AudioProvider';
 import { generateSmartDiscoveryQueries } from '@/lib/algorithm';
+import Image from 'next/image';
 
 interface Track {
     id: string;
@@ -11,13 +12,15 @@ interface Track {
     thumbnail: string;
 }
 
-export function RecommendedGrid() {
-    const [tracks, setTracks] = useState<Track[]>([]);
-    const [loading, setLoading] = useState(true);
+interface RecommendedGridProps {
+    initialTracks?: Track[];
+}
+
+export function RecommendedGrid({ initialTracks }: RecommendedGridProps) {
+    const [tracks, setTracks] = useState<Track[]>(initialTracks || []);
+    const [loading, setLoading] = useState(!initialTracks);
     const [isTransitioning, setIsTransitioning] = useState(false);
     const [historyStack, setHistoryStack] = useState<Track[][]>([]);
-    // If you want to show what the recommendation is based on, you can keep this, 
-    // or just say "Based on your taste"
     const [recSource, setRecSource] = useState('Based on your taste');
 
     // Track which query index we're on for variety
@@ -26,6 +29,7 @@ export function RecommendedGrid() {
     const { playTrack, addToQueue, listeningHistory, openConnect } = useAudio();
 
     const fetchRecommendations = useCallback(async (saveToHistory = false) => {
+        setLoading(true);
         // Use our new smart algorithm
         const queries = generateSmartDiscoveryQueries(listeningHistory);
 
@@ -59,8 +63,10 @@ export function RecommendedGrid() {
     }, [tracks, listeningHistory]);
 
     useEffect(() => {
-        fetchRecommendations(false);
-    }, []);
+        if (!initialTracks) {
+            fetchRecommendations(false);
+        }
+    }, [initialTracks]); // Only run on mount if no initial tracks
 
     const handleNext = async () => {
         setIsTransitioning(true);
@@ -85,15 +91,6 @@ export function RecommendedGrid() {
     const handlePlayTrack = (track: Track, index: number) => {
         playTrack(track);
         tracks.slice(index + 1).forEach(t => addToQueue(t));
-    };
-
-    const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>, track: Track) => {
-        const img = e.currentTarget;
-        if (img.src.includes('hqdefault')) {
-            img.src = `https://i.ytimg.com/vi/${track.id}/mqdefault.jpg`;
-        } else {
-            img.src = `https://i.ytimg.com/vi/${track.id}/default.jpg`;
-        }
     };
 
     return (
@@ -142,11 +139,13 @@ export function RecommendedGrid() {
                             onClick={() => handlePlayTrack(track, index)}
                         >
                             <div className="relative aspect-square rounded-2xl overflow-hidden mb-3 bg-[#18181b] shadow-lg ring-1 ring-white/5">
-                                <img
+                                <Image
                                     src={track.thumbnail || `https://i.ytimg.com/vi/${track.id}/hqdefault.jpg`}
                                     alt={track.title}
-                                    onError={(e) => handleImageError(e, track)}
-                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 opacity-90 group-hover:opacity-100"
+                                    fill
+                                    sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
+                                    quality={75}
+                                    className="object-cover transition-transform duration-500 group-hover:scale-110 opacity-90 group-hover:opacity-100"
                                 />
                                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-3 backdrop-blur-[2px]">
                                     <button

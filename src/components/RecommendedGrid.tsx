@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { useAudio } from './AudioProvider';
 import { generateSmartDiscoveryQueries } from '@/lib/algorithm';
 import Image from 'next/image';
+import { toUnifiedTrack } from '@/lib/types/music';
 
 interface Track {
     id: string;
@@ -89,8 +90,8 @@ export function RecommendedGrid({ initialTracks }: RecommendedGridProps) {
     };
 
     const handlePlayTrack = (track: Track, index: number) => {
-        playTrack(track);
-        tracks.slice(index + 1).forEach(t => addToQueue(t));
+        playTrack(toUnifiedTrack(track));
+        tracks.slice(index + 1).forEach(t => addToQueue(toUnifiedTrack(t)));
     };
 
     return (

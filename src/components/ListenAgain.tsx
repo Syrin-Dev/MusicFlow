@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useAudio } from './AudioProvider';
 import { Play, RotateCcw } from 'lucide-react';
+import { toUnifiedTrack } from '@/lib/types/music';
 
 interface Track {
     id: string;

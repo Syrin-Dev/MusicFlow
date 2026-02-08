@@ -10,6 +10,7 @@ import { ListenAgain } from '@/components/ListenAgain';
 import { GenreBubbles } from '@/components/GenreBubbles';
 import { useAudio } from '@/components/AudioProvider';
 import Image from 'next/image';
+import { toUnifiedTrack } from '@/lib/types/music';
 
 // GenreFilteredView Component
 function GenreFilteredView({ query }: { query: string }) {
@@ -32,8 +33,8 @@ function GenreFilteredView({ query }: { query: string }) {
 
   const handlePlayAll = () => {
     if (tracks.length > 0) {
-      playTrack(tracks[0]);
-      tracks.slice(1).forEach(t => addToQueue(t));
+      playTrack(toUnifiedTrack(tracks[0]));
+      tracks.slice(1).forEach(t => addToQueue(toUnifiedTrack(t)));
     }
   };
 
@@ -104,7 +105,7 @@ function GenreFilteredView({ query }: { query: string }) {
                 />
                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center gap-3 backdrop-blur-[2px]">
                   <button
-                    onClick={() => playTrack(track)}
+                    onClick={() => playTrack(toUnifiedTrack(track))}
                     className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white shadow-lg translate-y-4 group-hover:translate-y-0 transition-transform duration-300 hover:scale-110 active:scale-95"
                   >
                     <span className="material-icons-round text-3xl">play_arrow</span>

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Play, ChevronLeft, Heart, MoreHorizontal, Clock } from 'lucide-react';
 import { useAudio } from '@/components/AudioProvider';
+import { toUnifiedTrack } from '@/lib/types/music';
 
 interface Song {
     id: string;
@@ -110,7 +111,7 @@ export default function GenrePage() {
             {/* Content Actions */}
             <div className="px-8 py-6 flex items-center gap-6 sticky top-0 bg-[#0A0A0B]/90 backdrop-blur-xl z-30 border-b border-white/5">
                 <button
-                    onClick={() => songs[0] && playTrack(songs[0])}
+                    onClick={() => songs[0] && playTrack(toUnifiedTrack(songs[0]))}
                     className="w-14 h-14 rounded-full bg-[#8B5CF6] text-white flex items-center justify-center shadow-lg shadow-violet-500/30 hover:scale-105 transition-transform"
                 >
                     <Play size={28} fill="currentColor" className="ml-1" />
@@ -132,7 +133,7 @@ export default function GenrePage() {
                     <div
                         key={`${track.id}-${i}`}
                         className="group flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer border border-transparent hover:border-white/5"
-                        onClick={() => playTrack(track)}
+                        onClick={() => playTrack(toUnifiedTrack(track))}
                     >
                         <span className="w-8 text-center text-slate-500 group-hover:text-white font-medium">{i + 1}</span>
 

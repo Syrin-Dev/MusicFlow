@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useAudio } from './AudioProvider';
 import { Play } from 'lucide-react';
 import Image from 'next/image';
+import { toUnifiedTrack } from '@/lib/types/music';
 
 interface Track {
     id: string;
@@ -108,13 +109,13 @@ export function QuickPicks({ initialTracks }: QuickPicksProps) {
 
     const handlePlayAll = () => {
         if (tracks.length === 0) return;
-        playTrack(tracks[0]);
-        tracks.slice(1).forEach(track => addToQueue(track));
+        playTrack(toUnifiedTrack(tracks[0]));
+        tracks.slice(1).forEach(track => addToQueue(toUnifiedTrack(track)));
     };
 
     const handlePlayTrack = (track: Track, index: number) => {
-        playTrack(track);
-        tracks.slice(index + 1).forEach(t => addToQueue(t));
+        playTrack(toUnifiedTrack(track));
+        tracks.slice(index + 1).forEach(t => addToQueue(toUnifiedTrack(t)));
     };
 
     return (

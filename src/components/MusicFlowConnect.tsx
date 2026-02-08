@@ -4,6 +4,7 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
 import { useAudio } from '@/components/AudioProvider';
+import { toUnifiedTrack } from '@/lib/types/music';
 import { UserPlus, Copy, Check, Play, Reply, Trash2, X, Music, Send, ArrowLeft, MoreVertical, Ban, UserMinus, ShieldAlert, RefreshCw, Radio } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -544,12 +545,12 @@ export default function MusicFlowConnect({ isOpen, onClose, initialTrack: extern
                                                     <div className="flex flex-col space-y-3">
                                                         {msg.sharedMusicId && (
                                                             <div
-                                                                onClick={() => !msg.isDeleted && playTrack({
+                                                                onClick={() => !msg.isDeleted && playTrack(toUnifiedTrack({
                                                                     id: msg.sharedMusicId!,
                                                                     title: msg.sharedMusicTitle!,
                                                                     artist: msg.sharedMusicArtist!,
                                                                     thumbnail: msg.sharedMusicThumbnail!
-                                                                })}
+                                                                }))}
                                                                 className={`p-4 rounded-3xl bg-[#121214]/80 border border-white/5 backdrop-blur-3xl hover:bg-white/[0.04] transition-all cursor-pointer group/card flex gap-5 ${msg.isDeleted ? 'opacity-30 line-through grayscale' : 'shadow-2xl'}`}
                                                             >
                                                                 <div className="relative flex-shrink-0">

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Play, ChevronLeft, ChevronRight, Hash, Clock, Loader2 } from 'lucide-react';
 import { useAudio } from '@/components/AudioProvider';
+import { toUnifiedTrack } from '@/lib/types/music';
 
 interface Track {
     id: string;
@@ -200,7 +201,7 @@ export default function ExplorePage() {
                                 <div
                                     key={`${track.id}-${index}`}
                                     className="group flex items-center gap-4 p-3 rounded-2xl bg-[#1A1A1E]/50 border border-transparent hover:border-white/10 hover:bg-[#1A1A1E] transition-all cursor-pointer"
-                                    onClick={() => playTrack(track)}
+                                    onClick={() => playTrack(toUnifiedTrack(track))}
                                 >
                                     <span className={`w-8 text-center font-bold text-lg ${index < 3 ? 'text-[#8B5CF6]' : 'text-slate-600'}`}>
                                         {index + 1}

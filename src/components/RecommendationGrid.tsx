@@ -3,6 +3,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useAudio } from './AudioProvider';
 import { Play } from 'lucide-react';
+import { toUnifiedTrack } from '@/lib/types/music';
 import { useSearchParams } from 'next/navigation';
 
 interface Result {

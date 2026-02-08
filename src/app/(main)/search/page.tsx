@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useAudio } from '@/components/AudioProvider';
+import { toUnifiedTrack } from '@/lib/types/music';
 
 
 interface Track {
@@ -39,9 +40,9 @@ function SearchResultsContent() {
     }, [query]);
 
     const handlePlay = (track: Track, index: number) => {
-        playTrack(track);
+        playTrack(toUnifiedTrack(track));
         // Queue the rest of the search results
-        tracks.slice(index + 1).forEach(t => addToQueue(t));
+        tracks.slice(index + 1).forEach(t => addToQueue(toUnifiedTrack(t)));
     };
 
     const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>, track: Track) => {

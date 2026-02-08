@@ -5,6 +5,7 @@ import { Play, Pause, Heart } from 'lucide-react';
 import { useAudio } from '@/components/AudioProvider';
 import { AddToPlaylist } from './AddToPlaylist';
 import Image from 'next/image';
+import { toUnifiedTrack } from '@/lib/types/music';
 
 interface HeroProps {
     initialTrack?: any;
@@ -102,7 +103,7 @@ export function Hero({ initialTrack }: HeroProps) {
                 <div className="flex flex-wrap items-center gap-4 pt-8 md:pt-12">
                     {/* Redesigned Resume Button */}
                     <button
-                        onClick={() => isPlayingHero ? togglePlay() : playTrack(displayTrack)}
+                        onClick={() => isPlayingHero ? togglePlay() : playTrack(toUnifiedTrack(displayTrack))}
                         className="flex items-center gap-3 md:gap-4 px-8 md:px-12 py-4 md:py-5 bg-[#8B5CF6]/20 border border-[#8B5CF6]/50 text-white rounded-full font-black text-lg md:text-xl hover:bg-[#8B5CF6]/40 hover:border-[#8B5CF6] hover:scale-105 active:scale-95 transition-all shadow-[0_0_20px_rgba(139,92,246,0.2)] hover:shadow-[0_0_30px_rgba(139,92,246,0.5)] backdrop-blur-md group-btn"
                     >
                         {isPlayingHero && isPlaying ?
@@ -128,7 +129,7 @@ export function Hero({ initialTrack }: HeroProps) {
                         </button>
 
                         <AddToPlaylist
-                            track={displayTrack}
+                            track={toUnifiedTrack(displayTrack)}
                             dropdownPosition="bottom"
                             className="p-5 rounded-full backdrop-blur-xl border border-white/10 text-white hover:bg-white/10 hover:border-white/20 transition-all active:scale-90"
                         >

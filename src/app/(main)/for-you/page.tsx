@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Sparkles, RefreshCw, Play, Heart, TrendingUp, Moon, Dumbbell, Brain, PartyPopper, Flame, History, Music2 } from 'lucide-react';
 import { useAudio } from '@/components/AudioProvider';
+import { toUnifiedTrack } from '@/lib/types/music';
 
 interface Track {
     id: string;
@@ -105,14 +106,8 @@ export default function ForYouPage() {
 
     const handlePlayAll = () => {
         if (recommendations.length > 0) {
-            const toPlayerTrack = (t: Track) => ({
-                id: t.id,
-                title: t.title,
-                artist: t.artist,
-                thumbnail: t.thumbnail || `https://i.ytimg.com/vi/${t.id}/hqdefault.jpg`
-            });
-            playTrack(toPlayerTrack(recommendations[0]));
-            recommendations.slice(1).forEach(track => addToQueue(toPlayerTrack(track)));
+            playTrack(toUnifiedTrack(recommendations[0]));
+            recommendations.slice(1).forEach(track => addToQueue(toUnifiedTrack(track)));
         }
     };
 
@@ -198,7 +193,7 @@ export default function ForYouPage() {
                             {listeningHistory.slice(0, 6).map((track, i) => (
                                 <div
                                     key={i}
-                                    onClick={() => playTrack(track)}
+                                    onClick={() => playTrack(toUnifiedTrack(track))}
                                     className="group flex items-center gap-3 bg-white/5 hover:bg-white/10 p-2 rounded-lg cursor-pointer transition-colors border border-white/5 hover:border-white/10"
                                 >
                                     <img
@@ -255,7 +250,7 @@ export default function ForYouPage() {
                                         <div
                                             key={`${track.id}-${index}`}
                                             className="group cursor-pointer p-3 rounded-2xl hover:bg-white/5 transition-all duration-300"
-                                            onClick={() => playTrack(playerTrack)}
+                                            onClick={() => playTrack(toUnifiedTrack(playerTrack))}
                                         >
                                             <div
                                                 className={`aspect-square rounded-2xl overflow-hidden relative mb-4 bg-[#1A1A1E] shadow-xl ring-2 transition-all group-hover:shadow-2xl ${isCurrentTrack ? 'ring-violet-500' : 'ring-transparent'

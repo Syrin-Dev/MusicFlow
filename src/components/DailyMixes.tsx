@@ -4,6 +4,7 @@ import { Play, TrendingUp, Music, ListMusic, Headset, Moon, Sun, Coffee } from '
 import { useAudio } from '@/components/AudioProvider';
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
+import { toUnifiedTrack } from '@/lib/types/music';
 
 // Base definitions for mixes
 const BASE_MIXES = [
@@ -140,7 +141,7 @@ export function DailyMixes({ prefetchedPreviews }: DailyMixesProps) {
             const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
             const tracks = await res.json();
             if (Array.isArray(tracks) && tracks.length > 0) {
-                const playTracks = tracks.map((t: any) => ({
+                const playTracks = tracks.map((t: any) => toUnifiedTrack({
                     id: t.id,
                     title: t.title,
                     artist: t.artist,

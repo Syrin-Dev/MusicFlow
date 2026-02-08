@@ -21,12 +21,12 @@ export function ArtistStories() {
     const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
 
     const handleStoryClick = (story: typeof STORIES[0]) => {
-        playTrack({
+        playTrack(toUnifiedTrack({
             id: story.trackId,
             title: story.title,
             artist: story.artist,
             thumbnail: story.image,
-        });
+        }));
 
         if (!viewed.includes(story.id)) {
             setViewed(prev => [...prev, story.id]);

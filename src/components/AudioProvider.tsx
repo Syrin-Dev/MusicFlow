@@ -4,7 +4,7 @@ import React, { createContext, useContext, useEffect, useState, useRef, useCallb
 import { useSession } from "next-auth/react";
 import { toast } from 'sonner';
 import { Heart, HeartOff } from 'lucide-react';
-import { UnifiedTrack as Track } from '@/lib/types/music';
+import { UnifiedTrack as Track, toUnifiedTrack } from '@/lib/types/music';
 
 interface AudioContextType {
     currentTrack: Track | null;
@@ -153,18 +153,21 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         if (typeof window !== 'undefined') {
             const storedHistory = localStorage.getItem(LISTENING_HISTORY_KEY);
             if (storedHistory) {
-                try { setListeningHistory(JSON.parse(storedHistory)); } catch (e) { }
+                try {
+                    const raw = JSON.parse(storedHistory);
+                    if (Array.isArray(raw)) setListeningHistory(raw.map(toUnifiedTrack));
+                } catch (e) { }
             }
         }
         if (session?.user?.email) {
-            fetch('/api/user/history').then(res => res.json()).then(data => { if (Array.isArray(data)) setListeningHistory(data); });
+            fetch('/api/user/history').then(res => res.json()).then(data => {
+                if (Array.isArray(data)) setListeningHistory(data.map(toUnifiedTrack));
+            });
             fetch('/api/user/likes').then(res => res.json()).then(data => {
                 if (Array.isArray(data)) {
-                    setLikedSongs(data.map((item: any) => ({
+                    setLikedSongs(data.map((item: any) => toUnifiedTrack({
                         ...item,
                         id: item.videoId || item.id,
-                        // Ensure compatibility with UnifiedTrack
-                        sources: { youtubeId: item.videoId || item.id }
                     })));
                 }
             });
@@ -257,9 +260,60 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     const openConnect = (track?: Track) => { if (track) setConnectInitialTrack(track); setIsConnectOpen(true); };
     const closeConnect = () => { setIsConnectOpen(false); setConnectInitialTrack(null); };
 
-    const joinRoom = async (friendId: string) => { /* ... same ... */ };
-    const leaveRoom = async () => { /* ... same ... */ };
-    const hostRoom = async (trackOverride?: Track, progressOverride?: number) => { /* ... same ... */ };
+    const joinRoom = async (friendId: string) => {
+        try {
+            const res = await fetch('/api/rooms', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'JOIN_ROOM', friendId })
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setCurrentRoomId(data.id);
+                setIsHostingRoom(false);
+                setRoomData(data);
+                toast.success("Joined live room!");
+            }
+        } catch (e) {
+            toast.error("Failed to join room");
+        }
+    };
+
+    const leaveRoom = async () => {
+        try {
+            await fetch('/api/rooms', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'LEAVE_ROOM' })
+            });
+            setCurrentRoomId(null);
+            setIsHostingRoom(false);
+            setRoomData(null);
+        } catch (e) { }
+    };
+
+    const hostRoom = async (trackOverride?: Track, progressOverride?: number) => {
+        const track = trackOverride || currentTrack;
+        const progress = progressOverride !== undefined ? progressOverride : Math.floor(currentTime);
+
+        if (!track) return;
+        try {
+            const res = await fetch('/api/rooms', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'CREATE_ROOM',
+                    trackId: track.id,
+                    progress: progress
+                })
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setCurrentRoomId(data.id);
+                setIsHostingRoom(true);
+            }
+        } catch (e) { }
+    };
 
     // Unified Playback Logic with Failover
     const playTrackInternal = (track: Track, previousTrack?: Track | null) => {

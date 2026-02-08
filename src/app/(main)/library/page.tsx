@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Heart, Plus, Music, Play, MoreHorizontal, Trash2, X, User, Clock, Pin } from 'lucide-react';
 import { useAudio } from '@/components/AudioProvider';
+import { toUnifiedTrack } from '@/lib/types/music';
 
 interface Track {
     id: string;
@@ -93,8 +94,8 @@ export default function LibraryPage() {
 
     const playLikedSongs = () => {
         if (likedSongs.length > 0) {
-            playTrack(likedSongs[0]);
-            likedSongs.slice(1).forEach(song => addToQueue(song));
+            playTrack(toUnifiedTrack(likedSongs[0]));
+            likedSongs.slice(1).forEach(song => addToQueue(toUnifiedTrack(song)));
         }
     };
 

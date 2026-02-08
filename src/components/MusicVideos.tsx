@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAudio } from './AudioProvider';
 import { generateSmartDiscoveryQueries } from '@/lib/algorithm';
+import { toUnifiedTrack } from '@/lib/types/music';
 
 interface Video {
     id: string;
@@ -55,9 +56,9 @@ export function MusicVideos() {
     }, []); // Run only on mount
 
     const handlePlayVideo = (video: Video, index: number) => {
-        playTrack(video);
+        playTrack(toUnifiedTrack(video));
         // Add remaining to queue
-        videos.slice(index + 1).forEach(v => addToQueue(v));
+        videos.slice(index + 1).forEach(v => addToQueue(toUnifiedTrack(v)));
     };
 
     const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>, video: Video) => {

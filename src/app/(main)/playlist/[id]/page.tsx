@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Play, ChevronLeft, Clock, MoreHorizontal, Shuffle, Heart } from 'lucide-react';
 import { useAudio } from '@/components/AudioProvider';
+import { toUnifiedTrack } from '@/lib/types/music';
 
 interface Track {
     id: string;
@@ -63,7 +64,7 @@ export default function PlaylistPage() {
 
     const playAll = () => {
         if (playlist?.tracks?.length) {
-            playTrack(playlist.tracks[0]);
+            playTrack(toUnifiedTrack(playlist.tracks[0]));
         }
     };
 
@@ -164,7 +165,7 @@ export default function PlaylistPage() {
                 {tracks.map((track, i) => (
                     <div
                         key={`${track.id}-${i}`}
-                        onClick={() => playTrack(track)}
+                        onClick={() => playTrack(toUnifiedTrack(track))}
                         className="group flex md:grid md:grid-cols-[auto_1fr_auto] gap-4 items-center px-4 py-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer border border-transparent hover:border-white/5"
                     >
                         <span className="w-4 md:w-8 text-center text-xs md:text-sm text-slate-500 group-hover:text-white font-black">

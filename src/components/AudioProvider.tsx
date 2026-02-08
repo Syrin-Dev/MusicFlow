@@ -255,6 +255,17 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
 
     const addToQueue = (track: Track) => setQueue(prev => [...prev, track]);
 
+    const toggleShuffle = () => setShuffle(prev => !prev);
+    const toggleRepeat = () => setRepeat(prev => prev === 'off' ? 'one' : prev === 'one' ? 'all' : 'off');
+    const reorderQueue = (fromIndex: number, toIndex: number) => {
+        setQueue(prev => {
+            const newQueue = [...prev];
+            const [removed] = newQueue.splice(fromIndex, 1);
+            newQueue.splice(toIndex, 0, removed);
+            return newQueue;
+        });
+    };
+
     const [isConnectOpen, setIsConnectOpen] = useState(false);
     const [connectInitialTrack, setConnectInitialTrack] = useState<Track | null>(null);
     const openConnect = (track?: Track) => { if (track) setConnectInitialTrack(track); setIsConnectOpen(true); };
@@ -318,8 +329,8 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     // Unified Playback Logic with Failover
     const playTrackInternal = (track: Track, previousTrack?: Track | null) => {
         if (previousTrack && trackingRef.current) {
-             const playDuration = (Date.now() - trackingRef.current.startTime) / 1000;
-             recordListeningEvent(previousTrack, playDuration, trackingRef.current.duration, false);
+            const playDuration = (Date.now() - trackingRef.current.startTime) / 1000;
+            recordListeningEvent(previousTrack, playDuration, trackingRef.current.duration, false);
         }
 
         trackingRef.current = { startTime: Date.now(), trackId: track.id, duration: 0 };
@@ -328,7 +339,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         setCurrentTime(0);
         saveToListeningHistory(track);
         requestWakeLock();
-        silentAudioRef.current?.play().catch(() => {});
+        silentAudioRef.current?.play().catch(() => { });
 
         // Prioritize Sources: YouTube -> Audius -> SoundCloud (simplest to hardest)
         if (track.sources?.youtubeId) {
@@ -347,25 +358,25 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
                 html5AudioRef.current.play();
             }
         } else if (track.sources?.soundcloudId) {
-             // SC streaming needs CLIENT_ID. Fallback or use a proxy if not available?
-             // For now, failover might just be skipping if we can't play SC
-             setActiveSource('html5');
-             // Placeholder: Assume we might have a proxy or we skip
-             console.warn("SoundCloud playback requires client_id integration in frontend");
-             playNext(); // Skip for now until SC Player is fully implemented
+            // SC streaming needs CLIENT_ID. Fallback or use a proxy if not available?
+            // For now, failover might just be skipping if we can't play SC
+            setActiveSource('html5');
+            // Placeholder: Assume we might have a proxy or we skip
+            console.warn("SoundCloud playback requires client_id integration in frontend");
+            playNext(); // Skip for now until SC Player is fully implemented
         } else {
-             playNext();
+            playNext();
         }
     };
 
     const playTrack = (track: Track) => {
-        if(currentTrack) setHistory(prev => [...prev, currentTrack]);
+        if (currentTrack) setHistory(prev => [...prev, currentTrack]);
         playTrackInternal(track, currentTrack);
     };
 
     const playPlaylist = (tracks: Track[], startIndex = 0) => {
         if (!tracks.length) return;
-        if(currentTrack) setHistory(prev => [...prev, currentTrack]);
+        if (currentTrack) setHistory(prev => [...prev, currentTrack]);
         setQueue(tracks.slice(startIndex + 1));
         playTrackInternal(tracks[startIndex], currentTrack);
     };
@@ -373,7 +384,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     const playNext = () => {
         if (!queue.length) return;
         const prev = currentTrack;
-        if(currentTrack) setHistory(prevHist => [...prevHist, currentTrack]);
+        if (currentTrack) setHistory(prevHist => [...prevHist, currentTrack]);
 
         let nextIndex = 0;
         if (shuffle) nextIndex = Math.floor(Math.random() * queue.length);
@@ -410,9 +421,9 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
             setDuration(audio.duration || 0);
         };
         const onError = () => {
-             console.error("HTML5 Playback Error");
-             // Failover logic could go here
-             playNext();
+            console.error("HTML5 Playback Error");
+            // Failover logic could go here
+            playNext();
         };
 
         audio.addEventListener('play', onPlay);
@@ -439,13 +450,13 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         if (currentTrack) {
             // If YT failed, try Audius?
             if (currentTrack.sources?.audiusId && activeSource === 'youtube') {
-                 console.log("Failing over to Audius...");
-                 setActiveSource('html5');
-                 if (html5AudioRef.current) {
+                console.log("Failing over to Audius...");
+                setActiveSource('html5');
+                if (html5AudioRef.current) {
                     html5AudioRef.current.src = `https://discoveryprovider.audius.co/v1/tracks/${currentTrack.sources.audiusId}/stream?app_name=Hievly`;
                     html5AudioRef.current.play();
-                 }
-                 return;
+                }
+                return;
             }
         }
 

@@ -275,7 +275,7 @@ export default function ForYouPage() {
                                                 <button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        toggleLike(playerTrack);
+                                                        toggleLike(toUnifiedTrack(playerTrack));
                                                     }}
                                                     className={`absolute top-2 right-2 p-2 rounded-full transform transition-all duration-300 ${liked
                                                         ? 'bg-violet-600 opacity-100 scale-100'

@@ -158,7 +158,7 @@ export function RecommendedGrid({ initialTracks }: RecommendedGridProps) {
                                         </svg>
                                     </button>
                                     <button
-                                        onClick={(e) => { e.stopPropagation(); openConnect(track); }}
+                                        onClick={(e) => { e.stopPropagation(); openConnect(toUnifiedTrack(track)); }}
                                         className="w-12 h-12 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white shadow-lg translate-y-4 group-hover:translate-y-0 transition-transform duration-300 delay-75 hover:bg-white/20 hover:scale-110 active:scale-95"
                                         title="Share with friends"
                                     >

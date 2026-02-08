@@ -102,8 +102,8 @@ export function ListenAgain() {
                             key={track.id}
                             className="group cursor-pointer"
                             onClick={() => {
-                                playTrack(track);
-                                tracks.slice(index + 1).forEach(t => addToQueue(t));
+                                playTrack(toUnifiedTrack(track));
+                                tracks.slice(index + 1).forEach(t => addToQueue(toUnifiedTrack(t)));
                             }}
                         >
                             <div className="relative rounded-3xl overflow-hidden shadow-2xl transition-all duration-500 group-hover:-translate-y-2 group-hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] bg-zinc-900 border border-white/5">

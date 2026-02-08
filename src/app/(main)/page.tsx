@@ -57,23 +57,34 @@ export default async function Home() {
             const user = await prisma.user.findUnique({
                 where: { email: session.user.email },
                 include: {
-                    history: { orderBy: { playedAt: 'desc' }, take: 20 },
-                    likes: { take: 20 }
+                    history: {
+                        orderBy: { playedAt: 'desc' },
+                        take: 20,
+                        include: { track: true }
+                    },
+                    likedSongs: {
+                        take: 20,
+                        include: { track: true }
+                    }
                 }
             });
             if (user) {
-                listeningHistory = user.history.map(h => ({
-                    id: h.videoId,
-                    title: h.title,
-                    artist: h.artist,
-                    thumbnail: `https://i.ytimg.com/vi/${h.videoId}/hqdefault.jpg` // Approximation or better if stored
-                }));
-                likedSongs = user.likes.map(l => ({
-                    id: l.videoId,
-                    title: l.title,
-                    artist: l.artist,
-                    thumbnail: `https://i.ytimg.com/vi/${l.videoId}/hqdefault.jpg`
-                }));
+                listeningHistory = user.history
+                    .filter((h: any) => h.track)
+                    .map((h: any) => ({
+                        id: h.videoId,
+                        title: h.track?.title || 'Unknown',
+                        artist: h.track?.artist || 'Unknown',
+                        thumbnail: h.track?.thumbnail || `https://i.ytimg.com/vi/${h.videoId}/hqdefault.jpg`
+                    }));
+                likedSongs = user.likedSongs
+                    .filter((l: any) => l.track)
+                    .map((l: any) => ({
+                        id: l.videoId,
+                        title: l.track?.title || 'Unknown',
+                        artist: l.track?.artist || 'Unknown',
+                        thumbnail: l.track?.thumbnail || `https://i.ytimg.com/vi/${l.videoId}/hqdefault.jpg`
+                    }));
             }
         } catch (e) {
             console.error("Failed to fetch user data for home", e);
@@ -85,7 +96,7 @@ export default async function Home() {
         // 1. Hero Data
         (async () => {
             // Default Featured
-             const FEATURED_HITS = [
+            const FEATURED_HITS = [
                 { id: '34Na4j8AVgA', title: 'Starboy', artist: 'The Weeknd', thumbnail: 'https://i.ytimg.com/vi/34Na4j8AVgA/maxresdefault.jpg' },
                 { id: '5GJWxDKyk3A', title: 'Happier Than Ever', artist: 'Billie Eilish', thumbnail: 'https://i.ytimg.com/vi/5GJWxDKyk3A/maxresdefault.jpg' },
                 { id: 'OPf0YbXqDm0', title: 'Uptown Funk', artist: 'Mark Ronson', thumbnail: 'https://i.ytimg.com/vi/OPf0YbXqDm0/maxresdefault.jpg' },
@@ -99,9 +110,9 @@ export default async function Home() {
             // If we have personalized data, maybe pick the most recent history item?
             // "Continue Listening" is valuable.
             if (listeningHistory.length > 0) {
-                 const last = listeningHistory[0];
-                 // Ensure high res thumbnail
-                 return { ...last, thumbnail: `https://i.ytimg.com/vi/${last.id}/maxresdefault.jpg` };
+                const last = listeningHistory[0];
+                // Ensure high res thumbnail
+                return { ...last, thumbnail: `https://i.ytimg.com/vi/${last.id}/maxresdefault.jpg` };
             }
             // Fallback
             return FEATURED_HITS[0]; // Always start with first featured hit for consistency
@@ -109,57 +120,57 @@ export default async function Home() {
 
         // 2. Daily Mixes Previews
         (async () => {
-             // We need to sort mixes based on time (server time)
-             const timeOfDay = getTimeOfDay();
-             const sortedMixes = [...BASE_MIXES].sort((a, b) => {
+            // We need to sort mixes based on time (server time)
+            const timeOfDay = getTimeOfDay();
+            const sortedMixes = [...BASE_MIXES].sort((a, b) => {
                 const aScore = a.timeSlots.includes(timeOfDay) ? 1 : 0;
                 const bScore = b.timeSlots.includes(timeOfDay) ? 1 : 0;
                 return bScore - aScore;
-             });
+            });
 
-             // We fetch previews for ALL of them or just top 4?
-             // Fetch all 4.
-             // Also, personalization: we can try to seed with a liked artist if available.
-             // Picking a random liked artist on server is tricky for consistency, but works if we just do it once.
+            // We fetch previews for ALL of them or just top 4?
+            // Fetch all 4.
+            // Also, personalization: we can try to seed with a liked artist if available.
+            // Picking a random liked artist on server is tricky for consistency, but works if we just do it once.
 
-             const previews: { [key: string]: any[] } = {};
+            const previews: { [key: string]: any[] } = {};
 
-             // Create queries
-             const mixPromises = sortedMixes.map(async (mix, index) => {
-                 let query = mix.baseQuery;
-                 // Simple personalization
-                 if (likedSongs.length > 0) {
-                     // Pick artist based on index mod length to be deterministic-ish
-                     const artist = likedSongs[index % likedSongs.length].artist;
-                     // Only sometimes?
-                     if (index % 2 === 0) {
-                         const keyword = mix.keywords[index % mix.keywords.length];
-                         query = `${artist} ${keyword} mix`;
-                     }
-                 }
+            // Create queries
+            const mixPromises = sortedMixes.map(async (mix, index) => {
+                let query = mix.baseQuery;
+                // Simple personalization
+                if (likedSongs.length > 0) {
+                    // Pick artist based on index mod length to be deterministic-ish
+                    const artist = likedSongs[index % likedSongs.length].artist;
+                    // Only sometimes?
+                    if (index % 2 === 0) {
+                        const keyword = mix.keywords[index % mix.keywords.length];
+                        query = `${artist} ${keyword} mix`;
+                    }
+                }
 
-                 const results = await searchMusic(query);
-                 return { id: mix.id, tracks: results.slice(0, 4) };
-             });
+                const results = await searchMusic(query);
+                return { id: mix.id, tracks: results.slice(0, 4) };
+            });
 
-             const results = await Promise.all(mixPromises);
-             results.forEach(r => {
-                 previews[r.id] = r.tracks;
-             });
-             return previews;
+            const results = await Promise.all(mixPromises);
+            results.forEach(r => {
+                previews[r.id] = r.tracks;
+            });
+            return previews;
         })(),
 
         // 3. Recommended Grid
         (async () => {
-             const queries = generateSmartDiscoveryQueries(listeningHistory);
-             const query = queries[0] || 'trending music 2024';
-             const results = await searchMusic(query);
-             return results.slice(0, 5);
+            const queries = generateSmartDiscoveryQueries(listeningHistory);
+            const query = queries[0] || 'trending music 2024';
+            const results = await searchMusic(query);
+            return results.slice(0, 5);
         })(),
 
         // 4. Quick Picks
         (async () => {
-             const QUICK_PICK_QUERIES = [
+            const QUICK_PICK_QUERIES = [
                 'best songs all time',
                 'viral music 2024',
                 'feel good music',
@@ -168,7 +179,7 @@ export default async function Home() {
                 'love songs 2024',
             ];
             let queries = QUICK_PICK_QUERIES;
-             if (listeningHistory.length > 0) {
+            if (listeningHistory.length > 0) {
                 const artists = listeningHistory.slice(0, 3).map(t => t.artist);
                 queries = [...artists, ...QUICK_PICK_QUERIES];
             }

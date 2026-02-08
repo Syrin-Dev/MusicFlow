@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Play } from 'lucide-react';
 import { useAudio } from '@/components/AudioProvider';
+import { toUnifiedTrack } from '@/lib/types/music';
 
 const STORIES = [
     { id: '1', artist: 'The Weeknd', image: 'https://i.scdn.co/image/ab67616d0000b2732a96cbd8b4cf3a630549182d', trackId: '34Na4j8AVgA', title: 'Starboy' },

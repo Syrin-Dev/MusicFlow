@@ -53,6 +53,15 @@ export function PlayerBar() {
         seekTo(percentage * duration);
     };
 
+    const handleSeekKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+        if (!duration) return;
+        if (e.key === 'ArrowRight') {
+            seekTo(Math.min(currentTime + 5, duration));
+        } else if (e.key === 'ArrowLeft') {
+            seekTo(Math.max(currentTime - 5, 0));
+        }
+    };
+
     const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setVolume(Number(e.target.value));
     };
@@ -102,22 +111,28 @@ export function PlayerBar() {
                         </div>
                         <div className="flex flex-col min-w-0">
                             <div className="flex items-center gap-2">
-                                <div
-                                    className="text-white font-bold text-sm hover:underline cursor-pointer truncate max-w-[150px]"
+                                <button
+                                    className="text-white font-bold text-sm hover:underline cursor-pointer truncate max-w-[150px] text-left"
                                     onClick={togglePlayerExpansion}
+                                    aria-label="Expand player"
                                 >
                                     {currentTrack.title}
-                                </div>
-                                <button onClick={() => toggleLike(currentTrack)}>
+                                </button>
+                                <button
+                                    onClick={() => toggleLike(currentTrack)}
+                                    aria-label={liked ? "Remove from Liked Songs" : "Add to Liked Songs"}
+                                    title={liked ? "Remove from Liked Songs" : "Add to Liked Songs"}
+                                >
                                     <span className={`material-icons-round text-xs cursor-pointer hover:text-white ${liked ? 'text-[#8B5CF6]' : 'text-gray-400'}`}>favorite</span>
                                 </button>
                             </div>
-                            <span
-                                className="text-xs text-gray-400 hover:text-white cursor-pointer hover:underline truncate"
+                            <button
+                                className="text-xs text-gray-400 hover:text-white cursor-pointer hover:underline truncate text-left"
                                 onClick={handleArtistClick}
+                                aria-label={`Go to artist ${currentTrack.artist}`}
                             >
                                 {currentTrack.artist}
-                            </span>
+                            </button>
                         </div>
                     </div>
 
@@ -127,12 +142,16 @@ export function PlayerBar() {
                             <button
                                 className={`transition ${shuffle ? 'text-[#8B5CF6] drop-shadow-[0_0_5px_rgba(139,92,246,0.5)]' : 'text-gray-400 hover:text-white'}`}
                                 onClick={toggleShuffle}
+                                aria-label={shuffle ? "Shuffle On" : "Shuffle Off"}
+                                title={shuffle ? "Disable Shuffle" : "Enable Shuffle"}
                             >
                                 <span className="material-icons-round text-xl">shuffle</span>
                             </button>
                             <button
                                 className="text-gray-300 hover:text-white transition"
                                 onClick={playPrevious}
+                                aria-label="Previous Track"
+                                title="Previous Track"
                             >
                                 <span className="material-icons-round text-2xl">skip_previous</span>
                             </button>
@@ -142,6 +161,8 @@ export function PlayerBar() {
                                 className="w-10 h-10 bg-[#8B5CF6] rounded-full flex items-center justify-center text-white hover:scale-105 transition shadow-[0_0_15px_rgba(139,92,246,0.4)]"
                                 onClick={togglePlay}
                                 disabled={isLoading}
+                                aria-label={isPlaying ? "Pause" : "Play"}
+                                title={isPlaying ? "Pause" : "Play"}
                             >
                                 {isLoading ? (
                                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -153,12 +174,16 @@ export function PlayerBar() {
                             <button
                                 className="text-gray-300 hover:text-white transition"
                                 onClick={playNext}
+                                aria-label="Next Track"
+                                title="Next Track"
                             >
                                 <span className="material-icons-round text-2xl">skip_next</span>
                             </button>
                             <button
                                 className={`transition ${repeat !== 'off' ? 'text-[#8B5CF6] drop-shadow-[0_0_5px_rgba(139,92,246,0.5)]' : 'text-gray-400 hover:text-white'}`}
                                 onClick={toggleRepeat}
+                                aria-label={`Repeat ${repeat === 'one' ? 'One' : repeat === 'all' ? 'All' : 'Off'}`}
+                                title={`Repeat: ${repeat === 'one' ? 'One' : repeat === 'all' ? 'All' : 'Off'}`}
                             >
                                 <span className="material-icons-round text-xl">{repeat === 'one' ? 'repeat_one' : 'repeat'}</span>
                             </button>
@@ -167,8 +192,16 @@ export function PlayerBar() {
                         <div className="w-full flex items-center gap-3 text-xs font-medium text-gray-400">
                             <span>{formatTime(currentTime)}</span>
                             <div
-                                className="flex-1 h-1 bg-white/10 rounded-full cursor-pointer group relative overflow-hidden"
+                                className="flex-1 h-1 bg-white/10 rounded-full cursor-pointer group relative overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                                 onClick={handleSeek}
+                                onKeyDown={handleSeekKeyDown}
+                                role="slider"
+                                tabIndex={0}
+                                aria-label="Playback Progress"
+                                aria-valuemin={0}
+                                aria-valuemax={duration}
+                                aria-valuenow={currentTime}
+                                aria-valuetext={`${formatTime(currentTime)} of ${formatTime(duration)}`}
                             >
                                 {/* Progress bar with Purple Glow */}
                                 <div
@@ -189,6 +222,7 @@ export function PlayerBar() {
                         <button
                             className="text-gray-400 hover:text-[#8B5CF6] transition p-2 hover:bg-white/5 rounded-full"
                             onClick={() => openConnect(currentTrack)}
+                            aria-label="Share to Friend"
                             title="Share to Friend"
                         >
                             <span className="material-icons-round text-xl">send</span>
@@ -197,7 +231,11 @@ export function PlayerBar() {
                         <AddToPlaylist track={currentTrack} />
 
                         <div className="flex items-center gap-2 group w-24">
-                            <button onClick={() => setVolume(volume === 0 ? 100 : 0)}>
+                            <button
+                                onClick={() => setVolume(volume === 0 ? 100 : 0)}
+                                aria-label={volume === 0 ? "Unmute" : "Mute"}
+                                title={volume === 0 ? "Unmute" : "Mute"}
+                            >
                                 <span className="material-icons-round text-gray-400 text-xl hover:text-white">
                                     {volume === 0 ? 'volume_off' : volume < 50 ? 'volume_down' : 'volume_up'}
                                 </span>
@@ -210,6 +248,8 @@ export function PlayerBar() {
                                     value={volume}
                                     onChange={handleVolumeChange}
                                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                    aria-label="Volume"
+                                    title={`Volume: ${volume}%`}
                                 />
                                 <div
                                     className="absolute top-0 left-0 h-full bg-white group-hover:bg-[#8B5CF6] rounded-full transition-colors"
@@ -221,7 +261,8 @@ export function PlayerBar() {
                         <button
                             className="text-gray-400 hover:text-white transition ml-2"
                             onClick={togglePlayerExpansion}
-                            title="Expand"
+                            aria-label="Expand Player"
+                            title="Expand Player"
                         >
                             <span className="material-icons-round text-3xl">keyboard_arrow_up</span>
                         </button>
@@ -233,8 +274,18 @@ export function PlayerBar() {
             <div className="flex md:hidden px-2 pb-[calc(70px+16px+12px+env(safe-area-inset-bottom))] w-full">
                 {/* Glassmorphism update: Added backdrop-blur-md and bg-black/20 */}
                 <div
-                    className="backdrop-blur-md bg-black/20 rounded-xl p-2 flex items-center justify-between shadow-2xl pointer-events-auto border border-white/5 w-full relative overflow-hidden"
+                    className="backdrop-blur-md bg-black/20 rounded-xl p-2 flex items-center justify-between shadow-2xl pointer-events-auto border border-white/5 w-full relative overflow-hidden cursor-pointer"
                     onClick={togglePlayerExpansion}
+                    role="button"
+                    aria-label="Expand Player"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                        if (e.target !== e.currentTarget) return;
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            togglePlayerExpansion();
+                        }
+                    }}
                 >
                     {/* Progress line at top */}
                     <div className="absolute top-0 left-0 right-0 h-[2px] bg-white/5">
@@ -264,6 +315,7 @@ export function PlayerBar() {
                                 e.stopPropagation();
                                 openConnect(currentTrack);
                             }}
+                            aria-label="Share to Friend"
                         >
                             <span className="material-icons-round text-xl">send</span>
                         </button>
@@ -274,6 +326,7 @@ export function PlayerBar() {
                                 togglePlay();
                             }}
                             disabled={isLoading}
+                            aria-label={isPlaying ? "Pause" : "Play"}
                         >
                             {isLoading ? (
                                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>

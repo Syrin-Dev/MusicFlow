@@ -146,6 +146,7 @@ export function AddToPlaylist({ track, children, className, dropdownPosition = '
                 ref={buttonRef}
                 onClick={handleOpen}
                 className={className || "p-2 hover:bg-white/10 rounded-full transition-colors text-slate-400 hover:text-white"}
+                aria-label="Add to playlist"
             >
                 {children || <ListPlus size={18} />}
             </button>

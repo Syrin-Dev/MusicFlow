@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import {
     Home, Compass, Library, Heart, ListMusic, Pin, Sparkles
 } from 'lucide-react';
+import Image from 'next/image';
 
 const NavItem = ({ href, icon: Icon, label }: { href: string; icon: ElementType; label: string }) => {
     const pathname = usePathname();
@@ -65,10 +66,11 @@ export function Sidebar() {
             {/* Logo */}
             <div suppressHydrationWarning className="flex items-center gap-3 px-2 mb-8 mt-2">
                 <div suppressHydrationWarning className="relative w-12 h-12 flex items-center justify-center overflow-hidden rounded-xl bg-white/5 border border-white/10 shadow-[0_0_20px_rgba(139,92,246,0.3)]">
-                    <img
+                    <Image
                         src="/logo.png"
                         alt="Hievly"
-                        className="w-full h-full object-contain scale-[3.2] transition-transform brightness-110 filter invert-[1] hue-rotate-[180deg] drop-shadow-[0_0_5px_rgba(139,92,246,0.8)]"
+                        fill
+                        className="object-contain scale-[3.2] transition-transform brightness-110 filter invert-[1] hue-rotate-[180deg] drop-shadow-[0_0_5px_rgba(139,92,246,0.8)]"
                     />
                 </div>
                 <div>

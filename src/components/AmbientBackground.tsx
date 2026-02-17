@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useAudio } from '@/components/AudioProvider';
-import ColorThief from 'colorthief';
 
 // Helper to check saturation
 function getSaturation(r: number, g: number, b: number) {
@@ -23,7 +22,9 @@ export function AmbientBackground() {
 
     useEffect(() => {
         if (typeof window !== 'undefined' && !colorThiefRef.current) {
-            colorThiefRef.current = new ColorThief();
+            import('colorthief').then((module) => {
+                 colorThiefRef.current = new module.default();
+            }).catch(err => console.error("Failed to load ColorThief", err));
         }
     }, []);
 

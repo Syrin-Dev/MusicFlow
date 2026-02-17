@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useAudio } from '@/components/AudioProvider';
+import { toUnifiedTrack } from '@/lib/types/music';
 
 interface MusicCardProps {
     message: any;
@@ -22,12 +23,12 @@ export default function MusicCard({ message, currentUserId }: MusicCardProps) {
                     backdropFilter: 'blur(10px)',
                     boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
                 }}
-                onClick={() => playTrack({
+                onClick={() => playTrack(toUnifiedTrack({
                     id: message.sharedMusicId,
                     title: message.sharedMusicTitle,
                     artist: message.sharedMusicArtist,
                     thumbnail: message.sharedMusicImg
-                })}
+                }))}
             >
                 {/* Album Art with Play Overlay */}
                 <div className="relative w-16 h-16 rounded-xl overflow-hidden shadow-lg mr-4 flex-shrink-0">

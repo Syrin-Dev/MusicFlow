@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { Play, ChevronLeft, Clock, Heart, Shuffle, User } from 'lucide-react';
 import { useAudio } from '@/components/AudioProvider';
+import { toUnifiedTrack } from '@/lib/types/music';
 
 export default function LikedSongsPage() {
     const router = useRouter();
@@ -19,7 +20,9 @@ export default function LikedSongsPage() {
             playQueue = playQueue.sort(() => Math.random() - 0.5);
         }
 
-        playPlaylist(playQueue, 0);
+        // Ensure tracks are unified (AudioProvider usually does this, but being safe)
+        const unifiedQueue = playQueue.map(toUnifiedTrack);
+        playPlaylist(unifiedQueue, 0);
     };
 
     const formatDuration = (seconds?: string | number) => {
@@ -118,7 +121,7 @@ export default function LikedSongsPage() {
                 {tracks.map((track, i) => (
                     <div
                         key={`${track.id}-${i}`}
-                        onClick={() => playPlaylist(tracks, i)}
+                        onClick={() => playPlaylist(tracks.map(toUnifiedTrack), i)}
                         className="group grid grid-cols-[auto_1fr_auto] gap-4 items-center px-4 py-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer border border-transparent hover:border-white/5"
                     >
                         <span className="w-8 text-center text-slate-500 group-hover:text-white font-medium">

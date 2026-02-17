@@ -3,6 +3,7 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useAudio } from '@/components/AudioProvider';
+import { toUnifiedTrack } from '@/lib/types/music';
 
 interface ArtistData {
     name: string;
@@ -84,13 +85,13 @@ export default function ArtistPage() {
 
     const handlePlayTopSongs = () => {
         if (artist?.topSongs && artist.topSongs.length > 0) {
-            playTrack(artist.topSongs[0]);
-            artist.topSongs.slice(1).forEach(track => addToQueue(track));
+            playTrack(toUnifiedTrack(artist.topSongs[0]));
+            artist.topSongs.slice(1).forEach(track => addToQueue(toUnifiedTrack(track)));
         }
     };
 
     const handlePlayTrack = (track: any) => {
-        playTrack(track);
+        playTrack(toUnifiedTrack(track));
     };
 
     // Skeleton loading state
@@ -368,12 +369,12 @@ export default function ArtistPage() {
                                             onClick={() => {
                                                 if (item.type === 'Video') {
                                                     // Handle video play logic
-                                                    playTrack({
+                                                    playTrack(toUnifiedTrack({
                                                         id: item.id,
                                                         title: item.title,
                                                         artist: artist.name,
                                                         thumbnail: item.thumbnail
-                                                    });
+                                                    }));
                                                 } else {
                                                     router.push(`/playlist/${item.id}`);
                                                 }

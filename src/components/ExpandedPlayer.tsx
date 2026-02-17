@@ -8,6 +8,7 @@ import {
     ListMusic, Volume2, Mic2, Maximize2, Minimize2, Languages, Globe,
     ArrowUp, ArrowDown, RefreshCw
 } from 'lucide-react';
+import { toUnifiedTrack } from '@/lib/types/music';
 
 // Format seconds to mm:ss helper
 function formatTime(seconds: number): string {
@@ -375,7 +376,7 @@ export function ExpandedPlayer() {
                                 <div className="space-y-4">
                                     {queue.length > 0 ? (
                                         queue.map((track, i) => (
-                                            <div key={`${track.id}-${i}`} className="flex items-center gap-4 py-2 group" onClick={() => playTrack(track)}>
+                                            <div key={`${track.id}-${i}`} className="flex items-center gap-4 py-2 group" onClick={() => playTrack(toUnifiedTrack(track))}>
                                                 <div className="relative w-12 h-12 flex-shrink-0">
                                                     <img src={track.thumbnail || `https://i.ytimg.com/vi/${track.id}/hqdefault.jpg`} className="w-full h-full rounded-xl object-cover" />
                                                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center rounded-xl">
@@ -450,7 +451,7 @@ export function ExpandedPlayer() {
                             {activeTab === 'related' && (
                                 <div className="space-y-4">
                                     {relatedTracks.map((track, i) => (
-                                        <div key={`${track.id}-${i}`} className="flex items-center gap-4 py-2 group" onClick={() => playTrack(track)}>
+                                        <div key={`${track.id}-${i}`} className="flex items-center gap-4 py-2 group" onClick={() => playTrack(toUnifiedTrack(track))}>
                                             <img src={track.thumbnail} className="w-12 h-12 rounded-xl object-cover" />
                                             <div className="flex-1 min-w-0">
                                                 <p className="text-sm font-bold text-white truncate">{track.title}</p>
@@ -514,7 +515,7 @@ export function ExpandedPlayer() {
                                 </div>
                             </div>
                             {queue.map((track, i) => (
-                                <div key={`${track.id}-${i}`} draggable onDragStart={(e) => handleDragStart(e, i)} onDragOver={handleDragOver} onDrop={(e) => handleDrop(e, i)} onClick={() => playTrack(track)}
+                                <div key={`${track.id}-${i}`} draggable onDragStart={(e) => handleDragStart(e, i)} onDragOver={handleDragOver} onDrop={(e) => handleDrop(e, i)} onClick={() => playTrack(toUnifiedTrack(track))}
                                     className={`flex items-center gap-4 p-3 hover:bg-white/5 rounded-2xl transition-colors cursor-pointer group ${draggedIndex === i ? 'opacity-50 ring-2 ring-[#8B5CF6] ring-inset' : ''}`}>
                                     <img alt={track.title} className="w-12 h-12 rounded-lg object-cover flex-shrink-0" src={track.thumbnail || `https://i.ytimg.com/vi/${track.id}/hqdefault.jpg`} />
                                     <div className="flex-1 min-w-0">

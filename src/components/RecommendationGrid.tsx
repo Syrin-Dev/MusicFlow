@@ -3,6 +3,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useAudio } from './AudioProvider';
 import { Play } from 'lucide-react';
+import { toUnifiedTrack } from '@/lib/types/music';
 import { useSearchParams } from 'next/navigation';
 
 interface Result {
@@ -41,7 +42,7 @@ function RecommendationGridContent() {
                     <div
                         key={track.id}
                         className="group relative bg-[#18181b] p-4 rounded-xl hover:bg-[#27272a] transition-colors cursor-pointer"
-                        onClick={() => playTrack(track)}
+                        onClick={() => playTrack(toUnifiedTrack(track))}
                     >
                         <div className="relative aspect-square mb-4 overflow-hidden rounded-lg shadow-lg">
                             <img

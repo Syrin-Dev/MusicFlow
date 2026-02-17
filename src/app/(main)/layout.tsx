@@ -7,6 +7,8 @@ import { MobileNav } from '@/components/MobileNav';
 
 import { SocialOverlay } from '@/components/SocialOverlay';
 import { AmbientBackground } from '@/components/AmbientBackground';
+import { Suspense } from 'react';
+import Loading from './loading';
 
 export default function MainLayout({
     children,
@@ -23,7 +25,9 @@ export default function MainLayout({
 
             <main className="flex-1 md:ml-64 ml-0 h-full overflow-y-auto relative hide-scrollbar custom-scrollbar pb-[calc(160px+env(safe-area-inset-bottom))] md:pb-28">
                 <Header />
-                {children}
+                <Suspense fallback={<Loading />}>
+                    {children}
+                </Suspense>
             </main>
 
             <PlayerBar />

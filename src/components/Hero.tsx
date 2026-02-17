@@ -4,11 +4,17 @@ import { useState, useEffect } from 'react';
 import { Play, Pause, Heart } from 'lucide-react';
 import { useAudio } from '@/components/AudioProvider';
 import { AddToPlaylist } from './AddToPlaylist';
+import Image from 'next/image';
+import { toUnifiedTrack } from '@/lib/types/music';
 
-export function Hero() {
+interface HeroProps {
+    initialTrack?: any;
+}
+
+export function Hero({ initialTrack }: HeroProps) {
     const { playTrack, currentTrack, isLiked, toggleLike, isPlaying, togglePlay, likedSongs, listeningHistory } = useAudio();
-    const [displayTrack, setDisplayTrack] = useState<any>(null);
-    const [context, setContext] = useState('Featured Hit');
+    const [displayTrack, setDisplayTrack] = useState<any>(initialTrack || null);
+    const [context, setContext] = useState(initialTrack ? 'Featured Hit' : '');
 
     // Some curated fallback hits
     const FEATURED_HITS = [
@@ -24,21 +30,30 @@ export function Hero() {
             return;
         }
 
-        // Logic: Liked > History > Featured
-        if (likedSongs.length > 0) {
-            const random = likedSongs[Math.floor(Math.random() * likedSongs.length)];
-            setDisplayTrack(random);
-            setContext('From your favorites');
-        } else if (listeningHistory.length > 0) {
-            const random = listeningHistory[Math.floor(Math.random() * listeningHistory.length)];
-            setDisplayTrack(random);
-            setContext('Continue Listening');
-        } else {
-            const random = FEATURED_HITS[Math.floor(Math.random() * FEATURED_HITS.length)];
-            setDisplayTrack(random);
-            setContext('Global Featured');
+        // Logic: Liked > History > Featured (if initialTrack not provided or overriden by better context)
+        // If initialTrack is provided, we start with it.
+        // But if user has history/likes, maybe we should switch?
+        // To avoid layout shift, let's only switch if we didn't have an initial track, OR if we want to be personalized.
+        // User asked for instant load. Initial track is best.
+        // But personalization is key.
+        // Let's stick with initialTrack if provided, unless currentTrack changes.
+
+        if (!initialTrack) {
+             if (likedSongs.length > 0) {
+                const random = likedSongs[Math.floor(Math.random() * likedSongs.length)];
+                setDisplayTrack(random);
+                setContext('From your favorites');
+            } else if (listeningHistory.length > 0) {
+                const random = listeningHistory[Math.floor(Math.random() * listeningHistory.length)];
+                setDisplayTrack(random);
+                setContext('Continue Listening');
+            } else {
+                const random = FEATURED_HITS[Math.floor(Math.random() * FEATURED_HITS.length)];
+                setDisplayTrack(random);
+                setContext('Global Featured');
+            }
         }
-    }, [currentTrack, likedSongs.length, listeningHistory.length]);
+    }, [currentTrack, likedSongs.length, listeningHistory.length, initialTrack]);
 
     if (!displayTrack) return null;
 
@@ -48,10 +63,16 @@ export function Hero() {
     return (
         <div className="relative w-full h-[400px] md:h-[450px] rounded-2xl md:rounded-[3rem] overflow-hidden shadow-2xl group border border-white/5 mx-auto max-w-7xl mt-4 md:mt-8">
             {/* Background Image with Blur */}
-            <div
-                className="absolute inset-0 bg-cover bg-center transition-all duration-1000 transform group-hover:scale-105"
-                style={{ backgroundImage: `url(${displayTrack.thumbnail})` }}
-            >
+            <div className="absolute inset-0 transition-transform duration-1000 transform group-hover:scale-105">
+                 <Image
+                    src={displayTrack.thumbnail}
+                    alt={displayTrack.title}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 1200px"
+                    priority
+                    quality={75}
+                />
                 <div className="absolute inset-0 bg-black/60 backdrop-blur-[10px] group-hover:backdrop-blur-sm transition-all duration-700"></div>
 
                 {/* Gradient Overlays */}
@@ -82,7 +103,7 @@ export function Hero() {
                 <div className="flex flex-wrap items-center gap-4 pt-8 md:pt-12">
                     {/* Redesigned Resume Button */}
                     <button
-                        onClick={() => isPlayingHero ? togglePlay() : playTrack(displayTrack)}
+                        onClick={() => isPlayingHero ? togglePlay() : playTrack(toUnifiedTrack(displayTrack))}
                         className="flex items-center gap-3 md:gap-4 px-8 md:px-12 py-4 md:py-5 bg-[#8B5CF6]/20 border border-[#8B5CF6]/50 text-white rounded-full font-black text-lg md:text-xl hover:bg-[#8B5CF6]/40 hover:border-[#8B5CF6] hover:scale-105 active:scale-95 transition-all shadow-[0_0_20px_rgba(139,92,246,0.2)] hover:shadow-[0_0_30px_rgba(139,92,246,0.5)] backdrop-blur-md group-btn"
                     >
                         {isPlayingHero && isPlaying ?
@@ -108,7 +129,7 @@ export function Hero() {
                         </button>
 
                         <AddToPlaylist
-                            track={displayTrack}
+                            track={toUnifiedTrack(displayTrack)}
                             dropdownPosition="bottom"
                             className="p-5 rounded-full backdrop-blur-xl border border-white/10 text-white hover:bg-white/10 hover:border-white/20 transition-all active:scale-90"
                         >
@@ -120,7 +141,14 @@ export function Hero() {
 
             {/* Side Artwork Preview (Glassmorphism) */}
             <div className="absolute top-1/2 -right-12 -translate-y-1/2 w-80 h-80 rounded-[3rem] overflow-hidden border border-white/10 hidden xl:block shadow-2xl rotate-6 group-hover:rotate-3 transition-transform duration-1000">
-                <img src={displayTrack.thumbnail} className="w-full h-full object-cover" alt="" />
+                <Image
+                    src={displayTrack.thumbnail}
+                    alt={displayTrack.title}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 1200px) 0vw, 400px" // Hidden on small screens
+                    quality={75}
+                />
                 <div className="absolute inset-0 bg-black/20 backdrop-blur-[2px]"></div>
                 {/* Glow behind the artwork */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useAudio } from './AudioProvider';
 import { Play } from 'lucide-react';
+import { toUnifiedTrack } from '@/lib/types/music';
 
 interface Friend {
     id: string;
@@ -114,12 +115,12 @@ export function FriendActivity() {
                                 />
                                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/art:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[2px]">
                                     <button
-                                        onClick={() => playTrack({
+                                        onClick={() => playTrack(toUnifiedTrack({
                                             id: friend.lastTrack!.videoId,
                                             title: friend.lastTrack!.title,
                                             artist: friend.lastTrack!.artist,
                                             thumbnail: friend.lastTrack!.thumbnail
-                                        })}
+                                        }))}
                                         className="w-14 h-14 bg-primary text-white rounded-full flex items-center justify-center shadow-2xl scale-75 group-hover/art:scale-100 transition-transform duration-300"
                                     >
                                         <Play size={24} fill="currentColor" className="ml-1" />

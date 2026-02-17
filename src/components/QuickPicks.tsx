@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAudio } from './AudioProvider';
 import { Play } from 'lucide-react';
+import { toUnifiedTrack } from '@/lib/types/music';
 
 interface Track {
     id: string;
@@ -20,9 +21,13 @@ const QUICK_PICK_QUERIES = [
     'love songs 2024',
 ];
 
-export function QuickPicks() {
-    const [tracks, setTracks] = useState<Track[]>([]);
-    const [loading, setLoading] = useState(true);
+interface QuickPicksProps {
+    initialTracks?: Track[];
+}
+
+export function QuickPicks({ initialTracks }: QuickPicksProps) {
+    const [tracks, setTracks] = useState<Track[]>(initialTracks || []);
+    const [loading, setLoading] = useState(!initialTracks);
     const [loadingMore, setLoadingMore] = useState(false);
     const [hasMore, setHasMore] = useState(true);
     const { playTrack, addToQueue, listeningHistory } = useAudio();
@@ -49,9 +54,16 @@ export function QuickPicks() {
             const data1 = await res1.json();
             const data2 = await res2.json();
 
+            // Handle both paginated and legacy array responses
+            const getResults = (data: any): Track[] => {
+                if (data.results && Array.isArray(data.results)) return data.results;
+                if (Array.isArray(data)) return data;
+                return [];
+            };
+
             let combined: Track[] = [];
-            if (Array.isArray(data1)) combined.push(...data1.slice(0, 8));
-            if (Array.isArray(data2)) combined.push(...data2.slice(0, 8));
+            combined.push(...getResults(data1).slice(0, 8));
+            combined.push(...getResults(data2).slice(0, 8));
 
             combined = combined.sort(() => Math.random() - 0.5);
 
@@ -96,18 +108,20 @@ export function QuickPicks() {
     };
 
     useEffect(() => {
-        fetchTracks();
-    }, []);
+        if (!initialTracks) {
+            fetchTracks();
+        }
+    }, [initialTracks]);
 
     const handlePlayAll = () => {
         if (tracks.length === 0) return;
-        playTrack(tracks[0]);
-        tracks.slice(1).forEach(track => addToQueue(track));
+        playTrack(toUnifiedTrack(tracks[0]));
+        tracks.slice(1).forEach(track => addToQueue(toUnifiedTrack(track)));
     };
 
     const handlePlayTrack = (track: Track, index: number) => {
-        playTrack(track);
-        tracks.slice(index + 1).forEach(t => addToQueue(t));
+        playTrack(toUnifiedTrack(track));
+        tracks.slice(index + 1).forEach(t => addToQueue(toUnifiedTrack(t)));
     };
 
     return (
@@ -134,9 +148,14 @@ export function QuickPicks() {
                             <img
                                 src={track.thumbnail || `https://i.ytimg.com/vi/${track.id}/hqdefault.jpg`}
                                 alt={track.title}
-                                referrerPolicy="no-referrer"
-                                className="w-full h-full rounded-md object-cover shadow-lg group-hover:shadow-xl transition-shadow"
                                 loading="lazy"
+                                onError={(e) => {
+                                    const img = e.currentTarget;
+                                    if (!img.src.includes('mqdefault')) {
+                                        img.src = `https://i.ytimg.com/vi/${track.id}/mqdefault.jpg`;
+                                    }
+                                }}
+                                className="w-full h-full rounded-md object-cover shadow-lg group-hover:shadow-xl transition-shadow"
                             />
                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-md flex items-center justify-center backdrop-blur-[1px]">
                                 <Play size={20} className="text-white fill-white ml-0.5" />

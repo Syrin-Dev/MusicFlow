@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Play, ArrowLeft, Clock, MoreHorizontal, Trash2, Music, Shuffle } from 'lucide-react';
 import { useAudio } from '@/components/AudioProvider';
+import { toUnifiedTrack } from '@/lib/types/music';
 
 interface Track {
     id: string;
@@ -56,19 +57,19 @@ export default function PlaylistDetailPage() {
             tracks = tracks.sort(() => Math.random() - 0.5);
         }
 
-        playTrack({
+        playTrack(toUnifiedTrack({
             id: tracks[0].videoId,
             title: tracks[0].title,
             artist: tracks[0].artist,
             thumbnail: tracks[0].thumbnail
-        });
+        }));
 
-        tracks.slice(1).forEach(track => addToQueue({
+        tracks.slice(1).forEach(track => addToQueue(toUnifiedTrack({
             id: track.videoId,
             title: track.title,
             artist: track.artist,
             thumbnail: track.thumbnail
-        }));
+        })));
     };
 
     const removeTrack = async (trackId: string) => {
@@ -200,12 +201,12 @@ export default function PlaylistDetailPage() {
                             <div
                                 key={track.id}
                                 className="group grid grid-cols-[40px_1fr_200px_80px] gap-4 px-4 py-3 rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
-                                onClick={() => playTrack({
+                                onClick={() => playTrack(toUnifiedTrack({
                                     id: track.videoId,
                                     title: track.title,
                                     artist: track.artist,
                                     thumbnail: track.thumbnail
-                                })}
+                                }))}
                             >
                                 <span className="flex items-center justify-center text-slate-500 group-hover:hidden">
                                     {index + 1}

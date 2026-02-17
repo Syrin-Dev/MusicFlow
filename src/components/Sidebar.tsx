@@ -2,17 +2,19 @@
 
 import { useState, useEffect, ElementType } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
     Home, Compass, Library, Heart, ListMusic, Pin, Sparkles
 } from 'lucide-react';
 
 const NavItem = ({ href, icon: Icon, label }: { href: string; icon: ElementType; label: string }) => {
     const pathname = usePathname();
+    const router = useRouter();
     const active = pathname === href;
     return (
         <Link
             href={href}
+            onMouseEnter={() => router.prefetch(href)}
             className={`
                 group flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-300 relative overflow-hidden
                 ${active
@@ -35,6 +37,7 @@ const NavItem = ({ href, icon: Icon, label }: { href: string; icon: ElementType;
 
 export function Sidebar() {
     const pathname = usePathname();
+    const router = useRouter();
     const [playlists, setPlaylists] = useState<{ id: string; name: string }[]>([]);
 
     useEffect(() => {
@@ -100,6 +103,7 @@ export function Sidebar() {
                         {/* Liked Songs - Pinned Effect */}
                         <Link
                             href="/library/liked"
+                            onMouseEnter={() => router.prefetch('/library/liked')}
                             className={`
                                 flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group relative overflow-hidden border border-transparent
                                 ${isActive('/library/liked') ? 'bg-gradient-to-r from-purple-500/10 to-transparent border-white/5' : 'hover:bg-white/5'}
@@ -127,6 +131,7 @@ export function Sidebar() {
                             <Link
                                 key={playlist.id}
                                 href={`/library/playlist/${playlist.id}`}
+                                onMouseEnter={() => router.prefetch(`/library/playlist/${playlist.id}`)}
                                 className={`
                                     flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200 group
                                     ${isActive(`/library/playlist/${playlist.id}`) ? 'text-white bg-white/5 shadow-[0_0_15px_rgba(255,255,255,0.05)]' : 'text-zinc-500 hover:text-white hover:bg-white/5'}

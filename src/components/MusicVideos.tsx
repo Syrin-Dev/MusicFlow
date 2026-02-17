@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAudio } from './AudioProvider';
 import { generateSmartDiscoveryQueries } from '@/lib/algorithm';
+import { toUnifiedTrack } from '@/lib/types/music';
 
 interface Video {
     id: string;
@@ -41,8 +42,15 @@ export function MusicVideos() {
         try {
             const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
             const data = await res.json();
-            if (Array.isArray(data)) {
-                setVideos(data.slice(0, 5));
+            // Handle both paginated and array responses
+            const results = data.results || (Array.isArray(data) ? data : []);
+            if (results.length > 0) {
+                // Ensure thumbnails have fallbacks
+                const videosWithThumbnails = results.slice(0, 5).map((v: any) => ({
+                    ...v,
+                    thumbnail: v.thumbnail || `https://i.ytimg.com/vi/${v.id}/hqdefault.jpg`
+                }));
+                setVideos(videosWithThumbnails);
             }
         } catch (e) {
             console.error('Failed to fetch videos:', e);
@@ -55,9 +63,9 @@ export function MusicVideos() {
     }, []); // Run only on mount
 
     const handlePlayVideo = (video: Video, index: number) => {
-        playTrack(video);
+        playTrack(toUnifiedTrack(video));
         // Add remaining to queue
-        videos.slice(index + 1).forEach(v => addToQueue(v));
+        videos.slice(index + 1).forEach(v => addToQueue(toUnifiedTrack(v)));
     };
 
     const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>, video: Video) => {

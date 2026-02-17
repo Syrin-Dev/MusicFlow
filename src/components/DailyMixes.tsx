@@ -1,8 +1,9 @@
 'use client';
 
-import { Play, TrendingUp, Music, ListMusic, Headset, Moon, Sun, Coffee } from 'lucide-react';
+import { Play, TrendingUp, Music, ListMusic, Headset } from 'lucide-react';
 import { useAudio } from '@/components/AudioProvider';
 import { useState, useEffect } from 'react';
+import { toUnifiedTrack } from '@/lib/types/music';
 
 // Base definitions for mixes
 const BASE_MIXES = [
@@ -44,20 +45,25 @@ const BASE_MIXES = [
     }
 ];
 
-export function DailyMixes() {
+interface DailyMixesProps {
+    prefetchedPreviews?: { [key: string]: any[] };
+}
+
+export function DailyMixes({ prefetchedPreviews }: DailyMixesProps) {
     const { playPlaylist, likedSongs } = useAudio();
-    const [loadingMix, setLoadingMix] = useState<number | null>(null);
+    const [loadingMix, setLoadingMix] = useState<string | null>(null);
 
     // State to hold the final personalized mix configurations
     const [personalizedMixes, setPersonalizedMixes] = useState<any[]>([]);
     const [hasMounted, setHasMounted] = useState(false);
 
+    // Previews for the UI (Images)
+    const [previews, setPreviews] = useState<{ [key: string]: any[] }>(prefetchedPreviews || {});
+
     useEffect(() => {
         setHasMounted(true);
     }, []);
 
-    // Previews for the UI (Images)
-    const [previews, setPreviews] = useState<{ [key: string]: any[] }>({});
 
     useEffect(() => {
         // 1. Determine Time of Day
@@ -104,30 +110,41 @@ export function DailyMixes() {
 
             setPersonalizedMixes(newMixes);
 
-            // 4. Fetch Previews (Thumbnails)
-            newMixes.forEach(async (mix, index) => {
-                try {
-                    const res = await fetch(`/api/search?q=${encodeURIComponent(mix.query)}`);
-                    const tracks = await res.json();
-                    if (Array.isArray(tracks)) {
-                        setPreviews(prev => ({ ...prev, [index]: tracks.slice(0, 4) }));
+            // 4. Fetch Previews (Thumbnails) IF not provided or if we want personalized ones
+            // For now, if we have prefetchedPreviews, we use them to start.
+            // But if personalizedQuery differs significantly, we might want to fetch new ones.
+            // However, to keep it fast, we can rely on prefetched ones initially.
+            // If we don't have prefetched, fetch.
+
+            if (!prefetchedPreviews) {
+                newMixes.forEach(async (mix) => {
+                    try {
+                        const res = await fetch(`/api/search?q=${encodeURIComponent(mix.query)}`);
+                        const data = await res.json();
+                        // Handle both paginated and array responses
+                        const tracks = data.results || (Array.isArray(data) ? data : []);
+                        if (tracks.length > 0) {
+                            setPreviews(prev => ({ ...prev, [mix.id]: tracks.slice(0, 4) }));
+                        }
+                    } catch (e) {
+                        console.error("Preview failed", e);
                     }
-                } catch (e) {
-                    console.error("Preview failed", e);
-                }
-            });
+                });
+            }
         };
 
         generatePersonalizedMixes();
-    }, []); // Run only on mount
+    }, [likedSongs.length, prefetchedPreviews]); // Dependency on likedSongs
 
-    const handlePlayMix = async (index: number, query: string) => {
-        setLoadingMix(index);
+    const handlePlayMix = async (id: string, query: string) => {
+        setLoadingMix(id);
         try {
             const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
-            const tracks = await res.json();
-            if (Array.isArray(tracks) && tracks.length > 0) {
-                const playTracks = tracks.map((t: any) => ({
+            const data = await res.json();
+            // Handle both paginated and array responses
+            const tracks = data.results || (Array.isArray(data) ? data : []);
+            if (tracks.length > 0) {
+                const playTracks = tracks.map((t: any) => toUnifiedTrack({
                     id: t.id,
                     title: t.title,
                     artist: t.artist,
@@ -139,11 +156,15 @@ export function DailyMixes() {
         setLoadingMix(null);
     };
 
-    if (!hasMounted || personalizedMixes.length === 0) return (
+    if (!hasMounted && !prefetchedPreviews) return (
         <div suppressHydrationWarning className="h-64 flex items-center justify-center animate-pulse">
             <div className="w-12 h-12 rounded-full border-4 border-white/10 border-t-white/40 animate-spin"></div>
         </div>
     );
+
+    // If we have prefetchedPreviews but not yet mounted/personalized, show sortedMixes (default order or based on server guess?)
+    // We can show BASE_MIXES initially if we haven't personalized yet.
+    const displayMixes = personalizedMixes.length > 0 ? personalizedMixes : BASE_MIXES;
 
     return (
         <section suppressHydrationWarning className="py-2">
@@ -158,10 +179,11 @@ export function DailyMixes() {
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
-                {personalizedMixes.map((mix, i) => {
+                {displayMixes.map((mix, i) => {
                     const Icon = mix.icon;
-                    const isLoading = loadingMix === i;
-                    const mixTracks = previews[i] || [];
+                    const isLoading = loadingMix === mix.id;
+                    // Map by ID now
+                    const mixTracks = previews[mix.id] || [];
 
                     // Fallback to gradient if no track loaded yet
                     const coverImage = mixTracks[0]?.thumbnail;
@@ -169,7 +191,7 @@ export function DailyMixes() {
                     return (
                         <div
                             key={mix.id}
-                            onClick={() => handlePlayMix(i, mix.query)}
+                            onClick={() => handlePlayMix(mix.id, (mix as any).query || mix.baseQuery)}
                             className="group relative aspect-square rounded-[2rem] overflow-hidden cursor-pointer transition-all duration-500 hover:scale-[1.02] bg-[#0A0A0B] border border-white/5 shadow-xl"
                         >
                             {/* Main Cover Image */}
@@ -177,9 +199,16 @@ export function DailyMixes() {
                                 {coverImage ? (
                                     <img
                                         src={coverImage}
-                                        referrerPolicy="no-referrer"
-                                        className="w-full h-full object-cover opacity-60 group-hover:opacity-40 transition-all duration-700 group-hover:scale-110"
                                         alt=""
+                                        loading="lazy"
+                                        onError={(e) => {
+                                            const img = e.currentTarget;
+                                            const trackId = mixTracks[0]?.id;
+                                            if (trackId && !img.src.includes('mqdefault')) {
+                                                img.src = `https://i.ytimg.com/vi/${trackId}/mqdefault.jpg`;
+                                            }
+                                        }}
+                                        className="w-full h-full object-cover opacity-60 group-hover:opacity-40 transition-all duration-700 group-hover:scale-110"
                                     />
                                 ) : (
                                     <div className={`w-full h-full bg-gradient-to-br ${mix.gradient} opacity-20`}></div>
@@ -196,9 +225,9 @@ export function DailyMixes() {
                                     <div className="p-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10 shadow-lg">
                                         <Icon size={24} className="text-white" />
                                     </div>
-                                    {mix.seedArtist && (
+                                    {(mix as any).seedArtist && (
                                         <span className="px-2 py-1 rounded-full bg-white/10 backdrop-blur text-[10px] font-bold text-white/80 border border-white/10">
-                                            Inspired by {mix.seedArtist}
+                                            Inspired by {(mix as any).seedArtist}
                                         </span>
                                     )}
                                 </div>

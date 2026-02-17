@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useAudio } from './AudioProvider';
 import { generateSmartDiscoveryQueries } from '@/lib/algorithm';
+import { toUnifiedTrack } from '@/lib/types/music';
 
 interface Track {
     id: string;
@@ -11,13 +12,15 @@ interface Track {
     thumbnail: string;
 }
 
-export function RecommendedGrid() {
-    const [tracks, setTracks] = useState<Track[]>([]);
-    const [loading, setLoading] = useState(true);
+interface RecommendedGridProps {
+    initialTracks?: Track[];
+}
+
+export function RecommendedGrid({ initialTracks }: RecommendedGridProps) {
+    const [tracks, setTracks] = useState<Track[]>(initialTracks || []);
+    const [loading, setLoading] = useState(!initialTracks);
     const [isTransitioning, setIsTransitioning] = useState(false);
     const [historyStack, setHistoryStack] = useState<Track[][]>([]);
-    // If you want to show what the recommendation is based on, you can keep this, 
-    // or just say "Based on your taste"
     const [recSource, setRecSource] = useState('Based on your taste');
 
     // Track which query index we're on for variety
@@ -26,6 +29,7 @@ export function RecommendedGrid() {
     const { playTrack, addToQueue, listeningHistory, openConnect } = useAudio();
 
     const fetchRecommendations = useCallback(async (saveToHistory = false) => {
+        setLoading(true);
         // Use our new smart algorithm
         const queries = generateSmartDiscoveryQueries(listeningHistory);
 
@@ -46,11 +50,26 @@ export function RecommendedGrid() {
         try {
             const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
             const data = await res.json();
-            if (Array.isArray(data) && data.length > 0) {
+
+            // Handle both paginated response and legacy array response
+            let results: Track[] = [];
+            if (data.results && Array.isArray(data.results)) {
+                results = data.results;
+            } else if (Array.isArray(data)) {
+                results = data;
+            }
+
+            if (results.length > 0) {
+                // Ensure thumbnails have fallbacks
+                const tracksWithThumbnails = results.slice(0, 5).map(t => ({
+                    ...t,
+                    thumbnail: t.thumbnail || `https://i.ytimg.com/vi/${t.id}/hqdefault.jpg`
+                }));
+
                 if (saveToHistory && tracks.length > 0) {
                     setHistoryStack(prev => [...prev, tracks]);
                 }
-                setTracks(data.slice(0, 5));
+                setTracks(tracksWithThumbnails);
             }
         } catch (e) {
             console.error('Failed to fetch recommendations:', e);
@@ -59,8 +78,10 @@ export function RecommendedGrid() {
     }, [tracks, listeningHistory]);
 
     useEffect(() => {
-        fetchRecommendations(false);
-    }, []);
+        if (!initialTracks) {
+            fetchRecommendations(false);
+        }
+    }, [initialTracks]); // Only run on mount if no initial tracks
 
     const handleNext = async () => {
         setIsTransitioning(true);
@@ -83,17 +104,8 @@ export function RecommendedGrid() {
     };
 
     const handlePlayTrack = (track: Track, index: number) => {
-        playTrack(track);
-        tracks.slice(index + 1).forEach(t => addToQueue(t));
-    };
-
-    const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>, track: Track) => {
-        const img = e.currentTarget;
-        if (img.src.includes('hqdefault')) {
-            img.src = `https://i.ytimg.com/vi/${track.id}/mqdefault.jpg`;
-        } else {
-            img.src = `https://i.ytimg.com/vi/${track.id}/default.jpg`;
-        }
+        playTrack(toUnifiedTrack(track));
+        tracks.slice(index + 1).forEach(t => addToQueue(toUnifiedTrack(t)));
     };
 
     return (
@@ -145,7 +157,17 @@ export function RecommendedGrid() {
                                 <img
                                     src={track.thumbnail || `https://i.ytimg.com/vi/${track.id}/hqdefault.jpg`}
                                     alt={track.title}
-                                    onError={(e) => handleImageError(e, track)}
+                                    loading="lazy"
+                                    onError={(e) => {
+                                        const img = e.currentTarget;
+                                        if (img.src.includes('maxresdefault')) {
+                                            img.src = `https://i.ytimg.com/vi/${track.id}/hqdefault.jpg`;
+                                        } else if (img.src.includes('hqdefault')) {
+                                            img.src = `https://i.ytimg.com/vi/${track.id}/mqdefault.jpg`;
+                                        } else if (!img.src.includes('mqdefault')) {
+                                            img.src = `https://i.ytimg.com/vi/${track.id}/default.jpg`;
+                                        }
+                                    }}
                                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 opacity-90 group-hover:opacity-100"
                                 />
                                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-3 backdrop-blur-[2px]">
@@ -158,7 +180,7 @@ export function RecommendedGrid() {
                                         </svg>
                                     </button>
                                     <button
-                                        onClick={(e) => { e.stopPropagation(); openConnect(track); }}
+                                        onClick={(e) => { e.stopPropagation(); openConnect(toUnifiedTrack(track)); }}
                                         className="w-12 h-12 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white shadow-lg translate-y-4 group-hover:translate-y-0 transition-transform duration-300 delay-75 hover:bg-white/20 hover:scale-110 active:scale-95"
                                         title="Share with friends"
                                     >

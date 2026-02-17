@@ -8,12 +8,14 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const q = searchParams.get('q');
     const type = searchParams.get('type') || 'video';
+    const offset = parseInt(searchParams.get('offset') || '0');
+    const limit = parseInt(searchParams.get('limit') || '30');
 
     if (!q) {
         return NextResponse.json({ error: 'Query required' }, { status: 400 });
     }
 
-    // Log search query for personalization (Fire and forget, don't block response)
+    // Log search query for personalization (Fire and forget)
     getServerSession(authOptions).then(async (session) => {
         if (session?.user?.email) {
             try {
@@ -37,7 +39,20 @@ export async function GET(request: Request) {
         if (type === 'playlist') {
             results = await searchPlaylists(q);
         } else {
-            results = await searchMusic(q);
+            // Use reliable YouTube Music API (works correctly for artist searches)
+            const allResults = await searchMusic(q);
+
+            // Apply pagination
+            results = allResults.slice(offset, offset + limit);
+
+            // Return with pagination metadata
+            return NextResponse.json({
+                results,
+                total: allResults.length,
+                offset,
+                limit,
+                hasMore: offset + limit < allResults.length
+            });
         }
 
         return NextResponse.json(results);

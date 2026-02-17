@@ -100,7 +100,7 @@ export default function ExplorePage() {
 
     if (loading) {
         return (
-            <div className="flex-1 p-8 overflow-y-auto bg-[#0A0A0B] space-y-12">
+            <div className="flex-1 p-8 overflow-y-auto bg-transparent space-y-12">
                 <div className="animate-pulse flex gap-4">
                     {[1, 2, 3].map(i => <div key={i} className="h-10 w-32 bg-white/5 rounded-full"></div>)}
                 </div>
@@ -130,7 +130,7 @@ export default function ExplorePage() {
     const visibleTrending = viewAllTrending ? trending : trending.slice(0, 6);
 
     return (
-        <div className="flex-1 overflow-y-auto bg-[#0A0A0B] pb-32">
+        <div className="flex-1 overflow-y-auto bg-transparent pb-32">
 
             <div className="p-4 md:p-8 space-y-10 md:space-y-12">
 

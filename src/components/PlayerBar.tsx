@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { useAudio } from './AudioProvider';
+import { useAudio, useAudioProgress } from './AudioProvider';
 import { AddToPlaylist } from './AddToPlaylist';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 // Format seconds to mm:ss
 function formatTime(seconds: number): string {
@@ -13,36 +13,11 @@ function formatTime(seconds: number): string {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
-export function PlayerBar() {
-    const {
-        currentTrack,
-        isPlaying,
-        togglePlay,
-        volume,
-        setVolume,
-        isLoading,
-        currentTime,
-        duration,
-        seekTo,
-        playNext,
-        playPrevious,
-        shuffle,
-        toggleShuffle,
-        repeat,
-        toggleRepeat,
-        toggleLike,
-        isLiked,
-        togglePlayerExpansion,
-        isPlayerExpanded,
-        isConnectOpen,
-        openConnect,
-        closeConnect,
-        connectInitialTrack
-    } = useAudio();
+// Separated Progress Component to prevent full PlayerBar re-renders
+function DesktopProgressBar() {
+    const { seekTo } = useAudio();
+    const { currentTime, duration } = useAudioProgress();
 
-    const router = useRouter();
-
-    const liked = currentTrack ? isLiked(currentTrack.id) : false;
     const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
     const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -53,19 +28,69 @@ export function PlayerBar() {
         seekTo(percentage * duration);
     };
 
+    return (
+        <div className="w-full flex items-center gap-3 text-xs font-medium text-gray-400">
+            <span>{formatTime(currentTime)}</span>
+            <div
+                className="flex-1 h-1 bg-white/10 rounded-full cursor-pointer group relative overflow-hidden"
+                onClick={handleSeek}
+            >
+                {/* Progress bar with Purple Glow */}
+                <div
+                    className="absolute top-0 left-0 h-full bg-[#8B5CF6] rounded-full group-hover:bg-[#7c3aed] transition-colors shadow-[0_0_10px_#8B5CF6]"
+                    style={{ width: `${progress}%` }}
+                ></div>
+                <div
+                    className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full opacity-0 group-hover:opacity-100 shadow shadow-black/50 transition-opacity"
+                    style={{ left: `calc(${progress}% - 6px)` }}
+                ></div>
+            </div>
+            <span>{formatTime(duration)}</span>
+        </div>
+    );
+}
+
+function MobileProgressBar() {
+    const { currentTime, duration } = useAudioProgress();
+    const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+
+    return (
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-white/5">
+            <div
+                className="h-full bg-[#8B5CF6] shadow-[0_0_5px_#8B5CF6]"
+                style={{ width: `${progress}%` }}
+            ></div>
+        </div>
+    );
+}
+
+export function PlayerBar() {
+    const {
+        currentTrack,
+        isPlaying,
+        togglePlay,
+        volume,
+        setVolume,
+        isLoading,
+        playNext,
+        playPrevious,
+        shuffle,
+        toggleShuffle,
+        repeat,
+        toggleRepeat,
+        toggleLike,
+        isLiked,
+        togglePlayerExpansion,
+        isPlayerExpanded,
+        openConnect,
+    } = useAudio();
+
+    const router = useRouter();
+
+    const liked = currentTrack ? isLiked(currentTrack.id) : false;
+
     const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setVolume(Number(e.target.value));
-    };
-
-    const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
-        const img = e.currentTarget;
-        if (currentTrack) {
-            if (img.src.includes('maxresdefault')) {
-                img.src = `https://i.ytimg.com/vi/${currentTrack.id}/hqdefault.jpg`;
-            } else if (img.src.includes('hqdefault')) {
-                img.src = `https://i.ytimg.com/vi/${currentTrack.id}/mqdefault.jpg`;
-            }
-        }
     };
 
     const handleArtistClick = () => {
@@ -78,6 +103,9 @@ export function PlayerBar() {
         return null;
     }
 
+    // Determine best thumbnail (fallback to hqdefault which is always available mostly)
+    const thumbnailSrc = currentTrack.thumbnail || `https://i.ytimg.com/vi/${currentTrack.id}/hqdefault.jpg`;
+
     return (
         <div suppressHydrationWarning className="fixed bottom-0 left-0 right-0 z-50 pointer-events-none">
             {/* Desktop Player Bar */}
@@ -86,15 +114,17 @@ export function PlayerBar() {
                 <div className="backdrop-blur-md bg-black/20 border border-white/5 rounded-2xl p-3 flex items-center justify-between shadow-[0_8px_32px_rgba(0,0,0,0.5)] pointer-events-auto mx-auto max-w-screen-2xl w-full">
                     {/* Left: Track Info */}
                     <div className="flex items-center gap-4 w-1/4 min-w-[200px]">
-                        <div className="relative group">
-                            <img
+                        <div className="relative group w-12 h-12 flex-shrink-0">
+                            <Image
                                 alt={currentTrack.title}
-                                className="w-12 h-12 rounded-lg shadow-lg object-cover border border-white/5"
-                                src={currentTrack.thumbnail || `https://i.ytimg.com/vi/${currentTrack.id}/hqdefault.jpg`}
-                                onError={handleImageError}
+                                src={thumbnailSrc}
+                                fill
+                                sizes="48px"
+                                className="rounded-lg shadow-lg object-cover border border-white/5"
+                                unoptimized={!thumbnailSrc.includes('i.ytimg.com')}
                             />
                             <div
-                                className="absolute inset-0 bg-black/40 hidden group-hover:flex items-center justify-center rounded-lg transition cursor-pointer"
+                                className="absolute inset-0 bg-black/40 hidden group-hover:flex items-center justify-center rounded-lg transition cursor-pointer z-10"
                                 onClick={togglePlayerExpansion}
                             >
                                 <span className="material-icons-round text-white text-xl">expand_less</span>
@@ -164,24 +194,7 @@ export function PlayerBar() {
                             </button>
                         </div>
 
-                        <div className="w-full flex items-center gap-3 text-xs font-medium text-gray-400">
-                            <span>{formatTime(currentTime)}</span>
-                            <div
-                                className="flex-1 h-1 bg-white/10 rounded-full cursor-pointer group relative overflow-hidden"
-                                onClick={handleSeek}
-                            >
-                                {/* Progress bar with Purple Glow */}
-                                <div
-                                    className="absolute top-0 left-0 h-full bg-[#8B5CF6] rounded-full group-hover:bg-[#7c3aed] transition-colors shadow-[0_0_10px_#8B5CF6]"
-                                    style={{ width: `${progress}%` }}
-                                ></div>
-                                <div
-                                    className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full opacity-0 group-hover:opacity-100 shadow shadow-black/50 transition-opacity"
-                                    style={{ left: `calc(${progress}% - 6px)` }}
-                                ></div>
-                            </div>
-                            <span>{formatTime(duration)}</span>
-                        </div>
+                        <DesktopProgressBar />
                     </div>
 
                     {/* Right: Actions */}
@@ -236,21 +249,19 @@ export function PlayerBar() {
                     className="backdrop-blur-md bg-black/20 rounded-xl p-2 flex items-center justify-between shadow-2xl pointer-events-auto border border-white/5 w-full relative overflow-hidden"
                     onClick={togglePlayerExpansion}
                 >
-                    {/* Progress line at top */}
-                    <div className="absolute top-0 left-0 right-0 h-[2px] bg-white/5">
-                        <div
-                            className="h-full bg-[#8B5CF6] shadow-[0_0_5px_#8B5CF6]"
-                            style={{ width: `${progress}%` }}
-                        ></div>
-                    </div>
+                    <MobileProgressBar />
 
                     <div className="flex items-center gap-3 min-w-0 flex-1">
-                        <img
-                            alt={currentTrack.title}
-                            className="w-10 h-10 rounded-md object-cover shadow-lg border border-white/5"
-                            src={currentTrack.thumbnail || `https://i.ytimg.com/vi/${currentTrack.id}/hqdefault.jpg`}
-                            onError={handleImageError}
-                        />
+                        <div className="relative w-10 h-10 flex-shrink-0">
+                            <Image
+                                alt={currentTrack.title}
+                                src={thumbnailSrc}
+                                fill
+                                sizes="40px"
+                                className="rounded-md object-cover shadow-lg border border-white/5"
+                                unoptimized={!thumbnailSrc.includes('i.ytimg.com')}
+                            />
+                        </div>
                         <div className="flex flex-col min-w-0">
                             <span className="text-white font-bold text-xs truncate">{currentTrack.title}</span>
                             <span className="text-[10px] text-gray-400 truncate">{currentTrack.artist}</span>

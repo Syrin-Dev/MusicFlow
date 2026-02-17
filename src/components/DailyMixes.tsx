@@ -133,7 +133,7 @@ export function DailyMixes() {
                     artist: t.artist,
                     thumbnail: t.thumbnail || `https://i.ytimg.com/vi/${t.id}/hqdefault.jpg`
                 }));
-                playPlaylist(playTracks, 0);
+                playPlaylist(playTracks);
             }
         } catch (error) { console.error(error); }
         setLoadingMix(null);

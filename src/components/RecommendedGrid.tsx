@@ -16,7 +16,7 @@ export function RecommendedGrid() {
     const [loading, setLoading] = useState(true);
     const [isTransitioning, setIsTransitioning] = useState(false);
     const [historyStack, setHistoryStack] = useState<Track[][]>([]);
-    // If you want to show what the recommendation is based on, you can keep this, 
+    // If you want to show what the recommendation is based on, you can keep this,
     // or just say "Based on your taste"
     const [recSource, setRecSource] = useState('Based on your taste');
 

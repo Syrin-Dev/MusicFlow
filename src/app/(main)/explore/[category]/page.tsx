@@ -69,7 +69,7 @@ export default function GenrePage() {
 
     if (loading) {
         return (
-            <div className="flex-1 bg-[#0A0A0B] p-8 space-y-8">
+            <div className="flex-1 bg-transparent p-8 space-y-8">
                 <div className="h-64 rounded-3xl bg-white/5 animate-pulse"></div>
                 <div className="space-y-4">
                     {[1, 2, 3, 4, 5].map(i => <div key={i} className="h-16 rounded-xl bg-white/5 animate-pulse"></div>)}

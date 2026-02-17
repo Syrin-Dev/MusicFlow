@@ -58,7 +58,7 @@ export function Header() {
 
                     {/* Activity Button (Desktop) */}
                     <button
-                        onClick={() => openConnect()}
+                        onClick={() => openConnect(null)}
                         className="hidden md:flex p-2.5 rounded-full text-zinc-400 hover:bg-white/10 hover:text-white transition-all duration-300 group"
                         title="Friend Activity"
                     >

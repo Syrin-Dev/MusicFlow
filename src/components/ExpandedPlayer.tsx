@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useAudio } from './AudioProvider';
+import { useAudio, useAudioProgress } from './AudioProvider';
 import { useEffect, useState, useRef } from 'react';
 import {
     ChevronDown, Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Heart,
@@ -25,8 +25,6 @@ export function ExpandedPlayer() {
         togglePlay,
         playNext,
         playPrevious,
-        currentTime,
-        duration,
         seekTo,
         isPlayerExpanded,
         togglePlayerExpansion,
@@ -45,6 +43,8 @@ export function ExpandedPlayer() {
         reorderQueue,
         loadMoreRecommendations
     } = useAudio();
+
+    const { currentTime, duration } = useAudioProgress();
 
     const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 

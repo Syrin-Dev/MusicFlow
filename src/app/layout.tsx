@@ -1,6 +1,12 @@
 import type { Metadata, Viewport } from 'next';
+import { Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
 import { Providers } from '@/components/Providers';
+
+const font = Plus_Jakarta_Sans({
+    subsets: ['latin'],
+    display: 'swap',
+});
 import { Toaster } from 'sonner';
 
 export const metadata: Metadata = {
@@ -45,11 +51,6 @@ export default function RootLayout({
         <html lang="en" suppressHydrationWarning>
             <head>
                 <meta name="impact-site-verification" content="fdf98f23-909d-454c-af63-486b8614ec38" />
-                <link
-                    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
-                    rel="stylesheet"
-                />
-
                 <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
                 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
                 <link
@@ -57,7 +58,7 @@ export default function RootLayout({
                     rel="stylesheet"
                 />
             </head>
-            <body className="bg-[#0d0d0f] text-white h-screen overflow-hidden" suppressHydrationWarning>
+            <body className={`${font.className} bg-[#0d0d0f] text-white h-screen overflow-hidden`} suppressHydrationWarning>
                 <Providers>
                     {children}
                     <Toaster position="bottom-right" theme="dark" closeButton />

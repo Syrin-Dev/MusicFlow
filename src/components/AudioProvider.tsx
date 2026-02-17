@@ -106,6 +106,9 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         duration: number;
     } | null>(null);
 
+    // Error Tracking to prevent infinite loops
+    const errorCountRef = useRef(0);
+
     // Dynamic Refs to solve stale closure issues in YouTube API callbacks
     const onPlayerErrorRef = useRef((e: any) => { });
     const onPlayerStateChangeRef = useRef((e: any) => { });
@@ -365,7 +368,12 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     };
 
     // Audio Control Logic
-    const playTrackInternal = (track: Track, previousTrack?: Track | null) => {
+    const playTrackInternal = (track: Track, previousTrack?: Track | null, isFallback: boolean = false) => {
+        // Reset error count on new track unless it's a fallback attempt
+        if (currentTrack?.id !== track.id && !isFallback) {
+            errorCountRef.current = 0;
+        }
+
         if (previousTrack && trackingRef.current && trackingRef.current.trackId === previousTrack.id) {
             const playDuration = (Date.now() - trackingRef.current.startTime) / 1000;
             const totalDuration = trackingRef.current.duration || duration;
@@ -611,16 +619,79 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         }
     }, [handleTrackEnd]);
 
+    const findFallbackTrack = async (track: Track): Promise<Track | null> => {
+        try {
+            // Try searching for lyrics version first as it's often available when official is not
+            const query = `${track.title} ${track.artist} lyrics`;
+            const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+            const results = await res.json();
+
+            if (Array.isArray(results) && results.length > 0) {
+                // Find first track that isn't the current restricted one
+                const fallback = results.find(t => t.id !== track.id);
+                if (fallback) {
+                    // Preserve original metadata if possible, but use new ID
+                    return {
+                        ...track,
+                        id: fallback.id,
+                        thumbnail: track.thumbnail // Strictly use original thumb to obscure switch
+                    };
+                }
+            }
+            return null;
+        } catch (e) {
+            console.error("Fallback search failed", e);
+            return null;
+        }
+    };
+
     const onPlayerError = useCallback((event: any) => {
         console.error("YouTube Player Error:", event.data);
         setIsLoading(false);
-        if (event.data === 150 || event.data === 101) {
-            toast.error("Song unavailable (restricted). Skipping...");
-            playNext(); // Use playNext
-        } else {
-            toast.error("Playback error occurred.");
+        errorCountRef.current += 1;
+
+        // Prevent infinite loops
+        if (errorCountRef.current > 1) {
+            console.warn("Max retries reached for track. Skipping.");
+            errorCountRef.current = 0;
+            playNext();
+            return;
         }
-    }, [playNext]);
+
+        // 100: Video not found
+        // 101: Not allowed in embedded player
+        // 150: Same as 101
+        if (event.data === 150 || event.data === 101 || event.data === 100) {
+            if (currentTrack) {
+                console.log(`Track ${currentTrack.title} restricted/error. Attempting fallback...`);
+                toast.promise(
+                    findFallbackTrack(currentTrack).then(fallback => {
+                        if (fallback && fallback.id !== currentTrack.id) {
+                            console.log("Found fallback:", fallback.title, fallback.id);
+                            // Pass true for isFallback to prevent resetting error count
+                            playTrackInternal(fallback, currentTrack, true);
+                            return "Playing alternative version...";
+                        } else {
+                            throw new Error("No fallback found");
+                        }
+                    }),
+                    {
+                        loading: 'Song unavailable. Searching for alternative...',
+                        success: (msg) => msg,
+                        error: () => {
+                            playNext();
+                            return 'Song unavailable. Skipping to next...';
+                        }
+                    }
+                );
+            } else {
+                playNext();
+            }
+        } else {
+            // Unknown error, try next
+            playNext();
+        }
+    }, [playNext, currentTrack, playTrack]);
 
     // Update refs with fresh closures
     useEffect(() => {

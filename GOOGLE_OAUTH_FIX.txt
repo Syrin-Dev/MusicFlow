@@ -1,0 +1,21 @@
+
+URGENT FIX REQUIRED: Google "redirect_uri_mismatch" Error
+
+The screenshot you uploaded confirms the error code: 400: redirect_uri_mismatch.
+
+This means your Vercel app is telling Google to send the user back to:
+https://hievly.com/api/auth/callback/google
+
+BUT, your Google Cloud Console does NOT have this exact URL in the "Authorized redirect URIs" list.
+
+You MUST do this to fix it:
+
+1. Go to https://console.cloud.google.com/apis/credentials
+2. Select your project.
+3. Click on the "Hievly Web" (or similar) OAuth 2.0 Client ID.
+4. Scroll down to "Authorized redirect URIs".
+5. Paste this EXACT link:
+   https://hievly.com/api/auth/callback/google
+6. Click SAVE.
+
+Wait 5 minutes, then try again.

@@ -99,6 +99,10 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     const timeUpdateInterval = useRef<NodeJS.Timeout | null>(null);
     const wakeLockRef = useRef<any>(null); // Use any to avoid type issues
 
+    // Refs for state tracking (to avoid stale closures in event handlers)
+    const isPlayingRef = useRef(false);
+    const isUserPausedRef = useRef(false); // Distinguish user pause vs browser throttle
+
     // Listening Event Tracking
     const trackingRef = useRef<{
         startTime: number;
@@ -113,6 +117,11 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     const togglePlayerExpansion = () => setIsPlayerExpanded(prev => !prev);
     const toggleVideoMode = () => setVideoMode(prev => !prev);
     const toggleVideoFullscreen = () => setIsVideoFullscreen(prev => !prev);
+
+    // Sync ref
+    useEffect(() => {
+        isPlayingRef.current = isPlaying;
+    }, [isPlaying]);
 
     // Wake Lock Helper
     const requestWakeLock = async () => {
@@ -271,8 +280,10 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     const togglePlay = () => {
         if (!playerRef.current) return;
         if (isPlaying) {
+            isUserPausedRef.current = true; // Mark as intentional pause
             playerRef.current.pauseVideo();
         } else {
+            isUserPausedRef.current = false; // Mark as intentional play
             playerRef.current.playVideo();
         }
     };
@@ -372,6 +383,8 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
             const skipped = playDuration < 30 && totalDuration > 30;
             recordListeningEvent(previousTrack, playDuration, totalDuration, skipped);
         }
+
+        isUserPausedRef.current = false; // Reset intentional pause state
 
         trackingRef.current = {
             startTime: Date.now(),
@@ -474,6 +487,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
             };
             playerRef.current?.seekTo(0);
             playerRef.current?.playVideo();
+            isUserPausedRef.current = false;
         } else if (queue.length > 0) {
             playNext();
         } else {
@@ -505,6 +519,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
                 setIsPlaying(true);
                 setIsLoading(false);
                 requestWakeLock(); // Request Lock
+                isUserPausedRef.current = false;
 
                 // Clear any existing interval
                 if (timeUpdateInterval.current) clearInterval(timeUpdateInterval.current);
@@ -525,6 +540,12 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
                 }, 1000);
             }
             if (event.data === 2) { // Paused
+                // Critical: If browser paused it (throttling) but user didn't, resume!
+                if (!isUserPausedRef.current && document.visibilityState === 'hidden') {
+                    console.log("Auto-resuming background playback (aggressive)...");
+                    playerRef.current?.playVideo();
+                    return;
+                }
                 setIsPlaying(false);
                 releaseWakeLock(); // Release Lock
             }
@@ -586,6 +607,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
             setIsLoading(false);
             setDuration(playerRef.current?.getDuration() || 0);
             requestWakeLock(); // Request Lock
+            isUserPausedRef.current = false;
 
             // Start time tracking
             if (timeUpdateInterval.current) clearInterval(timeUpdateInterval.current);
@@ -599,6 +621,12 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
                 }
             }, 1000);
         } else if (data === 2) { // Paused
+            // Robust Background check
+            if (!isUserPausedRef.current && document.visibilityState === 'hidden') {
+                console.log("Prevented background pause");
+                playerRef.current?.playVideo();
+                return;
+            }
             setIsPlaying(false);
             releaseWakeLock(); // Release Lock
         } else if (data === 0) { // Ended
@@ -654,8 +682,13 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
             silentAudioRef.current?.play().catch(() => { });
             requestWakeLock();
         } else {
-            silentAudioRef.current?.pause();
-            releaseWakeLock();
+            // Only pause silent audio if user explicitly paused
+            if (!isUserPausedRef.current) {
+                // Do not pause silent audio if we think it should be playing
+            } else {
+                silentAudioRef.current?.pause();
+                releaseWakeLock();
+            }
         }
     }, [isPlaying]);
 
@@ -718,36 +751,46 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     // Background Resilience Logic
     useEffect(() => {
         const handleVisibilityChange = async () => {
-            if (document.visibilityState === 'hidden' && isPlaying) {
-                // When leaving the app, make sure our ghost audio is definitely playing
-                try {
-                    await silentAudioRef.current?.play();
-                } catch (e) {
-                    console.error("Silent audio play on vis change failed", e);
-                }
+            if (document.visibilityState === 'hidden') {
+                // Background mode active
+                if (!isUserPausedRef.current) {
+                    console.log("App backgrounded - enforcing playback");
 
-                // And try to keep YT playing
-                if (playerRef.current && playerRef.current.getPlayerState && playerRef.current.getPlayerState() !== 1) {
-                     playerRef.current.playVideo();
-                }
+                    // 1. Ensure silent audio is active (critical for iOS)
+                    try {
+                        await silentAudioRef.current?.play();
+                    } catch (e) {
+                        console.error("Silent audio background play failed", e);
+                    }
 
-                // Re-acquire Wake Lock if needed
-                requestWakeLock();
-            } else if (document.visibilityState === 'visible' && isPlaying) {
-                 // Re-acquire if lost
-                 requestWakeLock();
+                    // 2. Force YouTube to stay playing
+                    if (playerRef.current && playerRef.current.getPlayerState && playerRef.current.getPlayerState() !== 1) {
+                         playerRef.current.playVideo();
+                    }
+
+                    // 3. Re-acquire Wake Lock
+                    requestWakeLock();
+                }
+            } else if (document.visibilityState === 'visible') {
+                // Foreground - just ensure consistency
+                 if (isPlayingRef.current) {
+                     requestWakeLock();
+                 }
             }
         };
 
         document.addEventListener('visibilitychange', handleVisibilityChange);
         return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-    }, [isPlaying]);
+    }, []);
 
     // Reliable Session Position Update
     useEffect(() => {
         if (!('mediaSession' in navigator)) return;
-        navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
-    }, [isPlaying]);
+        // IMPORTANT: If we are not paused by user, tell the OS we are playing!
+        // This decouples the OS state from the flickering player state.
+        const shouldBePlaying = isPlaying || (!isUserPausedRef.current && currentTrack !== null);
+        navigator.mediaSession.playbackState = shouldBePlaying ? 'playing' : 'paused';
+    }, [isPlaying, currentTrack]);
 
     // Background keep-alive monitor removed - relying on Master Audio events
 
@@ -826,12 +869,12 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
                         width: '100%',
                         opacity: 1
                     } : {
-                        width: '1px',
-                        height: '1px',
+                        width: '100px',
+                        height: '100px',
                         opacity: 0.001,
                         position: 'fixed',
                         bottom: 0,
-                        left: 0,
+                        left: '-9999px', // Off-screen to ensure rendering but invisible
                         zIndex: -1,
                         pointerEvents: 'none',
                         visibility: 'visible'

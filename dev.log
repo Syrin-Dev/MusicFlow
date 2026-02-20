@@ -1,0 +1,95 @@
+
+> music-web@0.1.0 dev /app
+> next dev
+
+▲ Next.js 16.1.6 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.0.2:3000
+
+✓ Starting...
+Attention: Next.js now collects completely anonymous telemetry regarding usage.
+This information is used to shape Next.js' roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://nextjs.org/telemetry
+
+✓ Ready in 1848ms
+○ Compiling /login ...
+ GET /login 200 in 5.4s (compile: 4.9s, proxy.ts: 7ms, render: 500ms)
+[next-auth][warn][NEXTAUTH_URL]
+https://next-auth.js.org/warnings#nextauth_url
+[next-auth][warn][NO_SECRET]
+https://next-auth.js.org/warnings#no_secret
+[next-auth][warn][DEBUG_ENABLED]
+https://next-auth.js.org/warnings#debug_enabled
+ GET /api/auth/session 200 in 2.9s (compile: 2.8s, proxy.ts: 15ms, render: 54ms)
+ GET / 200 in 1520ms (compile: 1233ms, proxy.ts: 7ms, render: 280ms)
+ GET /api/notifications 401 in 979ms (compile: 927ms, proxy.ts: 34ms, render: 19ms)
+Failed to upsert dev user Error [PrismaClientInitializationError]:
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$prismadb$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].user.upsert()` invocation in
+/app/.next/dev/server/chunks/[root-of-the-server]__2156c0d4._.js:225:171
+
+  222 if (!email && ("TURBOPACK compile-time value", "development") !== 'production') {
+  223     // Force create/get dev user
+  224     try {
+→ 225         const devUser = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$prismadb$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].user.upsert(
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:7
+   |
+ 6 |   provider  = "postgresql"
+ 7 |   url       = env("DATABASE_URL")
+   |
+
+Validation Error Count: 1
+    at <unknown> (src/app/api/playlists/route.ts:14:47)
+    at <unknown> (-->  schema.prisma:7)
+    at async getUserEmail (src/app/api/playlists/route.ts:14:29)
+    at async GET (src/app/api/playlists/route.ts:38:23)
+  12 |         // Force create/get dev user
+  13 |         try {
+> 14 |             const devUser = await prisma.user.upsert({
+     |                                               ^
+  15 |                 where: { email: 'dev@example.com' },
+  16 |                 update: {},
+  17 |                 create: { {
+  clientVersion: '5.22.0',
+  errorCode: undefined
+}
+Get playlists error: Error [PrismaClientInitializationError]:
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$prismadb$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].user.findFirst()` invocation in
+/app/.next/dev/server/chunks/[root-of-the-server]__2156c0d4._.js:242:173
+
+  239 } catch (e) {
+  240     console.error('Failed to upsert dev user', e);
+  241     // Try fallback to any first user
+→ 242     const firstUser = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$prismadb$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].user.findFirst(
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:7
+   |
+ 6 |   provider  = "postgresql"
+ 7 |   url       = env("DATABASE_URL")
+   |
+
+Validation Error Count: 1
+    at <unknown> (src/app/api/playlists/route.ts:29:49)
+    at <unknown> (-->  schema.prisma:7)
+    at async getUserEmail (src/app/api/playlists/route.ts:29:31)
+    at async GET (src/app/api/playlists/route.ts:38:23)
+  27 |             console.error('Failed to upsert dev user', e);
+  28 |             // Try fallback to any first user
+> 29 |             const firstUser = await prisma.user.findFirst();
+     |                                                 ^
+  30 |             if (firstUser?.email) return firstUser.email;
+  31 |         }
+  32 |     } {
+  clientVersion: '5.22.0',
+  errorCode: undefined
+}
+ GET /api/playlists?t=1771624084144 500 in 1609ms (compile: 855ms, proxy.ts: 37ms, render: 717ms)
+ GET /api/search?q=gym%20phonk%20high%20energy%20workout%20music 200 in 2.8s (compile: 1949ms, proxy.ts: 34ms, render: 791ms)
+ GET /api/search?q=chill%20study%20music 200 in 1148ms (compile: 272ms, proxy.ts: 7ms, render: 869ms)
+ GET /api/search?q=evening%20chill%20music 200 in 1169ms (compile: 333ms, proxy.ts: 7ms, render: 829ms)
+ GET /api/search?q=summer%20dance%20club%20hits%20remix%202025 200 in 2.8s (compile: 1941ms, proxy.ts: 33ms, render: 803ms)
+ GET /api/search?q=lofi%20hip%20hop%20instrumental%20aesthetic 200 in 2.8s (compile: 1927ms, proxy.ts: 33ms, render: 821ms)
+ GET /api/search?q=ambient%20study%20music%20no%20lyrics%20deep%20focus 200 in 2.8s (compile: 1956ms, proxy.ts: 27ms, render: 789ms)
+ ELIFECYCLE  Command failed.
+[?25h

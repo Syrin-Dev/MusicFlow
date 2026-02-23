@@ -108,8 +108,14 @@ export function PlayerBar() {
                                 >
                                     {currentTrack.title}
                                 </div>
-                                <button onClick={() => toggleLike(currentTrack)}>
-                                    <span className={`material-icons-round text-xs cursor-pointer hover:text-white ${liked ? 'text-[#8B5CF6]' : 'text-gray-400'}`}>favorite</span>
+                                <button
+                                    onClick={() => toggleLike(currentTrack)}
+                                    aria-label={liked ? "Remove from Liked Songs" : "Add to Liked Songs"}
+                                    title={liked ? "Remove from Liked Songs" : "Add to Liked Songs"}
+                                    aria-pressed={liked}
+                                    className="focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none rounded-full p-1"
+                                >
+                                    <span className={`material-icons-round text-xs cursor-pointer hover:text-white ${liked ? 'text-[#8B5CF6]' : 'text-gray-400'}`} aria-hidden="true">favorite</span>
                                 </button>
                             </div>
                             <span
@@ -125,42 +131,54 @@ export function PlayerBar() {
                     <div className="flex flex-col items-center flex-1 max-w-2xl px-8">
                         <div className="flex items-center gap-6 mb-1">
                             <button
-                                className={`transition ${shuffle ? 'text-[#8B5CF6] drop-shadow-[0_0_5px_rgba(139,92,246,0.5)]' : 'text-gray-400 hover:text-white'}`}
+                                className={`transition ${shuffle ? 'text-[#8B5CF6] drop-shadow-[0_0_5px_rgba(139,92,246,0.5)]' : 'text-gray-400 hover:text-white'} focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none rounded-full`}
                                 onClick={toggleShuffle}
+                                aria-label={shuffle ? "Disable shuffle" : "Enable shuffle"}
+                                title={shuffle ? "Disable shuffle" : "Enable shuffle"}
+                                aria-pressed={shuffle}
                             >
-                                <span className="material-icons-round text-xl">shuffle</span>
+                                <span className="material-icons-round text-xl" aria-hidden="true">shuffle</span>
                             </button>
                             <button
-                                className="text-gray-300 hover:text-white transition"
+                                className="text-gray-300 hover:text-white transition focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none rounded-full"
                                 onClick={playPrevious}
+                                aria-label="Previous track"
+                                title="Previous track"
                             >
-                                <span className="material-icons-round text-2xl">skip_previous</span>
+                                <span className="material-icons-round text-2xl" aria-hidden="true">skip_previous</span>
                             </button>
 
                             {/* Primary Play Button - Vivid Purple */}
                             <button
-                                className="w-10 h-10 bg-[#8B5CF6] rounded-full flex items-center justify-center text-white hover:scale-105 transition shadow-[0_0_15px_rgba(139,92,246,0.4)]"
+                                className="w-10 h-10 bg-[#8B5CF6] rounded-full flex items-center justify-center text-white hover:scale-105 transition shadow-[0_0_15px_rgba(139,92,246,0.4)] focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none"
                                 onClick={togglePlay}
                                 disabled={isLoading}
+                                aria-label={isPlaying ? "Pause" : "Play"}
+                                title={isPlaying ? "Pause" : "Play"}
                             >
                                 {isLoading ? (
                                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                                 ) : (
-                                    <span className="material-icons-round text-2xl">{isPlaying ? 'pause' : 'play_arrow'}</span>
+                                    <span className="material-icons-round text-2xl" aria-hidden="true">{isPlaying ? 'pause' : 'play_arrow'}</span>
                                 )}
                             </button>
 
                             <button
-                                className="text-gray-300 hover:text-white transition"
+                                className="text-gray-300 hover:text-white transition focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none rounded-full"
                                 onClick={playNext}
+                                aria-label="Next track"
+                                title="Next track"
                             >
-                                <span className="material-icons-round text-2xl">skip_next</span>
+                                <span className="material-icons-round text-2xl" aria-hidden="true">skip_next</span>
                             </button>
                             <button
-                                className={`transition ${repeat !== 'off' ? 'text-[#8B5CF6] drop-shadow-[0_0_5px_rgba(139,92,246,0.5)]' : 'text-gray-400 hover:text-white'}`}
+                                className={`transition ${repeat !== 'off' ? 'text-[#8B5CF6] drop-shadow-[0_0_5px_rgba(139,92,246,0.5)]' : 'text-gray-400 hover:text-white'} focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none rounded-full`}
                                 onClick={toggleRepeat}
+                                aria-label="Toggle repeat"
+                                title="Toggle repeat"
+                                aria-pressed={repeat !== 'off'}
                             >
-                                <span className="material-icons-round text-xl">{repeat === 'one' ? 'repeat_one' : 'repeat'}</span>
+                                <span className="material-icons-round text-xl" aria-hidden="true">{repeat === 'one' ? 'repeat_one' : 'repeat'}</span>
                             </button>
                         </div>
 
@@ -187,18 +205,24 @@ export function PlayerBar() {
                     {/* Right: Actions */}
                     <div className="flex items-center justify-end gap-3 w-1/4 min-w-[200px]">
                         <button
-                            className="text-gray-400 hover:text-[#8B5CF6] transition p-2 hover:bg-white/5 rounded-full"
+                            className="text-gray-400 hover:text-[#8B5CF6] transition p-2 hover:bg-white/5 rounded-full focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none"
                             onClick={() => openConnect(currentTrack)}
+                            aria-label="Share to Friend"
                             title="Share to Friend"
                         >
-                            <span className="material-icons-round text-xl">send</span>
+                            <span className="material-icons-round text-xl" aria-hidden="true">send</span>
                         </button>
 
                         <AddToPlaylist track={currentTrack} />
 
                         <div className="flex items-center gap-2 group w-24">
-                            <button onClick={() => setVolume(volume === 0 ? 100 : 0)}>
-                                <span className="material-icons-round text-gray-400 text-xl hover:text-white">
+                            <button
+                                onClick={() => setVolume(volume === 0 ? 100 : 0)}
+                                aria-label={volume === 0 ? "Unmute" : "Mute"}
+                                title={volume === 0 ? "Unmute" : "Mute"}
+                                className="focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none rounded-full p-1"
+                            >
+                                <span className="material-icons-round text-gray-400 text-xl hover:text-white" aria-hidden="true">
                                     {volume === 0 ? 'volume_off' : volume < 50 ? 'volume_down' : 'volume_up'}
                                 </span>
                             </button>
@@ -219,11 +243,12 @@ export function PlayerBar() {
                         </div>
 
                         <button
-                            className="text-gray-400 hover:text-white transition ml-2"
+                            className="text-gray-400 hover:text-white transition ml-2 focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none rounded-full"
                             onClick={togglePlayerExpansion}
-                            title="Expand"
+                            aria-label="Expand player"
+                            title="Expand player"
                         >
-                            <span className="material-icons-round text-3xl">keyboard_arrow_up</span>
+                            <span className="material-icons-round text-3xl" aria-hidden="true">keyboard_arrow_up</span>
                         </button>
                     </div>
                 </div>
@@ -259,26 +284,30 @@ export function PlayerBar() {
 
                     <div className="flex items-center gap-1">
                         <button
-                            className="p-2 text-zinc-400 hover:text-white"
+                            className="p-2 text-zinc-400 hover:text-white focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none rounded-full"
                             onClick={(e) => {
                                 e.stopPropagation();
                                 openConnect(currentTrack);
                             }}
+                            aria-label="Share to Friend"
+                            title="Share to Friend"
                         >
-                            <span className="material-icons-round text-xl">send</span>
+                            <span className="material-icons-round text-xl" aria-hidden="true">send</span>
                         </button>
                         <button
-                            className="w-10 h-10 flex items-center justify-center text-white"
+                            className="w-10 h-10 flex items-center justify-center text-white focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none rounded-full"
                             onClick={(e) => {
                                 e.stopPropagation();
                                 togglePlay();
                             }}
                             disabled={isLoading}
+                            aria-label={isPlaying ? "Pause" : "Play"}
+                            title={isPlaying ? "Pause" : "Play"}
                         >
                             {isLoading ? (
                                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                             ) : (
-                                <span className="material-icons-round text-2xl drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]">{isPlaying ? 'pause' : 'play_arrow'}</span>
+                                <span className="material-icons-round text-2xl drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]" aria-hidden="true">{isPlaying ? 'pause' : 'play_arrow'}</span>
                             )}
                         </button>
                     </div>

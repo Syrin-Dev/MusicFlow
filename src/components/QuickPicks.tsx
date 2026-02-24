@@ -97,7 +97,7 @@ export function QuickPicks() {
 
     useEffect(() => {
         fetchTracks();
-    }, []);
+    }, [fetchTracks]);
 
     const handlePlayAll = () => {
         if (tracks.length === 0) return;
@@ -125,15 +125,17 @@ export function QuickPicks() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {tracks.map((track, index) => (
-                    <div
+                    <button
                         key={`${track.id}-${index}`}
+                        type="button"
                         onClick={() => handlePlayTrack(track, index)}
-                        className="group flex items-center gap-3 p-2 pr-4 rounded-xl hover:bg-white/10 transition-all duration-200 cursor-pointer border border-transparent hover:border-white/5 active:scale-[0.98]"
+                        aria-label={`Play ${track.title} by ${track.artist}`}
+                        className="group flex items-center gap-3 p-2 pr-4 rounded-xl hover:bg-white/10 transition-all duration-200 cursor-pointer border border-transparent hover:border-white/5 active:scale-[0.98] w-full text-left"
                     >
                         <div className="relative w-14 h-14 flex-shrink-0">
                             <img
                                 src={track.thumbnail || `https://i.ytimg.com/vi/${track.id}/hqdefault.jpg`}
-                                alt={track.title}
+                                alt=""
                                 referrerPolicy="no-referrer"
                                 className="w-full h-full rounded-md object-cover shadow-lg group-hover:shadow-xl transition-shadow"
                                 loading="lazy"
@@ -151,7 +153,7 @@ export function QuickPicks() {
                                 {track.artist}
                             </p>
                         </div>
-                    </div>
+                    </button>
                 ))}
 
                 {loading && tracks.length === 0 && (

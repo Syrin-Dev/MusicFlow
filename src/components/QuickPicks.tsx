@@ -127,8 +127,17 @@ export function QuickPicks() {
                 {tracks.map((track, index) => (
                     <div
                         key={`${track.id}-${index}`}
+                        role="button"
+                        tabIndex={0}
+                        aria-label={`Play ${track.title} by ${track.artist}`}
                         onClick={() => handlePlayTrack(track, index)}
-                        className="group flex items-center gap-3 p-2 pr-4 rounded-xl hover:bg-white/10 transition-all duration-200 cursor-pointer border border-transparent hover:border-white/5 active:scale-[0.98]"
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                handlePlayTrack(track, index);
+                            }
+                        }}
+                        className="group flex items-center gap-3 p-2 pr-4 rounded-xl hover:bg-white/10 transition-all duration-200 cursor-pointer border border-transparent hover:border-white/5 active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none"
                     >
                         <div className="relative w-14 h-14 flex-shrink-0">
                             <img

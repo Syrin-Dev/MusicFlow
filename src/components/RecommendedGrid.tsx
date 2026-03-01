@@ -107,7 +107,9 @@ export function RecommendedGrid() {
                     <button
                         onClick={handlePrevious}
                         disabled={loading || historyStack.length === 0}
-                        className="w-9 h-9 rounded-full border border-white/10 flex items-center justify-center hover:bg-white/10 text-gray-300 hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                        aria-label="Previous recommendations"
+                        title="Previous recommendations"
+                        className="w-9 h-9 rounded-full border border-white/10 flex items-center justify-center hover:bg-white/10 text-gray-300 hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none"
                     >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -116,7 +118,9 @@ export function RecommendedGrid() {
                     <button
                         onClick={handleNext}
                         disabled={loading}
-                        className="w-9 h-9 rounded-full bg-[#8B5CF6] flex items-center justify-center hover:bg-violet-600 text-white transition-colors disabled:opacity-50"
+                        aria-label="Next recommendations"
+                        title="Next recommendations"
+                        className="w-9 h-9 rounded-full bg-[#8B5CF6] flex items-center justify-center hover:bg-violet-600 text-white transition-colors disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none"
                     >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -151,7 +155,9 @@ export function RecommendedGrid() {
                                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-3 backdrop-blur-[2px]">
                                     <button
                                         onClick={(e) => { e.stopPropagation(); handlePlayTrack(track, index); }}
-                                        className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white shadow-lg translate-y-4 group-hover:translate-y-0 transition-transform duration-300 hover:scale-110 active:scale-95"
+                                        aria-label={`Play ${track.title}`}
+                                        title={`Play ${track.title}`}
+                                        className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white shadow-lg translate-y-4 group-hover:translate-y-0 transition-transform duration-300 hover:scale-110 active:scale-95 focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none"
                                     >
                                         <svg className="w-6 h-6 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
                                             <path d="M8 5v14l11-7L8 5z" />
@@ -159,8 +165,9 @@ export function RecommendedGrid() {
                                     </button>
                                     <button
                                         onClick={(e) => { e.stopPropagation(); openConnect(track); }}
-                                        className="w-12 h-12 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white shadow-lg translate-y-4 group-hover:translate-y-0 transition-transform duration-300 delay-75 hover:bg-white/20 hover:scale-110 active:scale-95"
+                                        className="w-12 h-12 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white shadow-lg translate-y-4 group-hover:translate-y-0 transition-transform duration-300 delay-75 hover:bg-white/20 hover:scale-110 active:scale-95 focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none"
                                         title="Share with friends"
+                                        aria-label={`Share ${track.title} with friends`}
                                     >
                                         <span className="material-icons-round text-xl">share</span>
                                     </button>

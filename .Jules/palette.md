@@ -1,0 +1,3 @@
+## 2026-03-01 - Added ARIA labels and focus visible styling to RecommendedGrid.tsx
+**Learning:** Adding `aria-label`, `title`, and focus-visible styling to icon-only buttons improves accessibility and keyboard navigation. Using `focus-visible:ring-2 focus-visible:ring-white` for solid/primary buttons and `focus-visible:ring-2 focus-visible:ring-[#8B5CF6]` for bordered/transparent buttons helps them maintain a high contrast outline while matching the theme.
+**Action:** Use these accessibility styles for all icon-only buttons consistently across the application, especially in grids and media controls.

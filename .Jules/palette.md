@@ -1,0 +1,3 @@
+## 2024-05-18 - Custom sliders lack implicit semantic roles and keyboard behavior
+**Learning:** Custom components like seek sliders constructed using standard `div` tags lack built-in accessibility semantics and behavior.
+**Action:** When a `<div/>` is used as a slider, always ensure it is explicitly assigned `role="slider"`, `tabIndex={0}`, standard state properties (`aria-valuemin`, `aria-valuemax`, `aria-valuenow`, `aria-valuetext`, `aria-label`), visible focus styles (`focus-visible:ring-2 focus-visible:outline-none`), and keyboard interactions via `onKeyDown` to allow user control utilizing the arrow keys.

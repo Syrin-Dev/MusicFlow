@@ -1,0 +1,3 @@
+## 2024-05-24 - QuickPicks Track Item Accessibility
+**Learning:** Track items in `QuickPicks.tsx` are implemented as clickable `div` elements without proper accessibility semantics, making them invisible and inaccessible to keyboard and screen reader users. The application relies heavily on visual grid layouts where standard buttons might disrupt styling if not handled correctly.
+**Action:** When implementing custom interactive elements (like track cards), always include `role="button"`, `tabIndex={0}`, a descriptive `aria-label`, an `onKeyDown` handler (for 'Enter' and 'Space'), and visual focus indicators (`focus-visible:ring-2`) to ensure full keyboard and screen reader accessibility while maintaining the design system's visual integrity.

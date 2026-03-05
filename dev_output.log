@@ -1,0 +1,238 @@
+
+> music-web@0.1.0 dev /app
+> next dev
+
+▲ Next.js 16.1.6 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.0.2:3000
+
+✓ Starting...
+✓ Ready in 2.3s
+○ Compiling / ...
+ GET / 200 in 4.9s (compile: 4.2s, proxy.ts: 275ms, render: 450ms)
+[next-auth][warn][NEXTAUTH_URL]
+https://next-auth.js.org/warnings#nextauth_url
+[next-auth][warn][NO_SECRET]
+https://next-auth.js.org/warnings#no_secret
+[next-auth][warn][DEBUG_ENABLED]
+https://next-auth.js.org/warnings#debug_enabled
+ GET /api/notifications 401 in 2.7s (compile: 2.4s, proxy.ts: 26ms, render: 272ms)
+Failed to upsert dev user Error [PrismaClientInitializationError]:
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$prismadb$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].user.upsert()` invocation in
+/app/.next/dev/server/chunks/[root-of-the-server]__2156c0d4._.js:225:171
+
+  222 if (!email && ("TURBOPACK compile-time value", "development") !== 'production') {
+  223     // Force create/get dev user
+  224     try {
+→ 225         const devUser = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$prismadb$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].user.upsert(
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:7
+   |
+ 6 |   provider  = "postgresql"
+ 7 |   url       = env("DATABASE_URL")
+   |
+
+Validation Error Count: 1
+    at <unknown> (src/app/api/playlists/route.ts:14:47)
+    at <unknown> (-->  schema.prisma:7)
+    at async getUserEmail (src/app/api/playlists/route.ts:14:29)
+    at async GET (src/app/api/playlists/route.ts:38:23)
+  12 |         // Force create/get dev user
+  13 |         try {
+> 14 |             const devUser = await prisma.user.upsert({
+     |                                               ^
+  15 |                 where: { email: 'dev@example.com' },
+  16 |                 update: {},
+  17 |                 create: { {
+  clientVersion: '5.22.0',
+  errorCode: undefined
+}
+Get playlists error: Error [PrismaClientInitializationError]:
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$prismadb$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].user.findFirst()` invocation in
+/app/.next/dev/server/chunks/[root-of-the-server]__2156c0d4._.js:242:173
+
+  239 } catch (e) {
+  240     console.error('Failed to upsert dev user', e);
+  241     // Try fallback to any first user
+→ 242     const firstUser = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$prismadb$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].user.findFirst(
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:7
+   |
+ 6 |   provider  = "postgresql"
+ 7 |   url       = env("DATABASE_URL")
+   |
+
+Validation Error Count: 1
+    at <unknown> (src/app/api/playlists/route.ts:29:49)
+    at <unknown> (-->  schema.prisma:7)
+    at async getUserEmail (src/app/api/playlists/route.ts:29:31)
+    at async GET (src/app/api/playlists/route.ts:38:23)
+  27 |             console.error('Failed to upsert dev user', e);
+  28 |             // Try fallback to any first user
+> 29 |             const firstUser = await prisma.user.findFirst();
+     |                                                 ^
+  30 |             if (firstUser?.email) return firstUser.email;
+  31 |         }
+  32 |     } {
+  clientVersion: '5.22.0',
+  errorCode: undefined
+}
+ GET /api/playlists?t=1772746840299 500 in 3.1s (compile: 2.3s, proxy.ts: 15ms, render: 735ms)
+ GET /api/search?q=ambient%20study%20music%20no%20lyrics%20deep%20focus 200 in 3.8s (compile: 2.6s, proxy.ts: 67ms, render: 1198ms)
+ GET /api/search?q=lofi%20hip%20hop%20instrumental%20aesthetic 200 in 3.9s (compile: 2.6s, proxy.ts: 34ms, render: 1281ms)
+ GET /api/search?q=gym%20phonk%20high%20energy%20workout%20music 200 in 4.0s (compile: 2.5s, proxy.ts: 66ms, render: 1367ms)
+ GET /api/search?q=party%20music%20hits 200 in 952ms (compile: 14ms, proxy.ts: 10ms, render: 928ms)
+ GET /api/search?q=summer%20dance%20club%20hits%20remix%202025 200 in 4.1s (compile: 2.6s, proxy.ts: 42ms, render: 1416ms)
+ GET /api/search?q=evening%20chill%20music 200 in 1033ms (compile: 8ms, proxy.ts: 9ms, render: 1015ms)
+ GET /api/search?q=viral%20music%202024 200 in 507ms (compile: 5ms, proxy.ts: 13ms, render: 488ms)
+ GET /api/search?q=classical%20crossover 200 in 632ms (compile: 4ms, proxy.ts: 14ms, render: 614ms)
+ GET /api/search?q=new%20release%20music%20video 200 in 733ms (compile: 9ms, proxy.ts: 40ms, render: 684ms)
+ GET /api/auth/session 200 in 1578ms (compile: 1555ms, proxy.ts: 5ms, render: 18ms)
+ GET / 200 in 142ms (compile: 5ms, proxy.ts: 6ms, render: 130ms)
+ GET /api/search?q=lofi%20hip%20hop%20instrumental%20aesthetic 200 in 71ms (compile: 36ms, proxy.ts: 29ms, render: 6ms)
+ GET /api/notifications 401 in 87ms (compile: 27ms, proxy.ts: 34ms, render: 25ms)
+ GET /api/search?q=summer%20dance%20club%20hits%20remix%202025 200 in 80ms (compile: 47ms, proxy.ts: 28ms, render: 5ms)
+ GET /api/search?q=gym%20phonk%20high%20energy%20workout%20music 200 in 81ms (compile: 50ms, proxy.ts: 27ms, render: 4ms)
+Failed to upsert dev user Error [PrismaClientInitializationError]:
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$prismadb$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].user.upsert()` invocation in
+/app/.next/dev/server/chunks/[root-of-the-server]__2156c0d4._.js:225:171
+
+  222 if (!email && ("TURBOPACK compile-time value", "development") !== 'production') {
+  223     // Force create/get dev user
+  224     try {
+→ 225         const devUser = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$prismadb$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].user.upsert(
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:7
+   |
+ 6 |   provider  = "postgresql"
+ 7 |   url       = env("DATABASE_URL")
+   |
+
+Validation Error Count: 1
+    at <unknown> (src/app/api/playlists/route.ts:14:47)
+    at <unknown> (-->  schema.prisma:7)
+    at async getUserEmail (src/app/api/playlists/route.ts:14:29)
+    at async GET (src/app/api/playlists/route.ts:38:23)
+  12 |         // Force create/get dev user
+  13 |         try {
+> 14 |             const devUser = await prisma.user.upsert({
+     |                                               ^
+  15 |                 where: { email: 'dev@example.com' },
+  16 |                 update: {},
+  17 |                 create: { {
+  clientVersion: '5.22.0',
+  errorCode: undefined
+}
+Get playlists error: Error [PrismaClientInitializationError]:
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$prismadb$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].user.findFirst()` invocation in
+/app/.next/dev/server/chunks/[root-of-the-server]__2156c0d4._.js:242:173
+
+  239 } catch (e) {
+  240     console.error('Failed to upsert dev user', e);
+  241     // Try fallback to any first user
+→ 242     const firstUser = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$prismadb$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].user.findFirst(
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:7
+   |
+ 6 |   provider  = "postgresql"
+ 7 |   url       = env("DATABASE_URL")
+   |
+
+Validation Error Count: 1
+    at <unknown> (src/app/api/playlists/route.ts:29:49)
+    at <unknown> (-->  schema.prisma:7)
+    at async getUserEmail (src/app/api/playlists/route.ts:29:31)
+    at async GET (src/app/api/playlists/route.ts:38:23)
+  27 |             console.error('Failed to upsert dev user', e);
+  28 |             // Try fallback to any first user
+> 29 |             const firstUser = await prisma.user.findFirst();
+     |                                                 ^
+  30 |             if (firstUser?.email) return firstUser.email;
+  31 |         }
+  32 |     } {
+  clientVersion: '5.22.0',
+  errorCode: undefined
+}
+ GET /api/playlists?t=1772746877216 500 in 583ms (compile: 22ms, proxy.ts: 34ms, render: 526ms)
+ GET /api/search?q=ambient%20study%20music%20no%20lyrics%20deep%20focus 200 in 230ms (compile: 19ms, proxy.ts: 205ms, render: 6ms)
+ GET /api/search?q=evening%20chill%20music 200 in 227ms (compile: 17ms, proxy.ts: 205ms, render: 5ms)
+ GET /api/auth/session 200 in 119ms (compile: 37ms, proxy.ts: 26ms, render: 55ms)
+ GET /api/search?q=trending%20music%20videos 200 in 527ms (compile: 50ms, proxy.ts: 21ms, render: 457ms)
+ GET /api/search?q=world%20music%202024 200 in 555ms (compile: 33ms, proxy.ts: 36ms, render: 486ms)
+ GET /api/search?q=chill%20study%20music 200 in 772ms (compile: 31ms, proxy.ts: 194ms, render: 547ms)
+ GET /api/search?q=feel%20good%20music 200 in 626ms (compile: 41ms, proxy.ts: 21ms, render: 564ms)
+ POST /api/rooms 401 in 427ms (compile: 398ms, proxy.ts: 9ms, render: 19ms)
+ GET / 200 in 141ms (compile: 5ms, proxy.ts: 6ms, render: 129ms)
+ GET /api/search?q=lofi%20hip%20hop%20instrumental%20aesthetic 200 in 50ms (compile: 23ms, proxy.ts: 22ms, render: 5ms)
+ GET /api/search?q=summer%20dance%20club%20hits%20remix%202025 200 in 58ms (compile: 30ms, proxy.ts: 22ms, render: 6ms)
+ GET /api/search?q=gym%20phonk%20high%20energy%20workout%20music 200 in 64ms (compile: 35ms, proxy.ts: 20ms, render: 10ms)
+Failed to upsert dev user Error [PrismaClientInitializationError]:
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$prismadb$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].user.upsert()` invocation in
+/app/.next/dev/server/chunks/[root-of-the-server]__2156c0d4._.js:225:171
+
+  222 if (!email && ("TURBOPACK compile-time value", "development") !== 'production') {
+  223     // Force create/get dev user
+  224     try {
+→ 225         const devUser = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$prismadb$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].user.upsert(
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:7
+   |
+ 6 |   provider  = "postgresql"
+ 7 |   url       = env("DATABASE_URL")
+   |
+
+Validation Error Count: 1
+    at <unknown> (src/app/api/playlists/route.ts:14:47)
+    at <unknown> (-->  schema.prisma:7)
+    at async getUserEmail (src/app/api/playlists/route.ts:14:29)
+    at async GET (src/app/api/playlists/route.ts:38:23)
+  12 |         // Force create/get dev user
+  13 |         try {
+> 14 |             const devUser = await prisma.user.upsert({
+     |                                               ^
+  15 |                 where: { email: 'dev@example.com' },
+  16 |                 update: {},
+  17 |                 create: { {
+  clientVersion: '5.22.0',
+  errorCode: undefined
+}
+ GET /api/notifications 401 in 364ms (compile: 21ms, proxy.ts: 34ms, render: 309ms)
+Get playlists error: Error [PrismaClientInitializationError]:
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$prismadb$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].user.findFirst()` invocation in
+/app/.next/dev/server/chunks/[root-of-the-server]__2156c0d4._.js:242:173
+
+  239 } catch (e) {
+  240     console.error('Failed to upsert dev user', e);
+  241     // Try fallback to any first user
+→ 242     const firstUser = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$prismadb$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].user.findFirst(
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:7
+   |
+ 6 |   provider  = "postgresql"
+ 7 |   url       = env("DATABASE_URL")
+   |
+
+Validation Error Count: 1
+    at <unknown> (src/app/api/playlists/route.ts:29:49)
+    at <unknown> (-->  schema.prisma:7)
+    at async getUserEmail (src/app/api/playlists/route.ts:29:31)
+    at async GET (src/app/api/playlists/route.ts:38:23)
+  27 |             console.error('Failed to upsert dev user', e);
+  28 |             // Try fallback to any first user
+> 29 |             const firstUser = await prisma.user.findFirst();
+     |                                                 ^
+  30 |             if (firstUser?.email) return firstUser.email;
+  31 |         }
+  32 |     } {
+  clientVersion: '5.22.0',
+  errorCode: undefined
+}
+ GET /api/playlists?t=1772746993296 500 in 585ms (compile: 24ms, proxy.ts: 27ms, render: 534ms)
+ GET /api/search?q=ambient%20study%20music%20no%20lyrics%20deep%20focus 200 in 260ms (compile: 18ms, proxy.ts: 238ms, render: 4ms)
+ GET /api/search?q=evening%20chill%20music 200 in 45ms (compile: 22ms, proxy.ts: 18ms, render: 5ms)
+ GET /api/search?q=chill%20study%20music 200 in 51ms (compile: 28ms, proxy.ts: 18ms, render: 5ms)
+ GET /api/search?q=new%20release%20music%20video 200 in 65ms (compile: 43ms, proxy.ts: 17ms, render: 4ms)
+ GET /api/search?q=classical%20crossover 200 in 77ms (compile: 52ms, proxy.ts: 18ms, render: 7ms)
+ GET /api/auth/session 200 in 88ms (compile: 38ms, proxy.ts: 37ms, render: 13ms)
+ GET /api/search?q=best%20songs%20all%20time 200 in 628ms (compile: 35ms, proxy.ts: 16ms, render: 577ms)
+ POST /api/rooms 401 in 20ms (compile: 3ms, proxy.ts: 7ms, render: 9ms)

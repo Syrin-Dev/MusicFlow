@@ -108,7 +108,12 @@ export function PlayerBar() {
                                 >
                                     {currentTrack.title}
                                 </div>
-                                <button onClick={() => toggleLike(currentTrack)}>
+                                <button
+                                    onClick={() => toggleLike(currentTrack)}
+                                    aria-label={liked ? 'Unlike track' : 'Like track'}
+                                    title={liked ? 'Unlike track' : 'Like track'}
+                                    className="focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none rounded-full"
+                                >
                                     <span className={`material-icons-round text-xs cursor-pointer hover:text-white ${liked ? 'text-[#8B5CF6]' : 'text-gray-400'}`}>favorite</span>
                                 </button>
                             </div>
@@ -125,23 +130,29 @@ export function PlayerBar() {
                     <div className="flex flex-col items-center flex-1 max-w-2xl px-8">
                         <div className="flex items-center gap-6 mb-1">
                             <button
-                                className={`transition ${shuffle ? 'text-[#8B5CF6] drop-shadow-[0_0_5px_rgba(139,92,246,0.5)]' : 'text-gray-400 hover:text-white'}`}
+                                className={`transition focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none rounded-full ${shuffle ? 'text-[#8B5CF6] drop-shadow-[0_0_5px_rgba(139,92,246,0.5)]' : 'text-gray-400 hover:text-white'}`}
                                 onClick={toggleShuffle}
+                                aria-label={shuffle ? 'Disable shuffle' : 'Enable shuffle'}
+                                title={shuffle ? 'Disable shuffle' : 'Enable shuffle'}
                             >
                                 <span className="material-icons-round text-xl">shuffle</span>
                             </button>
                             <button
-                                className="text-gray-300 hover:text-white transition"
+                                className="text-gray-300 hover:text-white transition focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none rounded-full"
                                 onClick={playPrevious}
+                                aria-label="Play previous track"
+                                title="Play previous track"
                             >
                                 <span className="material-icons-round text-2xl">skip_previous</span>
                             </button>
 
                             {/* Primary Play Button - Vivid Purple */}
                             <button
-                                className="w-10 h-10 bg-[#8B5CF6] rounded-full flex items-center justify-center text-white hover:scale-105 transition shadow-[0_0_15px_rgba(139,92,246,0.4)]"
+                                className="w-10 h-10 bg-[#8B5CF6] rounded-full flex items-center justify-center text-white hover:scale-105 transition shadow-[0_0_15px_rgba(139,92,246,0.4)] focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black focus-visible:outline-none"
                                 onClick={togglePlay}
                                 disabled={isLoading}
+                                aria-label={isPlaying ? 'Pause' : 'Play'}
+                                title={isPlaying ? 'Pause' : 'Play'}
                             >
                                 {isLoading ? (
                                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -151,14 +162,18 @@ export function PlayerBar() {
                             </button>
 
                             <button
-                                className="text-gray-300 hover:text-white transition"
+                                className="text-gray-300 hover:text-white transition focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none rounded-full"
                                 onClick={playNext}
+                                aria-label="Play next track"
+                                title="Play next track"
                             >
                                 <span className="material-icons-round text-2xl">skip_next</span>
                             </button>
                             <button
-                                className={`transition ${repeat !== 'off' ? 'text-[#8B5CF6] drop-shadow-[0_0_5px_rgba(139,92,246,0.5)]' : 'text-gray-400 hover:text-white'}`}
+                                className={`transition focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none rounded-full ${repeat !== 'off' ? 'text-[#8B5CF6] drop-shadow-[0_0_5px_rgba(139,92,246,0.5)]' : 'text-gray-400 hover:text-white'}`}
                                 onClick={toggleRepeat}
+                                aria-label={repeat === 'off' ? 'Enable repeat' : repeat === 'all' ? 'Enable repeat one' : 'Disable repeat'}
+                                title={repeat === 'off' ? 'Enable repeat' : repeat === 'all' ? 'Enable repeat one' : 'Disable repeat'}
                             >
                                 <span className="material-icons-round text-xl">{repeat === 'one' ? 'repeat_one' : 'repeat'}</span>
                             </button>
@@ -197,7 +212,12 @@ export function PlayerBar() {
                         <AddToPlaylist track={currentTrack} />
 
                         <div className="flex items-center gap-2 group w-24">
-                            <button onClick={() => setVolume(volume === 0 ? 100 : 0)}>
+                            <button
+                                onClick={() => setVolume(volume === 0 ? 100 : 0)}
+                                aria-label={volume === 0 ? 'Unmute' : 'Mute'}
+                                title={volume === 0 ? 'Unmute' : 'Mute'}
+                                className="focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none rounded-full"
+                            >
                                 <span className="material-icons-round text-gray-400 text-xl hover:text-white">
                                     {volume === 0 ? 'volume_off' : volume < 50 ? 'volume_down' : 'volume_up'}
                                 </span>

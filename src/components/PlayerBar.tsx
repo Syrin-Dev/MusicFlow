@@ -233,8 +233,17 @@ export function PlayerBar() {
             <div className="flex md:hidden px-2 pb-[calc(70px+16px+12px+env(safe-area-inset-bottom))] w-full">
                 {/* Glassmorphism update: Added backdrop-blur-md and bg-black/20 */}
                 <div
-                    className="backdrop-blur-md bg-black/20 rounded-xl p-2 flex items-center justify-between shadow-2xl pointer-events-auto border border-white/5 w-full relative overflow-hidden"
+                    role="button"
+                    tabIndex={0}
+                    aria-label="Expand player"
+                    className="backdrop-blur-md bg-black/20 rounded-xl p-2 flex items-center justify-between shadow-2xl pointer-events-auto border border-white/5 w-full relative overflow-hidden focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none"
                     onClick={togglePlayerExpansion}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            togglePlayerExpansion();
+                        }
+                    }}
                 >
                     {/* Progress line at top */}
                     <div className="absolute top-0 left-0 right-0 h-[2px] bg-white/5">

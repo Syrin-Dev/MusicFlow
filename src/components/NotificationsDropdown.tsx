@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Bell, Check, X } from 'lucide-react';
+import { Bell, Check, X, Loader2 } from 'lucide-react';
 
 interface Notification {
     id: string;
@@ -18,6 +18,7 @@ export function NotificationsDropdown() {
     const [isOpen, setIsOpen] = useState(false);
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
+    const [processingAction, setProcessingAction] = useState<{ id: string, action: 'ACCEPT' | 'REJECT' } | null>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     const fetchNotifications = async () => {
@@ -97,6 +98,7 @@ export function NotificationsDropdown() {
 
         if (!requesterId) return;
 
+        setProcessingAction({ id: notificationId, action });
         try {
             await fetch('/api/friends/respond', {
                 method: 'POST',
@@ -108,6 +110,8 @@ export function NotificationsDropdown() {
             deleteNotification(notificationId);
         } catch (e) {
             console.error(e);
+        } finally {
+            setProcessingAction(null);
         }
     };
 
@@ -124,8 +128,11 @@ export function NotificationsDropdown() {
         <div className="relative" ref={dropdownRef}>
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="p-2.5 rounded-full text-zinc-400 hover:bg-white/10 hover:text-white transition-all duration-300 relative group"
+                className="p-2.5 rounded-full text-zinc-400 hover:bg-white/10 hover:text-white transition-all duration-300 relative group focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none"
                 title="Notifications"
+                aria-label={`Notifications ${unreadCount > 0 ? `(${unreadCount} unread)` : ''}`}
+                aria-expanded={isOpen}
+                aria-haspopup="true"
             >
                 <Bell size={20} className={`group-hover:scale-110 transition-transform group-hover:rotate-12 ${isOpen ? 'text-white' : ''}`} />
                 {unreadCount > 0 && (
@@ -134,13 +141,17 @@ export function NotificationsDropdown() {
             </button>
 
             {isOpen && (
-                <div className="absolute right-0 mt-3 w-80 bg-[#18181b] border border-white/10 rounded-2xl shadow-2xl shadow-black/80 overflow-hidden transform origin-top-right transition-all animate-in fade-in slide-in-from-top-2 duration-200 z-50">
+                <div
+                    className="absolute right-0 mt-3 w-80 bg-[#18181b] border border-white/10 rounded-2xl shadow-2xl shadow-black/80 overflow-hidden transform origin-top-right transition-all animate-in fade-in slide-in-from-top-2 duration-200 z-50"
+                    role="menu"
+                >
                     <div className="p-4 border-b border-white/5 bg-white/5 flex justify-between items-center">
                         <h3 className="text-white font-semibold text-sm">Notifications</h3>
                         {unreadCount > 0 && (
                             <button
                                 onClick={markAllRead}
-                                className="text-[10px] text-primary hover:underline font-bold uppercase tracking-wider"
+                                className="text-[10px] text-primary hover:underline font-bold uppercase tracking-wider focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none rounded px-1"
+                                aria-label="Mark all notifications as read"
                             >
                                 Mark all read
                             </button>
@@ -165,7 +176,9 @@ export function NotificationsDropdown() {
                                             e.stopPropagation();
                                             deleteNotification(notification.id);
                                         }}
-                                        className="absolute top-4 right-4 opacity-0 group-hover/item:opacity-100 p-1 hover:bg-white/10 rounded-md text-zinc-500 hover:text-white transition-all"
+                                        aria-label="Delete notification"
+                                        title="Delete notification"
+                                        className="absolute top-4 right-4 opacity-0 group-hover/item:opacity-100 p-1 hover:bg-white/10 rounded-md text-zinc-500 hover:text-white focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-[#8B5CF6] transition-all"
                                     >
                                         <X size={14} />
                                     </button>
@@ -183,18 +196,20 @@ export function NotificationsDropdown() {
                                                             e.stopPropagation();
                                                             handleAction(notification.id, 'ACCEPT', notification);
                                                         }}
-                                                        className="flex-1 bg-primary hover:bg-primary/80 text-white text-xs font-bold py-1.5 rounded-lg transition-colors flex items-center justify-center gap-1"
+                                                        disabled={processingAction?.id === notification.id}
+                                                        className={`flex-1 bg-primary hover:bg-primary/80 text-white text-xs font-bold py-1.5 rounded-lg transition-colors flex items-center justify-center gap-1 focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none ${processingAction?.id === notification.id ? 'opacity-50 cursor-not-allowed' : ''}`}
                                                     >
-                                                        <Check size={12} /> Accept
+                                                        {processingAction?.id === notification.id && processingAction.action === 'ACCEPT' ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />} Accept
                                                     </button>
                                                     <button
                                                         onClick={(e) => {
                                                             e.stopPropagation();
                                                             handleAction(notification.id, 'REJECT', notification);
                                                         }}
-                                                        className="flex-1 bg-white/10 hover:bg-white/20 text-white text-xs font-bold py-1.5 rounded-lg transition-colors flex items-center justify-center gap-1"
+                                                        disabled={processingAction?.id === notification.id}
+                                                        className={`flex-1 bg-white/10 hover:bg-white/20 text-white text-xs font-bold py-1.5 rounded-lg transition-colors flex items-center justify-center gap-1 focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none ${processingAction?.id === notification.id ? 'opacity-50 cursor-not-allowed' : ''}`}
                                                     >
-                                                        <X size={12} /> Decline
+                                                        {processingAction?.id === notification.id && processingAction.action === 'REJECT' ? <Loader2 size={12} className="animate-spin" /> : <X size={12} />} Decline
                                                     </button>
                                                 </div>
                                             )}

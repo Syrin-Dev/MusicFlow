@@ -1,0 +1,3 @@
+## 2024-05-24 - Duplicate clear buttons in SearchBar
+**Learning:** When upgrading a search input from `type="text"` to `type="search"` to improve semantics, WebKit browsers automatically add their own clear (`X`) button. If the component already implements a custom clear button, this results in confusing duplicate clear controls.
+**Action:** Use the `[&::-webkit-search-cancel-button]:hidden` Tailwind utility on `type="search"` inputs to hide the default browser control and maintain the custom UI pattern.

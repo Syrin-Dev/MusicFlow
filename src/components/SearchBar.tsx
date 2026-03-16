@@ -75,6 +75,7 @@ export function SearchBar() {
                 {query && (
                     <button
                         type="button"
+                        aria-label="Clear search"
                         onClick={() => { setQuery(''); setSuggestions([]); }}
                         className="absolute right-4 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-white/10 text-zinc-400 hover:text-white transition-colors"
                     >

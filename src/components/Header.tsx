@@ -61,6 +61,7 @@ export function Header() {
                         onClick={() => openConnect()}
                         className="hidden md:flex p-2.5 rounded-full text-zinc-400 hover:bg-white/10 hover:text-white transition-all duration-300 group"
                         title="Friend Activity"
+                        aria-label="Friend Activity"
                     >
                         <Users size={20} className="group-hover:scale-110 transition-transform group-hover:text-[#8B5CF6] group-hover:drop-shadow-[0_0_5px_rgba(139,92,246,0.5)]" />
                     </button>
@@ -79,6 +80,7 @@ export function Header() {
                                 <button
                                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                                     className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-transparent hover:ring-[#8B5CF6]/50 transition-all duration-300 transform hover:scale-105 shadow-lg"
+                                    aria-label="Toggle profile menu"
                                 >
                                     {userImage ? (
                                         <img

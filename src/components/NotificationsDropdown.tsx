@@ -124,8 +124,11 @@ export function NotificationsDropdown() {
         <div className="relative" ref={dropdownRef}>
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="p-2.5 rounded-full text-zinc-400 hover:bg-white/10 hover:text-white transition-all duration-300 relative group"
+                className="p-2.5 rounded-full text-zinc-400 hover:bg-white/10 hover:text-white transition-all duration-300 relative group focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
                 title="Notifications"
+                aria-label={unreadCount > 0 ? `Notifications (${unreadCount} unread)` : "Notifications"}
+                aria-expanded={isOpen}
+                aria-haspopup="true"
             >
                 <Bell size={20} className={`group-hover:scale-110 transition-transform group-hover:rotate-12 ${isOpen ? 'text-white' : ''}`} />
                 {unreadCount > 0 && (
@@ -140,7 +143,8 @@ export function NotificationsDropdown() {
                         {unreadCount > 0 && (
                             <button
                                 onClick={markAllRead}
-                                className="text-[10px] text-primary hover:underline font-bold uppercase tracking-wider"
+                                className="text-[10px] text-primary hover:underline font-bold uppercase tracking-wider focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none rounded"
+                                aria-label="Mark all notifications as read"
                             >
                                 Mark all read
                             </button>
@@ -165,7 +169,8 @@ export function NotificationsDropdown() {
                                             e.stopPropagation();
                                             deleteNotification(notification.id);
                                         }}
-                                        className="absolute top-4 right-4 opacity-0 group-hover/item:opacity-100 p-1 hover:bg-white/10 rounded-md text-zinc-500 hover:text-white transition-all"
+                                        className="absolute top-4 right-4 opacity-0 group-hover/item:opacity-100 p-1 hover:bg-white/10 rounded-md text-zinc-500 hover:text-white transition-all focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none"
+                                        aria-label="Delete notification"
                                     >
                                         <X size={14} />
                                     </button>
@@ -183,7 +188,8 @@ export function NotificationsDropdown() {
                                                             e.stopPropagation();
                                                             handleAction(notification.id, 'ACCEPT', notification);
                                                         }}
-                                                        className="flex-1 bg-primary hover:bg-primary/80 text-white text-xs font-bold py-1.5 rounded-lg transition-colors flex items-center justify-center gap-1"
+                                                        className="flex-1 bg-primary hover:bg-primary/80 text-white text-xs font-bold py-1.5 rounded-lg transition-colors flex items-center justify-center gap-1 focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none"
+                                                        aria-label="Accept friend request"
                                                     >
                                                         <Check size={12} /> Accept
                                                     </button>
@@ -192,7 +198,8 @@ export function NotificationsDropdown() {
                                                             e.stopPropagation();
                                                             handleAction(notification.id, 'REJECT', notification);
                                                         }}
-                                                        className="flex-1 bg-white/10 hover:bg-white/20 text-white text-xs font-bold py-1.5 rounded-lg transition-colors flex items-center justify-center gap-1"
+                                                        className="flex-1 bg-white/10 hover:bg-white/20 text-white text-xs font-bold py-1.5 rounded-lg transition-colors flex items-center justify-center gap-1 focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none"
+                                                        aria-label="Decline friend request"
                                                     >
                                                         <X size={12} /> Decline
                                                     </button>

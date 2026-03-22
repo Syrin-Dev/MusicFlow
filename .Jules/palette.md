@@ -1,0 +1,3 @@
+## 2026-03-22 - Missing ARIA Labels on Icon-Only Control Buttons in PlayerBar
+**Learning:** The core playback control buttons (Play, Pause, Skip, Repeat, Shuffle, Volume) and the mobile mini player container in the `PlayerBar` component lacked `aria-label`s and proper focus indicators, making the primary interaction point of the music app largely inaccessible to screen reader users and difficult for keyboard users.
+**Action:** When adding or modifying interactive media controls (especially those relying entirely on icons like Material Icons), always explicitly add an `aria-label` describing the action or current state, and include `focus-visible` utility classes to ensure keyboard focus is evident.

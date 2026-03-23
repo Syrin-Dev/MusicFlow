@@ -108,7 +108,7 @@ export function PlayerBar() {
                                 >
                                     {currentTrack.title}
                                 </div>
-                                <button onClick={() => toggleLike(currentTrack)}>
+                                <button aria-label={liked ? "Unlike" : "Like"} onClick={() => toggleLike(currentTrack)}>
                                     <span className={`material-icons-round text-xs cursor-pointer hover:text-white ${liked ? 'text-[#8B5CF6]' : 'text-gray-400'}`}>favorite</span>
                                 </button>
                             </div>
@@ -124,13 +124,13 @@ export function PlayerBar() {
                     {/* Center: Controls & Progress */}
                     <div className="flex flex-col items-center flex-1 max-w-2xl px-8">
                         <div className="flex items-center gap-6 mb-1">
-                            <button
+                            <button aria-label="Toggle shuffle"
                                 className={`transition ${shuffle ? 'text-[#8B5CF6] drop-shadow-[0_0_5px_rgba(139,92,246,0.5)]' : 'text-gray-400 hover:text-white'}`}
                                 onClick={toggleShuffle}
                             >
                                 <span className="material-icons-round text-xl">shuffle</span>
                             </button>
-                            <button
+                            <button aria-label="Previous track"
                                 className="text-gray-300 hover:text-white transition"
                                 onClick={playPrevious}
                             >
@@ -138,7 +138,7 @@ export function PlayerBar() {
                             </button>
 
                             {/* Primary Play Button - Vivid Purple */}
-                            <button
+                            <button aria-label={isPlaying ? "Pause" : "Play"}
                                 className="w-10 h-10 bg-[#8B5CF6] rounded-full flex items-center justify-center text-white hover:scale-105 transition shadow-[0_0_15px_rgba(139,92,246,0.4)]"
                                 onClick={togglePlay}
                                 disabled={isLoading}
@@ -150,13 +150,13 @@ export function PlayerBar() {
                                 )}
                             </button>
 
-                            <button
+                            <button aria-label="Next track"
                                 className="text-gray-300 hover:text-white transition"
                                 onClick={playNext}
                             >
                                 <span className="material-icons-round text-2xl">skip_next</span>
                             </button>
-                            <button
+                            <button aria-label={repeat === "off" ? "Enable repeat" : repeat === "one" ? "Disable repeat" : "Repeat one"}
                                 className={`transition ${repeat !== 'off' ? 'text-[#8B5CF6] drop-shadow-[0_0_5px_rgba(139,92,246,0.5)]' : 'text-gray-400 hover:text-white'}`}
                                 onClick={toggleRepeat}
                             >
@@ -186,7 +186,7 @@ export function PlayerBar() {
 
                     {/* Right: Actions */}
                     <div className="flex items-center justify-end gap-3 w-1/4 min-w-[200px]">
-                        <button
+                        <button aria-label="Share track"
                             className="text-gray-400 hover:text-[#8B5CF6] transition p-2 hover:bg-white/5 rounded-full"
                             onClick={() => openConnect(currentTrack)}
                             title="Share to Friend"
@@ -197,7 +197,7 @@ export function PlayerBar() {
                         <AddToPlaylist track={currentTrack} />
 
                         <div className="flex items-center gap-2 group w-24">
-                            <button onClick={() => setVolume(volume === 0 ? 100 : 0)}>
+                            <button aria-label={volume === 0 ? "Unmute" : "Mute"} onClick={() => setVolume(volume === 0 ? 100 : 0)}>
                                 <span className="material-icons-round text-gray-400 text-xl hover:text-white">
                                     {volume === 0 ? 'volume_off' : volume < 50 ? 'volume_down' : 'volume_up'}
                                 </span>
@@ -218,7 +218,7 @@ export function PlayerBar() {
                             </div>
                         </div>
 
-                        <button
+                        <button aria-label="Expand player"
                             className="text-gray-400 hover:text-white transition ml-2"
                             onClick={togglePlayerExpansion}
                             title="Expand"
@@ -258,7 +258,7 @@ export function PlayerBar() {
                     </div>
 
                     <div className="flex items-center gap-1">
-                        <button
+                        <button aria-label="Share track"
                             className="p-2 text-zinc-400 hover:text-white"
                             onClick={(e) => {
                                 e.stopPropagation();
@@ -267,7 +267,7 @@ export function PlayerBar() {
                         >
                             <span className="material-icons-round text-xl">send</span>
                         </button>
-                        <button
+                        <button aria-label={isPlaying ? "Pause" : "Play"}
                             className="w-10 h-10 flex items-center justify-center text-white"
                             onClick={(e) => {
                                 e.stopPropagation();

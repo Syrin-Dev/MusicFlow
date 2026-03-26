@@ -132,7 +132,7 @@ export async function GET() {
 
         // Calculate listening patterns
         const hourlyDistribution = new Array(24).fill(0);
-        recentEvents.forEach(event => {
+        recentEvents.forEach((event: any) => {
             hourlyDistribution[event.hourOfDay]++;
         });
 

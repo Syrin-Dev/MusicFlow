@@ -105,18 +105,20 @@ export function RecommendedGrid() {
                 </div>
                 <div className="flex gap-2">
                     <button
+                        aria-label="Previous recommendations"
                         onClick={handlePrevious}
                         disabled={loading || historyStack.length === 0}
-                        className="w-9 h-9 rounded-full border border-white/10 flex items-center justify-center hover:bg-white/10 text-gray-300 hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                        className="w-9 h-9 rounded-full border border-white/10 flex items-center justify-center hover:bg-white/10 text-gray-300 hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                     >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                         </svg>
                     </button>
                     <button
+                        aria-label="Next recommendations"
                         onClick={handleNext}
                         disabled={loading}
-                        className="w-9 h-9 rounded-full bg-[#8B5CF6] flex items-center justify-center hover:bg-violet-600 text-white transition-colors disabled:opacity-50"
+                        className="w-9 h-9 rounded-full bg-[#8B5CF6] flex items-center justify-center hover:bg-violet-600 text-white transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                     >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -138,8 +140,17 @@ export function RecommendedGrid() {
                     tracks.map((track, index) => (
                         <div
                             key={track.id}
-                            className="group cursor-pointer"
+                            role="button"
+                            tabIndex={0}
+                            aria-label={`Play ${track.title} by ${track.artist}`}
+                            className="group cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8B5CF6] rounded-2xl p-2 -m-2"
                             onClick={() => handlePlayTrack(track, index)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                    e.preventDefault();
+                                    handlePlayTrack(track, index);
+                                }
+                            }}
                         >
                             <div className="relative aspect-square rounded-2xl overflow-hidden mb-3 bg-[#18181b] shadow-lg ring-1 ring-white/5">
                                 <img
@@ -148,18 +159,20 @@ export function RecommendedGrid() {
                                     onError={(e) => handleImageError(e, track)}
                                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 opacity-90 group-hover:opacity-100"
                                 />
-                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-3 backdrop-blur-[2px]">
+                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-3 backdrop-blur-[2px]">
                                     <button
+                                        aria-label={`Play ${track.title}`}
                                         onClick={(e) => { e.stopPropagation(); handlePlayTrack(track, index); }}
-                                        className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white shadow-lg translate-y-4 group-hover:translate-y-0 transition-transform duration-300 hover:scale-110 active:scale-95"
+                                        className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white shadow-lg translate-y-4 group-hover:translate-y-0 focus-visible:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white transition-transform duration-300 hover:scale-110 active:scale-95"
                                     >
                                         <svg className="w-6 h-6 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
                                             <path d="M8 5v14l11-7L8 5z" />
                                         </svg>
                                     </button>
                                     <button
+                                        aria-label={`Share ${track.title} with friends`}
                                         onClick={(e) => { e.stopPropagation(); openConnect(track); }}
-                                        className="w-12 h-12 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white shadow-lg translate-y-4 group-hover:translate-y-0 transition-transform duration-300 delay-75 hover:bg-white/20 hover:scale-110 active:scale-95"
+                                        className="w-12 h-12 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white shadow-lg translate-y-4 group-hover:translate-y-0 focus-visible:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white transition-transform duration-300 delay-75 hover:bg-white/20 hover:scale-110 active:scale-95"
                                         title="Share with friends"
                                     >
                                         <span className="material-icons-round text-xl">share</span>

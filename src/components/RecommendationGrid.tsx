@@ -20,17 +20,24 @@ function RecommendationGridContent() {
     const title = searchParams.get('q') ? `Results for "${searchParams.get('q')}"` : 'Recommended for You';
 
     useEffect(() => {
-        setResults([]); // Clear previous results
+        let isMounted = true;
+
         fetch(`/api/search?q=${encodeURIComponent(query)}`)
             .then(res => res.json())
             .then(data => {
-                if (Array.isArray(data)) {
-                    setResults(data);
-                } else {
-                    console.error("API response is not an array:", data);
+                if (isMounted) {
+                    if (Array.isArray(data)) {
+                        setResults(data);
+                    } else {
+                        console.error("API response is not an array:", data);
+                    }
                 }
             })
             .catch(err => console.error("Fetch error:", err));
+
+        return () => {
+            isMounted = false;
+        };
     }, [query]);
 
     return (
@@ -40,8 +47,17 @@ function RecommendationGridContent() {
                 {results.map((track) => (
                     <div
                         key={track.id}
-                        className="group relative bg-[#18181b] p-4 rounded-xl hover:bg-[#27272a] transition-colors cursor-pointer"
+                        role="button"
+                        tabIndex={0}
+                        aria-label={`Play ${track.title} by ${track.artist}`}
+                        className="group relative bg-[#18181b] p-4 rounded-xl hover:bg-[#27272a] transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8B5CF6]"
                         onClick={() => playTrack(track)}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                playTrack(track);
+                            }
+                        }}
                     >
                         <div className="relative aspect-square mb-4 overflow-hidden rounded-lg shadow-lg">
                             <img

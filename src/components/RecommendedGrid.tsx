@@ -138,8 +138,17 @@ export function RecommendedGrid() {
                     tracks.map((track, index) => (
                         <div
                             key={track.id}
-                            className="group cursor-pointer"
+                            role="button"
+                            tabIndex={0}
+                            aria-label={`Play ${track.title} by ${track.artist}`}
+                            className="group cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8B5CF6] rounded-2xl p-2 -m-2"
                             onClick={() => handlePlayTrack(track, index)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                    e.preventDefault();
+                                    handlePlayTrack(track, index);
+                                }
+                            }}
                         >
                             <div className="relative aspect-square rounded-2xl overflow-hidden mb-3 bg-[#18181b] shadow-lg ring-1 ring-white/5">
                                 <img

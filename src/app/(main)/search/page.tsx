@@ -63,7 +63,7 @@ function SearchResultsContent() {
 
     return (
         <div className="px-8 pb-32 pt-6">
-            <h2 className="text-3xl font-bold text-white mb-6">Results for "{query}"</h2>
+            <h2 className="text-3xl font-bold text-white mb-6">Results for &quot;{query}&quot;</h2>
 
             {loading ? (
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
@@ -80,8 +80,17 @@ function SearchResultsContent() {
                     {tracks.map((track, index) => (
                         <div
                             key={track.id}
-                            className="group cursor-pointer"
+                            role="button"
+                            tabIndex={0}
+                            aria-label={`Play ${track.title} by ${track.artist}`}
+                            className="group cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8B5CF6] rounded-2xl p-2 -m-2"
                             onClick={() => handlePlay(track, index)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                    e.preventDefault();
+                                    handlePlay(track, index);
+                                }
+                            }}
                         >
                             <div className="relative aspect-square rounded-2xl overflow-hidden mb-3 bg-[#18181b] shadow-lg ring-1 ring-white/5">
                                 <img
@@ -105,7 +114,7 @@ function SearchResultsContent() {
                 </div>
             ) : (
                 <div className="text-center py-20">
-                    <p className="text-xl text-gray-400">No results found for "{query}"</p>
+                    <p className="text-xl text-gray-400">No results found for &quot;{query}&quot;</p>
                     <p className="text-sm text-gray-500 mt-2">Try searching for something else.</p>
                 </div>
             )}

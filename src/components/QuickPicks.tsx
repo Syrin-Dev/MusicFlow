@@ -38,7 +38,7 @@ export function QuickPicks() {
         }
 
         const query1 = queries[Math.floor(Math.random() * queries.length)];
-        let query2 = queries[Math.floor(Math.random() * queries.length)];
+        const query2 = queries[Math.floor(Math.random() * queries.length)];
 
         try {
             const [res1, res2] = await Promise.all([
@@ -80,7 +80,7 @@ export function QuickPicks() {
             const data1 = await res1.json();
             const data2 = await res2.json();
 
-            let newTracks: Track[] = [];
+            const newTracks: Track[] = [];
             if (Array.isArray(data1)) newTracks.push(...data1.slice(0, 8));
             if (Array.isArray(data2)) newTracks.push(...data2.slice(0, 8));
 

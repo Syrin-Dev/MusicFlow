@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Bell, Check, X } from 'lucide-react';
+import { Bell, Check, X, Loader2 } from 'lucide-react';
 
 interface Notification {
     id: string;
@@ -18,6 +18,7 @@ export function NotificationsDropdown() {
     const [isOpen, setIsOpen] = useState(false);
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
+    const [loadingAction, setLoadingAction] = useState<{ id: string, action: 'ACCEPT' | 'REJECT' | 'DELETE' } | null>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     const fetchNotifications = async () => {
@@ -66,12 +67,15 @@ export function NotificationsDropdown() {
     };
 
     const deleteNotification = async (id: string) => {
+        setLoadingAction({ id, action: 'DELETE' });
         try {
             await fetch(`/api/notifications?id=${id}`, { method: 'DELETE' });
             setNotifications(prev => prev.filter(n => n.id !== id));
             setUnreadCount(prev => notifications.find(n => n.id === id)?.read ? prev : Math.max(0, prev - 1));
         } catch (e) {
             console.error(e);
+        } finally {
+            setLoadingAction(null);
         }
     };
 
@@ -97,6 +101,7 @@ export function NotificationsDropdown() {
 
         if (!requesterId) return;
 
+        setLoadingAction({ id: notificationId, action });
         try {
             await fetch('/api/friends/respond', {
                 method: 'POST',
@@ -105,9 +110,11 @@ export function NotificationsDropdown() {
             });
 
             // Remove notification after action
-            deleteNotification(notificationId);
+            await deleteNotification(notificationId);
         } catch (e) {
             console.error(e);
+        } finally {
+            setLoadingAction(null);
         }
     };
 
@@ -124,10 +131,12 @@ export function NotificationsDropdown() {
         <div className="relative" ref={dropdownRef}>
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="p-2.5 rounded-full text-zinc-400 hover:bg-white/10 hover:text-white transition-all duration-300 relative group"
+                className="p-2.5 rounded-full text-zinc-400 hover:bg-white/10 hover:text-white transition-all duration-300 relative group focus-visible:ring-2 focus-visible:ring-primary outline-none"
                 title="Notifications"
+                aria-label="Notifications"
+                aria-expanded={isOpen}
             >
-                <Bell size={20} className={`group-hover:scale-110 transition-transform group-hover:rotate-12 ${isOpen ? 'text-white' : ''}`} />
+                <Bell size={20} className={`group-hover:scale-110 transition-transform group-hover:rotate-12 ${isOpen ? 'text-white' : ''}`} aria-hidden="true" />
                 {unreadCount > 0 && (
                     <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-violet-500 rounded-full ring-2 ring-[#0A0A0B] animate-pulse"></span>
                 )}
@@ -165,9 +174,15 @@ export function NotificationsDropdown() {
                                             e.stopPropagation();
                                             deleteNotification(notification.id);
                                         }}
-                                        className="absolute top-4 right-4 opacity-0 group-hover/item:opacity-100 p-1 hover:bg-white/10 rounded-md text-zinc-500 hover:text-white transition-all"
+                                        disabled={loadingAction?.id === notification.id}
+                                        aria-label="Delete notification"
+                                        className="absolute top-4 right-4 opacity-0 group-hover/item:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-primary p-1 hover:bg-white/10 rounded-md text-zinc-500 hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed outline-none"
                                     >
-                                        <X size={14} />
+                                        {loadingAction?.id === notification.id && loadingAction?.action === 'DELETE' ? (
+                                            <Loader2 size={14} className="animate-spin" aria-hidden="true" />
+                                        ) : (
+                                            <X size={14} aria-hidden="true" />
+                                        )}
                                     </button>
 
                                     <div className="flex gap-3">
@@ -183,18 +198,28 @@ export function NotificationsDropdown() {
                                                             e.stopPropagation();
                                                             handleAction(notification.id, 'ACCEPT', notification);
                                                         }}
-                                                        className="flex-1 bg-primary hover:bg-primary/80 text-white text-xs font-bold py-1.5 rounded-lg transition-colors flex items-center justify-center gap-1"
+                                                        disabled={loadingAction?.id === notification.id}
+                                                        className="flex-1 bg-primary hover:bg-primary/80 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold py-1.5 rounded-lg transition-colors flex items-center justify-center gap-1 focus-visible:ring-2 focus-visible:ring-white outline-none"
                                                     >
-                                                        <Check size={12} /> Accept
+                                                        {loadingAction?.id === notification.id && loadingAction?.action === 'ACCEPT' ? (
+                                                            <Loader2 size={12} className="animate-spin" aria-hidden="true" />
+                                                        ) : (
+                                                            <Check size={12} aria-hidden="true" />
+                                                        )} Accept
                                                     </button>
                                                     <button
                                                         onClick={(e) => {
                                                             e.stopPropagation();
                                                             handleAction(notification.id, 'REJECT', notification);
                                                         }}
-                                                        className="flex-1 bg-white/10 hover:bg-white/20 text-white text-xs font-bold py-1.5 rounded-lg transition-colors flex items-center justify-center gap-1"
+                                                        disabled={loadingAction?.id === notification.id}
+                                                        className="flex-1 bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold py-1.5 rounded-lg transition-colors flex items-center justify-center gap-1 focus-visible:ring-2 focus-visible:ring-white outline-none"
                                                     >
-                                                        <X size={12} /> Decline
+                                                        {loadingAction?.id === notification.id && loadingAction?.action === 'REJECT' ? (
+                                                            <Loader2 size={12} className="animate-spin" aria-hidden="true" />
+                                                        ) : (
+                                                            <X size={12} aria-hidden="true" />
+                                                        )} Decline
                                                     </button>
                                                 </div>
                                             )}

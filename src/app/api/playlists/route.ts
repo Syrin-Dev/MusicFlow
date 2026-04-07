@@ -6,7 +6,7 @@ import { authOptions } from '@/lib/auth';
 // Helper to get user email or dev fallback
 async function getUserEmail() {
     const session = await getServerSession(authOptions);
-    let email = session?.user?.email;
+    const email = session?.user?.email;
 
     if (!email && process.env.NODE_ENV !== 'production') {
         // Force create/get dev user

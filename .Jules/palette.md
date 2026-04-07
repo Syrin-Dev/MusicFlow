@@ -1,0 +1,3 @@
+## 2024-04-07 - Accessible Custom Components
+**Learning:** Custom interactive elements like custom sliders (divs mimicking input ranges) and clickable track wrappers need comprehensive ARIA roles, tabIndex, explicit focus styles (`focus-visible`), and robust keyboard event handlers (`onKeyDown` for Space/Enter/Arrows) to be genuinely accessible, as they lack the native semantics of `<input>` and `<button>`.
+**Action:** Always apply `role="slider"`, ARIA value attributes, `tabIndex={0}`, and arrow key handlers to custom seek bars. Apply `role="button"`, `tabIndex={0}`, and Space/Enter handlers to clickable container `div`s.

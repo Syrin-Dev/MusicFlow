@@ -205,6 +205,17 @@ export function ExpandedPlayer() {
         seekTo(percentage * duration);
     };
 
+    const handleSeekKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+        if (!duration) return;
+        if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            seekTo(Math.min(duration, currentTime + 5));
+        } else if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            seekTo(Math.max(0, currentTime - 5));
+        }
+    };
+
     const navigateToArtist = () => {
         togglePlayerExpansion();
         router.push(`/search?q=${encodeURIComponent(currentTrack.artist)}`);
@@ -328,7 +339,18 @@ export function ExpandedPlayer() {
                 {/* Mobile Scrubber & Controls */}
                 <div className="block md:hidden w-full space-y-6 mb-8 px-2">
                     {/* Scrubber */}
-                    <div className="group relative w-full h-4 flex items-center" onClick={handleSeek}>
+                    <div
+                        role="slider"
+                        tabIndex={0}
+                        aria-label="Seek progress"
+                        aria-valuemin={0}
+                        aria-valuemax={duration || 100}
+                        aria-valuenow={currentTime}
+                        aria-valuetext={formatTime(currentTime)}
+                        className="group relative w-full h-4 flex items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-black rounded"
+                        onClick={handleSeek}
+                        onKeyDown={handleSeekKeyDown}
+                    >
                         <div className="w-full h-1 bg-white/20 rounded-full overflow-hidden">
                             <div className="h-full bg-primary" style={{ width: `${progress}%` }}></div>
                         </div>
@@ -556,7 +578,18 @@ export function ExpandedPlayer() {
             {/* Desktop Footer (Hidden on Mobile, as Mobile has inline controls) */}
             <footer className={`hidden md:flex relative z-[70] h-28 flex-shrink-0 border-t border-white/10 px-12 flex-col justify-center transition-colors duration-500 ${videoMode ? 'bg-[#0A0A0B]' : 'bg-[#0A0A0B]/80 backdrop-blur-md'}`}>
                 {/* Scrubber */}
-                <div className="absolute top-0 left-0 right-0 h-1.5 w-full bg-white/10 cursor-pointer group" onClick={handleSeek}>
+                <div
+                    role="slider"
+                    tabIndex={0}
+                    aria-label="Seek progress"
+                    aria-valuemin={0}
+                    aria-valuemax={duration || 100}
+                    aria-valuenow={currentTime}
+                    aria-valuetext={formatTime(currentTime)}
+                    className="absolute top-0 left-0 right-0 h-1.5 w-full bg-white/10 cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+                    onClick={handleSeek}
+                    onKeyDown={handleSeekKeyDown}
+                >
                     <div className="absolute top-0 left-0 h-full bg-[#8B5CF6] shadow-[0_0_15px_rgba(139,92,246,0.6)]" style={{ width: `${progress}%` }}>
                         <div className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-lg scale-0 group-hover:scale-100 transition-transform"></div>
                     </div>

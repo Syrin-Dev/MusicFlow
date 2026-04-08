@@ -53,6 +53,17 @@ export function PlayerBar() {
         seekTo(percentage * duration);
     };
 
+    const handleSeekKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+        if (!duration) return;
+        if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            seekTo(Math.min(duration, currentTime + 5));
+        } else if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            seekTo(Math.max(0, currentTime - 5));
+        }
+    };
+
     const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setVolume(Number(e.target.value));
     };
@@ -127,12 +138,14 @@ export function PlayerBar() {
                             <button
                                 className={`transition ${shuffle ? 'text-[#8B5CF6] drop-shadow-[0_0_5px_rgba(139,92,246,0.5)]' : 'text-gray-400 hover:text-white'}`}
                                 onClick={toggleShuffle}
+                                aria-label={shuffle ? 'Disable shuffle' : 'Enable shuffle'}
                             >
                                 <span className="material-icons-round text-xl">shuffle</span>
                             </button>
                             <button
                                 className="text-gray-300 hover:text-white transition"
                                 onClick={playPrevious}
+                                aria-label="Play previous track"
                             >
                                 <span className="material-icons-round text-2xl">skip_previous</span>
                             </button>
@@ -142,6 +155,7 @@ export function PlayerBar() {
                                 className="w-10 h-10 bg-[#8B5CF6] rounded-full flex items-center justify-center text-white hover:scale-105 transition shadow-[0_0_15px_rgba(139,92,246,0.4)]"
                                 onClick={togglePlay}
                                 disabled={isLoading}
+                                aria-label={isLoading ? 'Loading...' : (isPlaying ? 'Pause' : 'Play')}
                             >
                                 {isLoading ? (
                                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -153,12 +167,14 @@ export function PlayerBar() {
                             <button
                                 className="text-gray-300 hover:text-white transition"
                                 onClick={playNext}
+                                aria-label="Play next track"
                             >
                                 <span className="material-icons-round text-2xl">skip_next</span>
                             </button>
                             <button
                                 className={`transition ${repeat !== 'off' ? 'text-[#8B5CF6] drop-shadow-[0_0_5px_rgba(139,92,246,0.5)]' : 'text-gray-400 hover:text-white'}`}
                                 onClick={toggleRepeat}
+                                aria-label={repeat === 'one' ? 'Disable repeat one' : (repeat === 'all' ? 'Disable repeat all' : 'Enable repeat')}
                             >
                                 <span className="material-icons-round text-xl">{repeat === 'one' ? 'repeat_one' : 'repeat'}</span>
                             </button>
@@ -167,8 +183,16 @@ export function PlayerBar() {
                         <div className="w-full flex items-center gap-3 text-xs font-medium text-gray-400">
                             <span>{formatTime(currentTime)}</span>
                             <div
-                                className="flex-1 h-1 bg-white/10 rounded-full cursor-pointer group relative overflow-hidden"
+                                role="slider"
+                                tabIndex={0}
+                                aria-label="Seek progress"
+                                aria-valuemin={0}
+                                aria-valuemax={duration || 100}
+                                aria-valuenow={currentTime}
+                                aria-valuetext={formatTime(currentTime)}
+                                className="flex-1 h-1 bg-white/10 rounded-full cursor-pointer group relative overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                                 onClick={handleSeek}
+                                onKeyDown={handleSeekKeyDown}
                             >
                                 {/* Progress bar with Purple Glow */}
                                 <div
@@ -233,8 +257,17 @@ export function PlayerBar() {
             <div className="flex md:hidden px-2 pb-[calc(70px+16px+12px+env(safe-area-inset-bottom))] w-full">
                 {/* Glassmorphism update: Added backdrop-blur-md and bg-black/20 */}
                 <div
-                    className="backdrop-blur-md bg-black/20 rounded-xl p-2 flex items-center justify-between shadow-2xl pointer-events-auto border border-white/5 w-full relative overflow-hidden"
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Expand player. Currently playing ${currentTrack.title} by ${currentTrack.artist}`}
+                    className="backdrop-blur-md bg-black/20 rounded-xl p-2 flex items-center justify-between shadow-2xl pointer-events-auto border border-white/5 w-full relative overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8B5CF6]"
                     onClick={togglePlayerExpansion}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            togglePlayerExpansion();
+                        }
+                    }}
                 >
                     {/* Progress line at top */}
                     <div className="absolute top-0 left-0 right-0 h-[2px] bg-white/5">

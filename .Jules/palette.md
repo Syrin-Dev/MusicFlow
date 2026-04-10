@@ -1,0 +1,2 @@
+
+## 2025-05-18 - PlayerBar dynamic aria-labels\n**Learning:** Icon-only buttons with changing states (like Play/Pause, Mute/Unmute, Repeat modes) need dynamic `aria-label` attributes that accurately reflect their current state to screen reader users, rather than static generic labels. This improves accessibility significantly.\n**Action:** Always verify that interactive icon components have either text labels or dynamic `aria-label` properties that update based on their state.

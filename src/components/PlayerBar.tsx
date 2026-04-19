@@ -53,6 +53,18 @@ export function PlayerBar() {
         seekTo(percentage * duration);
     };
 
+    const handleSeekKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+        if (!duration) return;
+        const SEEK_STEP = 5; // 5 seconds
+        if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            seekTo(Math.min(duration, currentTime + SEEK_STEP));
+        } else if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            seekTo(Math.max(0, currentTime - SEEK_STEP));
+        }
+    };
+
     const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setVolume(Number(e.target.value));
     };
@@ -133,6 +145,7 @@ export function PlayerBar() {
                             <button
                                 className="text-gray-300 hover:text-white transition"
                                 onClick={playPrevious}
+                                aria-label="Previous track"
                             >
                                 <span className="material-icons-round text-2xl">skip_previous</span>
                             </button>
@@ -142,6 +155,7 @@ export function PlayerBar() {
                                 className="w-10 h-10 bg-[#8B5CF6] rounded-full flex items-center justify-center text-white hover:scale-105 transition shadow-[0_0_15px_rgba(139,92,246,0.4)]"
                                 onClick={togglePlay}
                                 disabled={isLoading}
+                                aria-label={isPlaying ? 'Pause' : 'Play'}
                             >
                                 {isLoading ? (
                                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -153,6 +167,7 @@ export function PlayerBar() {
                             <button
                                 className="text-gray-300 hover:text-white transition"
                                 onClick={playNext}
+                                aria-label="Next track"
                             >
                                 <span className="material-icons-round text-2xl">skip_next</span>
                             </button>
@@ -167,8 +182,15 @@ export function PlayerBar() {
                         <div className="w-full flex items-center gap-3 text-xs font-medium text-gray-400">
                             <span>{formatTime(currentTime)}</span>
                             <div
-                                className="flex-1 h-1 bg-white/10 rounded-full cursor-pointer group relative overflow-hidden"
+                                role="slider"
+                                tabIndex={0}
+                                aria-valuemin={0}
+                                aria-valuemax={duration || 100}
+                                aria-valuenow={currentTime}
+                                className="flex-1 h-1 bg-white/10 rounded-full cursor-pointer group relative overflow-hidden focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A0B]"
                                 onClick={handleSeek}
+                                onKeyDown={handleSeekKeyDown}
+                                aria-label="Seek track"
                             >
                                 {/* Progress bar with Purple Glow */}
                                 <div

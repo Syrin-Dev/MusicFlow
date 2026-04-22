@@ -18,6 +18,7 @@ export function NotificationsDropdown() {
     const [isOpen, setIsOpen] = useState(false);
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
+    const [actionLoading, setActionLoading] = useState<{ id: string; action: string } | null>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     const fetchNotifications = async () => {
@@ -97,6 +98,7 @@ export function NotificationsDropdown() {
 
         if (!requesterId) return;
 
+        setActionLoading({ id: notificationId, action });
         try {
             await fetch('/api/friends/respond', {
                 method: 'POST',
@@ -108,6 +110,8 @@ export function NotificationsDropdown() {
             deleteNotification(notificationId);
         } catch (e) {
             console.error(e);
+        } finally {
+            setActionLoading(null);
         }
     };
 
@@ -126,6 +130,9 @@ export function NotificationsDropdown() {
                 onClick={() => setIsOpen(!isOpen)}
                 className="p-2.5 rounded-full text-zinc-400 hover:bg-white/10 hover:text-white transition-all duration-300 relative group"
                 title="Notifications"
+                aria-label="Notifications"
+                aria-expanded={isOpen}
+                aria-haspopup="true"
             >
                 <Bell size={20} className={`group-hover:scale-110 transition-transform group-hover:rotate-12 ${isOpen ? 'text-white' : ''}`} />
                 {unreadCount > 0 && (
@@ -165,7 +172,8 @@ export function NotificationsDropdown() {
                                             e.stopPropagation();
                                             deleteNotification(notification.id);
                                         }}
-                                        className="absolute top-4 right-4 opacity-0 group-hover/item:opacity-100 p-1 hover:bg-white/10 rounded-md text-zinc-500 hover:text-white transition-all"
+                                        className="absolute top-4 right-4 opacity-0 group-hover/item:opacity-100 focus-visible:opacity-100 p-1 hover:bg-white/10 rounded-md text-zinc-500 hover:text-white transition-all focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none"
+                                        aria-label="Delete notification"
                                     >
                                         <X size={14} />
                                     </button>
@@ -183,18 +191,30 @@ export function NotificationsDropdown() {
                                                             e.stopPropagation();
                                                             handleAction(notification.id, 'ACCEPT', notification);
                                                         }}
-                                                        className="flex-1 bg-primary hover:bg-primary/80 text-white text-xs font-bold py-1.5 rounded-lg transition-colors flex items-center justify-center gap-1"
+                                                        disabled={actionLoading !== null}
+                                                        className="flex-1 bg-primary hover:bg-primary/80 text-white text-xs font-bold py-1.5 rounded-lg transition-colors flex items-center justify-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
                                                     >
-                                                        <Check size={12} /> Accept
+                                                        {actionLoading?.id === notification.id && actionLoading?.action === 'ACCEPT' ? (
+                                                            <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                                        ) : (
+                                                            <Check size={12} />
+                                                        )}
+                                                        Accept
                                                     </button>
                                                     <button
                                                         onClick={(e) => {
                                                             e.stopPropagation();
                                                             handleAction(notification.id, 'REJECT', notification);
                                                         }}
-                                                        className="flex-1 bg-white/10 hover:bg-white/20 text-white text-xs font-bold py-1.5 rounded-lg transition-colors flex items-center justify-center gap-1"
+                                                        disabled={actionLoading !== null}
+                                                        className="flex-1 bg-white/10 hover:bg-white/20 text-white text-xs font-bold py-1.5 rounded-lg transition-colors flex items-center justify-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
                                                     >
-                                                        <X size={12} /> Decline
+                                                        {actionLoading?.id === notification.id && actionLoading?.action === 'REJECT' ? (
+                                                            <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                                        ) : (
+                                                            <X size={12} />
+                                                        )}
+                                                        Decline
                                                     </button>
                                                 </div>
                                             )}

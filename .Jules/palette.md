@@ -1,0 +1,3 @@
+## 2024-04-26 - [Hiding Duplicate Webkit Search Clear Button]
+**Learning:** When changing `<input type="text">` to a more semantic `<input type="search">` combined with a custom clear icon/button inside a search component, WebKit-based browsers (Safari, Chrome, Edge) will inject their own native cancel 'X' button inside the input field. This leads to duplicate clear buttons being displayed simultaneously, harming UX.
+**Action:** Always append the `[&::-webkit-search-cancel-button]:hidden` utility class when using `type="search"` inside Tailwind-styled custom search components that provide their own cancel functionality.

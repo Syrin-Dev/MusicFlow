@@ -1,0 +1,3 @@
+## 2026-04-27 - [SearchBar Accessiblity]
+**Learning:** Found an accessibility issue pattern in the SearchBar component. The main search form did not include an explicit search role and lacked labels for its input. It also had duplicated clear buttons in webkit browsers since we are using a custom 'X' button alongside a standard search input, and custom buttons were not labeled explicitly.
+**Action:** Always include semantic search roles, hide duplicate browser-native clear buttons using webkit specific css extensions, and hide decorative elements using aria-hidden. Added to SearchBar component.

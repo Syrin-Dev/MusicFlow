@@ -167,8 +167,26 @@ export function PlayerBar() {
                         <div className="w-full flex items-center gap-3 text-xs font-medium text-gray-400">
                             <span>{formatTime(currentTime)}</span>
                             <div
-                                className="flex-1 h-1 bg-white/10 rounded-full cursor-pointer group relative overflow-hidden"
+                                className="flex-1 h-1 bg-white/10 rounded-full cursor-pointer group relative overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:ring-offset-2 focus-visible:ring-offset-[#121212]"
                                 onClick={handleSeek}
+                                role="slider"
+                                tabIndex={0}
+                                aria-label="Seek time"
+                                aria-valuemin={0}
+                                aria-valuemax={duration || 100}
+                                aria-valuenow={currentTime || 0}
+                                aria-valuetext={formatTime(currentTime)}
+                                onKeyDown={(e) => {
+                                    if (!duration) return;
+                                    const skipAmount = 5; // 5 seconds
+                                    if (e.key === 'ArrowRight') {
+                                        e.preventDefault();
+                                        seekTo(Math.min(currentTime + skipAmount, duration));
+                                    } else if (e.key === 'ArrowLeft') {
+                                        e.preventDefault();
+                                        seekTo(Math.max(currentTime - skipAmount, 0));
+                                    }
+                                }}
                             >
                                 {/* Progress bar with Purple Glow */}
                                 <div

@@ -1,0 +1,3 @@
+## 2026-05-01 - Adding Accessible Controls to PlayerBar
+**Learning:** Found a core pattern where interactive control components like PlayerBar lacked basic `aria-label` attributes on icon-only `<button>`s, a common barrier for assistive technologies in music apps heavily relying on icons. The dynamic state (Play/Pause, Like/Unlike, Mute/Unmute) was visually represented by icon changes but conveyed nothing to screen readers.
+**Action:** Always verify that interactive buttons relying solely on visual icons have dynamically updating `aria-label` attributes that reflect their functional state for inclusive design.

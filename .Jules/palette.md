@@ -1,0 +1,3 @@
+## 2024-06-25 - PlayerBar Accessibility Enhancements
+**Learning:** Pure icon buttons lacking labels obscure functionality for screen readers. Using `aria-label` allows dynamic context (e.g. "Pause" instead of "Play" when running). Additionally, custom interactive div components like progress/seek bars are inaccessible to keyboards without strict explicit `role`, `tabIndex`, ARIA values (`aria-valuenow`, `aria-valuemin`, `aria-valuemax`), and keyboard event handlers (`onKeyDown` for ArrowKeys).
+**Action:** When implementing pure icon buttons, include `aria-label` attributes. When implementing custom interactive sliders with divs, include ARIA slider attributes and keyboard navigation.

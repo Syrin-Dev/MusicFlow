@@ -125,12 +125,14 @@ export function PlayerBar() {
                     <div className="flex flex-col items-center flex-1 max-w-2xl px-8">
                         <div className="flex items-center gap-6 mb-1">
                             <button
+                                aria-label={shuffle ? 'Disable shuffle' : 'Enable shuffle'}
                                 className={`transition ${shuffle ? 'text-[#8B5CF6] drop-shadow-[0_0_5px_rgba(139,92,246,0.5)]' : 'text-gray-400 hover:text-white'}`}
                                 onClick={toggleShuffle}
                             >
                                 <span className="material-icons-round text-xl">shuffle</span>
                             </button>
                             <button
+                                aria-label="Previous track"
                                 className="text-gray-300 hover:text-white transition"
                                 onClick={playPrevious}
                             >
@@ -139,6 +141,7 @@ export function PlayerBar() {
 
                             {/* Primary Play Button - Vivid Purple */}
                             <button
+                                aria-label={isPlaying ? 'Pause' : 'Play'}
                                 className="w-10 h-10 bg-[#8B5CF6] rounded-full flex items-center justify-center text-white hover:scale-105 transition shadow-[0_0_15px_rgba(139,92,246,0.4)]"
                                 onClick={togglePlay}
                                 disabled={isLoading}
@@ -151,12 +154,14 @@ export function PlayerBar() {
                             </button>
 
                             <button
+                                aria-label="Next track"
                                 className="text-gray-300 hover:text-white transition"
                                 onClick={playNext}
                             >
                                 <span className="material-icons-round text-2xl">skip_next</span>
                             </button>
                             <button
+                                aria-label={repeat === 'off' ? 'Enable repeat' : repeat === 'all' ? 'Enable repeat one' : 'Disable repeat'}
                                 className={`transition ${repeat !== 'off' ? 'text-[#8B5CF6] drop-shadow-[0_0_5px_rgba(139,92,246,0.5)]' : 'text-gray-400 hover:text-white'}`}
                                 onClick={toggleRepeat}
                             >
@@ -167,8 +172,25 @@ export function PlayerBar() {
                         <div className="w-full flex items-center gap-3 text-xs font-medium text-gray-400">
                             <span>{formatTime(currentTime)}</span>
                             <div
-                                className="flex-1 h-1 bg-white/10 rounded-full cursor-pointer group relative overflow-hidden"
+                                role="slider"
+                                tabIndex={0}
+                                aria-label="Seek time"
+                                aria-valuemin={0}
+                                aria-valuemax={duration || 100}
+                                aria-valuenow={currentTime}
+                                className="flex-1 h-1 bg-white/10 rounded-full cursor-pointer group relative overflow-visible focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                                 onClick={handleSeek}
+                                onKeyDown={(e) => {
+                                    if (!duration) return;
+                                    const seekAmount = 5; // seconds
+                                    if (e.key === 'ArrowRight') {
+                                        e.preventDefault();
+                                        seekTo(Math.min(duration, currentTime + seekAmount));
+                                    } else if (e.key === 'ArrowLeft') {
+                                        e.preventDefault();
+                                        seekTo(Math.max(0, currentTime - seekAmount));
+                                    }
+                                }}
                             >
                                 {/* Progress bar with Purple Glow */}
                                 <div
@@ -197,7 +219,10 @@ export function PlayerBar() {
                         <AddToPlaylist track={currentTrack} />
 
                         <div className="flex items-center gap-2 group w-24">
-                            <button onClick={() => setVolume(volume === 0 ? 100 : 0)}>
+                            <button
+                                aria-label={volume === 0 ? 'Unmute' : 'Mute'}
+                                onClick={() => setVolume(volume === 0 ? 100 : 0)}
+                            >
                                 <span className="material-icons-round text-gray-400 text-xl hover:text-white">
                                     {volume === 0 ? 'volume_off' : volume < 50 ? 'volume_down' : 'volume_up'}
                                 </span>
@@ -207,6 +232,7 @@ export function PlayerBar() {
                                     type="range"
                                     min="0"
                                     max="100"
+                                    aria-label="Volume"
                                     value={volume}
                                     onChange={handleVolumeChange}
                                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
@@ -219,6 +245,7 @@ export function PlayerBar() {
                         </div>
 
                         <button
+                            aria-label="Expand player"
                             className="text-gray-400 hover:text-white transition ml-2"
                             onClick={togglePlayerExpansion}
                             title="Expand"
@@ -233,7 +260,16 @@ export function PlayerBar() {
             <div className="flex md:hidden px-2 pb-[calc(70px+16px+12px+env(safe-area-inset-bottom))] w-full">
                 {/* Glassmorphism update: Added backdrop-blur-md and bg-black/20 */}
                 <div
-                    className="backdrop-blur-md bg-black/20 rounded-xl p-2 flex items-center justify-between shadow-2xl pointer-events-auto border border-white/5 w-full relative overflow-hidden"
+                    role="button"
+                    tabIndex={0}
+                    aria-label="Expand player"
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            togglePlayerExpansion();
+                        }
+                    }}
+                    className="backdrop-blur-md bg-black/20 rounded-xl p-2 flex items-center justify-between shadow-2xl pointer-events-auto border border-white/5 w-full relative overflow-hidden cursor-pointer"
                     onClick={togglePlayerExpansion}
                 >
                     {/* Progress line at top */}
@@ -259,6 +295,7 @@ export function PlayerBar() {
 
                     <div className="flex items-center gap-1">
                         <button
+                            aria-label="Share to Friend"
                             className="p-2 text-zinc-400 hover:text-white"
                             onClick={(e) => {
                                 e.stopPropagation();
@@ -268,6 +305,7 @@ export function PlayerBar() {
                             <span className="material-icons-round text-xl">send</span>
                         </button>
                         <button
+                                aria-label={isPlaying ? 'Pause' : 'Play'}
                             className="w-10 h-10 flex items-center justify-center text-white"
                             onClick={(e) => {
                                 e.stopPropagation();

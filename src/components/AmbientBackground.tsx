@@ -2,7 +2,8 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useAudio } from '@/components/AudioProvider';
-import ColorThief from 'colorthief';
+import * as ColorThiefLib from 'colorthief';
+const ColorThief: any = (ColorThiefLib as any).default || ColorThiefLib;
 
 // Helper to check saturation
 function getSaturation(r: number, g: number, b: number) {

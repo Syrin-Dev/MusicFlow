@@ -65,16 +65,18 @@ export function SearchBar() {
             <form onSubmit={handleSearch} className="relative group">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 group-hover:text-white transition-colors z-10" size={20} />
                 <input
-                    type="text"
+                    type="search"
+                    aria-label="Search query"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     onFocus={() => query.length > 2 && setShowSuggestions(true)}
                     placeholder="What do you want to listen to?"
-                    className="w-full bg-white/5 border border-white/5 text-white pl-12 pr-10 py-3 rounded-full focus:outline-none focus:bg-white/10 focus:border-[#8B5CF6]/50 focus:ring-2 focus:ring-[#8B5CF6]/20 shadow-lg shadow-black/20 backdrop-blur-xl transition-all placeholder:text-zinc-500 hover:bg-white/10 hover:border-white/10"
+                    className="w-full bg-white/5 border border-white/5 text-white pl-12 pr-10 py-3 rounded-full focus:outline-none focus:bg-white/10 focus:border-[#8B5CF6]/50 focus:ring-2 focus:ring-[#8B5CF6]/20 shadow-lg shadow-black/20 backdrop-blur-xl transition-all placeholder:text-zinc-500 hover:bg-white/10 hover:border-white/10 [&::-webkit-search-cancel-button]:hidden"
                 />
                 {query && (
                     <button
                         type="button"
+                        aria-label="Clear search"
                         onClick={() => { setQuery(''); setSuggestions([]); }}
                         className="absolute right-4 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-white/10 text-zinc-400 hover:text-white transition-colors"
                     >
@@ -89,6 +91,7 @@ export function SearchBar() {
                     {suggestions.map((suggestion, index) => (
                         <button
                             key={index}
+                            aria-label={`Search for ${suggestion}`}
                             onClick={() => performSearch(suggestion)}
                             className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-white/5 transition-colors group"
                         >

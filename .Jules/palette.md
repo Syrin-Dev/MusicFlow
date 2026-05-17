@@ -1,0 +1,3 @@
+## 2024-05-17 - Added dynamic aria-labels to PlayerBar icon-only buttons
+**Learning:** Icon-only buttons in complex media players (like `PlayerBar.tsx`) often rely entirely on visual context (e.g., a "favorite" heart icon changing color, a play/pause icon toggling). This is completely opaque to screen readers. Furthermore, the state of these buttons must be reflected dynamically in the `aria-label` (e.g., `aria-label={isPlaying ? 'Pause' : 'Play'}`) rather than statically.
+**Action:** Always check interactive icon-only components for `aria-label` and ensure that if the button toggles a state, the ARIA label toggles correspondingly to describe the *action* that will occur upon the next click, not just the current state.

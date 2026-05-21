@@ -1,0 +1,3 @@
+## 2026-05-21 - Dynamic ARIA labels for icon-only audio controls
+**Learning:** Interactive audio components like PlayerBar rely almost exclusively on visual icons (Play/Pause, Shuffle, Repeat) without text labels. Standard static `aria-label` attributes are insufficient because they do not convey the current state (e.g., whether shuffle is enabled or disabled).
+**Action:** Always implement dynamic `aria-label` attributes that update reactively based on the component's state (e.g., `aria-label={isPlaying ? 'Pause' : 'Play'}`) for all interactive, icon-only UI elements to ensure accurate screen reader feedback.

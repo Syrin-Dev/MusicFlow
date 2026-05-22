@@ -1,0 +1,3 @@
+## 2024-05-18 - Interactive Element Accessibility
+**Learning:** Adding `aria-label`s to dynamically updating stateful components like play/pause and volume controls requires ensuring the label text evaluates to accurate states matching visual icons. Furthermore, unsemantic slider elements need full ARIA attributes (`role`, `aria-valuemin`, `aria-valuemax`, `aria-valuenow`) and explicit `onKeyDown` handlers for proper keyboard navigation.
+**Action:** Always implement `tabIndex={0}`, ARIA attributes, and `onKeyDown` (Arrow keys) when converting `div` elements into custom sliders, and ensure dynamic labels update on state change.

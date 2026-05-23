@@ -1,0 +1,3 @@
+## 2024-03-20 - Missing aria-labels on icon-only interactive elements in PlayerBar
+**Learning:** The application extensively uses Material Icons for controls (e.g. Play, Pause, Shuffle, Repeat) without dynamic or static text equivalents. Without these labels or dynamically updated `aria-label` properties, assistive technologies cannot correctly relay the current state or function of these buttons.
+**Action:** Ensure all icon-only buttons include descriptive `aria-label` attributes. Further, for stateful toggle buttons (like like, shuffle, repeat), dynamically update the `aria-label` and bind the active state using `aria-pressed`. This ensures users navigating with screen readers are aware of both the button's purpose and its current state.

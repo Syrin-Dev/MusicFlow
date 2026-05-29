@@ -53,6 +53,17 @@ export function PlayerBar() {
         seekTo(percentage * duration);
     };
 
+    const handleSeekKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+        if (!duration) return;
+        if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            seekTo(Math.min(duration, currentTime + 5));
+        } else if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            seekTo(Math.max(0, currentTime - 5));
+        }
+    };
+
     const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setVolume(Number(e.target.value));
     };
@@ -167,8 +178,16 @@ export function PlayerBar() {
                         <div className="w-full flex items-center gap-3 text-xs font-medium text-gray-400">
                             <span>{formatTime(currentTime)}</span>
                             <div
-                                className="flex-1 h-1 bg-white/10 rounded-full cursor-pointer group relative overflow-hidden"
+                                className="flex-1 h-1 bg-white/10 rounded-full cursor-pointer group relative overflow-hidden focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none"
                                 onClick={handleSeek}
+                                onKeyDown={handleSeekKeyDown}
+                                tabIndex={0}
+                                role="slider"
+                                aria-label="Seek time"
+                                aria-valuemin={0}
+                                aria-valuemax={duration || 100}
+                                aria-valuenow={currentTime}
+                                aria-valuetext={formatTime(currentTime)}
                             >
                                 {/* Progress bar with Purple Glow */}
                                 <div
@@ -209,7 +228,9 @@ export function PlayerBar() {
                                     max="100"
                                     value={volume}
                                     onChange={handleVolumeChange}
-                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                    aria-label="Volume"
+                                    title="Volume"
+                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none"
                                 />
                                 <div
                                     className="absolute top-0 left-0 h-full bg-white group-hover:bg-[#8B5CF6] rounded-full transition-colors"

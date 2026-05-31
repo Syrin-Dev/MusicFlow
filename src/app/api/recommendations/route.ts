@@ -111,7 +111,7 @@ async function generateCandidates(
             take: 20
         });
 
-        const topArtists = [...new Set(likedSongs.map(s => s.track?.artist || '').filter(Boolean))].slice(0, 5);
+        const topArtists = [...new Set(likedSongs.map((s: any) => s.track?.artist || '').filter(Boolean))].slice(0, 5);
 
         // Queue artist searches
         topArtists.forEach(artistName => {
@@ -157,7 +157,7 @@ async function generateCandidates(
             orderBy: { createdAt: 'desc' },
             take: 10
         });
-        const likedArtists = [...new Set(likedSongs.map(s => s.track?.artist || '').filter(Boolean))];
+        const likedArtists = [...new Set(likedSongs.map((s: any) => s.track?.artist || '').filter(Boolean))];
 
         likedArtists.slice(0, 3).forEach(artist => {
             searchPromises.push(
@@ -204,7 +204,7 @@ async function rankCandidates(
             include: { track: true }
         });
 
-        liked.forEach(l => {
+        liked.forEach((l: any) => {
             likedVideoIds.add(l.videoId);
             if (l.track?.artist) {
                 const artist = l.track.artist.toLowerCase();
@@ -220,7 +220,7 @@ async function rankCandidates(
             },
             select: { videoId: true }
         });
-        recent.forEach(r => recentlyPlayedIds.add(r.videoId));
+        recent.forEach((r: any) => recentlyPlayedIds.add(r.videoId));
     }
 
     // Context weights

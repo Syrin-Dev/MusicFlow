@@ -1,0 +1,3 @@
+## 2026-06-02 - Focus Ring Clipping in Custom Sliders
+**Learning:** Using `overflow-hidden` on a custom slider track container to mask progress fills will inadvertently clip both the slider's thumb (if it's larger than the track) and the `focus-visible` keyboard focus ring, breaking visual accessibility for keyboard users.
+**Action:** Avoid `overflow-hidden` on the outermost wrapper of interactive elements that require focus rings or overlapping interactive elements. Instead, use `overflow-hidden` only on an inner decorative container or use border-radius clipping techniques that don't affect standard CSS outlines/box-shadows.

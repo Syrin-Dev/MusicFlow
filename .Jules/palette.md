@@ -1,0 +1,3 @@
+## 2024-06-03 - [Missing ARIA labels on media controls]
+**Learning:** Found that the main `PlayerBar` and many other components have icon-only buttons (`Like`, `Shuffle`, `Previous`, `Play`, `Next`, `Repeat`, `Share`, `Volume`, `Expand`) without `aria-label`s. Also, some buttons have state (like `isPlaying`, `shuffle`, `repeat`, `liked`) that needs to be communicated via `aria-pressed`. `type="range"` input is used for volume but lacks an `aria-label`.
+**Action:** Will add `aria-label`s to all icon-only buttons in `PlayerBar.tsx` and appropriate `aria-pressed` states for toggle buttons. Also added `aria-label` to volume slider.

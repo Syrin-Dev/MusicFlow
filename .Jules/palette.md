@@ -1,0 +1,3 @@
+## 2024-05-18 - Essential ARIA labels and Focus states for Media Players
+**Learning:** Icon-only media controls (play, pause, next) heavily depend on `aria-label` and `aria-pressed` to convey meaning to screen readers. Focus styles ensure keyboard users know what they are interacting with.
+**Action:** Always add ARIA labels to icon-only buttons. Add `aria-pressed` for toggle buttons (like shuffle, repeat). Consistently use standard focus rings (`focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none`) on all interactive components. Ensure custom sliders (like seek bars) have `tabIndex={0}`, `role="slider"`, `aria-valuenow`, and keyboard event handlers.

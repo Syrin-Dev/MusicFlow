@@ -125,50 +125,75 @@ export function PlayerBar() {
                     <div className="flex flex-col items-center flex-1 max-w-2xl px-8">
                         <div className="flex items-center gap-6 mb-1">
                             <button
-                                className={`transition ${shuffle ? 'text-[#8B5CF6] drop-shadow-[0_0_5px_rgba(139,92,246,0.5)]' : 'text-gray-400 hover:text-white'}`}
+                                aria-label="Shuffle"
+                                aria-pressed={shuffle}
+                                className={`transition focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none rounded-full ${shuffle ? 'text-[#8B5CF6] drop-shadow-[0_0_5px_rgba(139,92,246,0.5)]' : 'text-gray-400 hover:text-white'}`}
                                 onClick={toggleShuffle}
                             >
-                                <span className="material-icons-round text-xl">shuffle</span>
+                                <span className="material-icons-round text-xl" aria-hidden="true">shuffle</span>
                             </button>
                             <button
-                                className="text-gray-300 hover:text-white transition"
+                                aria-label="Previous track"
+                                className="text-gray-300 hover:text-white transition focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none rounded-full"
                                 onClick={playPrevious}
                             >
-                                <span className="material-icons-round text-2xl">skip_previous</span>
+                                <span className="material-icons-round text-2xl" aria-hidden="true">skip_previous</span>
                             </button>
 
                             {/* Primary Play Button - Vivid Purple */}
                             <button
-                                className="w-10 h-10 bg-[#8B5CF6] rounded-full flex items-center justify-center text-white hover:scale-105 transition shadow-[0_0_15px_rgba(139,92,246,0.4)]"
+                                aria-label={isPlaying ? 'Pause' : 'Play'}
+                                className="w-10 h-10 bg-[#8B5CF6] rounded-full flex items-center justify-center text-white hover:scale-105 transition shadow-[0_0_15px_rgba(139,92,246,0.4)] focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none"
                                 onClick={togglePlay}
                                 disabled={isLoading}
                             >
                                 {isLoading ? (
-                                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" aria-hidden="true"></div>
                                 ) : (
-                                    <span className="material-icons-round text-2xl">{isPlaying ? 'pause' : 'play_arrow'}</span>
+                                    <span className="material-icons-round text-2xl" aria-hidden="true">{isPlaying ? 'pause' : 'play_arrow'}</span>
                                 )}
                             </button>
 
                             <button
-                                className="text-gray-300 hover:text-white transition"
+                                aria-label="Next track"
+                                className="text-gray-300 hover:text-white transition focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none rounded-full"
                                 onClick={playNext}
                             >
-                                <span className="material-icons-round text-2xl">skip_next</span>
+                                <span className="material-icons-round text-2xl" aria-hidden="true">skip_next</span>
                             </button>
                             <button
-                                className={`transition ${repeat !== 'off' ? 'text-[#8B5CF6] drop-shadow-[0_0_5px_rgba(139,92,246,0.5)]' : 'text-gray-400 hover:text-white'}`}
+                                aria-label={repeat === 'one' ? 'Repeat one' : repeat === 'all' ? 'Repeat all' : 'Repeat off'}
+                                aria-pressed={repeat !== 'off'}
+                                className={`transition focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none rounded-full ${repeat !== 'off' ? 'text-[#8B5CF6] drop-shadow-[0_0_5px_rgba(139,92,246,0.5)]' : 'text-gray-400 hover:text-white'}`}
                                 onClick={toggleRepeat}
                             >
-                                <span className="material-icons-round text-xl">{repeat === 'one' ? 'repeat_one' : 'repeat'}</span>
+                                <span className="material-icons-round text-xl" aria-hidden="true">{repeat === 'one' ? 'repeat_one' : 'repeat'}</span>
                             </button>
                         </div>
 
                         <div className="w-full flex items-center gap-3 text-xs font-medium text-gray-400">
                             <span>{formatTime(currentTime)}</span>
                             <div
-                                className="flex-1 h-1 bg-white/10 rounded-full cursor-pointer group relative overflow-hidden"
+                                className="flex-1 h-1 bg-white/10 rounded-full cursor-pointer group relative overflow-visible focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none"
                                 onClick={handleSeek}
+                                tabIndex={0}
+                                role="slider"
+                                aria-label="Seek time"
+                                aria-valuemin={0}
+                                aria-valuemax={duration || 100}
+                                aria-valuenow={currentTime || 0}
+                                aria-valuetext={`${formatTime(currentTime)} of ${formatTime(duration)}`}
+                                onKeyDown={(e) => {
+                                    if (!duration) return;
+                                    const step = 5; // Seek by 5 seconds
+                                    if (e.key === 'ArrowRight') {
+                                        e.preventDefault();
+                                        seekTo(Math.min(currentTime + step, duration));
+                                    } else if (e.key === 'ArrowLeft') {
+                                        e.preventDefault();
+                                        seekTo(Math.max(currentTime - step, 0));
+                                    }
+                                }}
                             >
                                 {/* Progress bar with Purple Glow */}
                                 <div
@@ -176,7 +201,7 @@ export function PlayerBar() {
                                     style={{ width: `${progress}%` }}
                                 ></div>
                                 <div
-                                    className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full opacity-0 group-hover:opacity-100 shadow shadow-black/50 transition-opacity"
+                                    className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 shadow shadow-black/50 transition-opacity"
                                     style={{ left: `calc(${progress}% - 6px)` }}
                                 ></div>
                             </div>

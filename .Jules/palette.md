@@ -1,0 +1,3 @@
+## 2024-05-24 - Enhance SearchBar Accessibility
+**Learning:** Adding standard focus-visible classes (`focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none`) and accessible `role="search"` and `type="search"` greatly improves keyboard and screen-reader accessibility for native search components. Hiding `[&::-webkit-search-cancel-button]:hidden` is essential when using a custom clear button.
+**Action:** Always verify `type="search"` has `[&::-webkit-search-cancel-button]:hidden` if we implement custom clear buttons to prevent duplicate clear buttons. Always ensure icon-only buttons like clear search have `aria-label` and `focus-visible` styles.

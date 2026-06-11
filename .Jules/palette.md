@@ -1,0 +1,3 @@
+## 2026-06-11 - Custom ARIA Sliders Missing Keyboard Access
+**Learning:** Custom UI sliders (like playback seek bars or volume controls) built with `div` elements and styled with Tailwind often lack keyboard navigability. Simply adding `role="slider"` is not enough; they require an `onKeyDown` handler to capture `ArrowLeft` and `ArrowRight` events for incrementing/decrementing values, alongside `tabIndex={0}` and proper `aria-value*` attributes.
+**Action:** When auditing or implementing custom sliders, always pair `role="slider"` with `tabIndex={0}`, `aria-valuemin`, `aria-valuemax`, `aria-valuenow`, and an `onKeyDown` handler for arrow keys. Ensure focus states are visible using standard `focus-visible` classes.

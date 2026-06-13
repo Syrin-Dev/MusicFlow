@@ -167,16 +167,32 @@ export function PlayerBar() {
                         <div className="w-full flex items-center gap-3 text-xs font-medium text-gray-400">
                             <span>{formatTime(currentTime)}</span>
                             <div
-                                className="flex-1 h-1 bg-white/10 rounded-full cursor-pointer group relative overflow-hidden"
+                                className="flex-1 h-1 bg-white/10 rounded-full cursor-pointer group relative focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none"
                                 onClick={handleSeek}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'ArrowRight') {
+                                        seekTo(Math.min(duration, currentTime + 5));
+                                    } else if (e.key === 'ArrowLeft') {
+                                        seekTo(Math.max(0, currentTime - 5));
+                                    }
+                                }}
+                                tabIndex={0}
+                                role="slider"
+                                aria-label="Seek time"
+                                aria-valuenow={currentTime}
+                                aria-valuemin={0}
+                                aria-valuemax={duration || 100}
+                                aria-valuetext={formatTime(currentTime)}
                             >
-                                {/* Progress bar with Purple Glow */}
+                                <div className="absolute inset-0 rounded-full overflow-hidden">
+                                    {/* Progress bar with Purple Glow */}
+                                    <div
+                                        className="absolute top-0 left-0 h-full bg-[#8B5CF6] rounded-full group-hover:bg-[#7c3aed] transition-colors shadow-[0_0_10px_#8B5CF6]"
+                                        style={{ width: `${progress}%` }}
+                                    ></div>
+                                </div>
                                 <div
-                                    className="absolute top-0 left-0 h-full bg-[#8B5CF6] rounded-full group-hover:bg-[#7c3aed] transition-colors shadow-[0_0_10px_#8B5CF6]"
-                                    style={{ width: `${progress}%` }}
-                                ></div>
-                                <div
-                                    className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full opacity-0 group-hover:opacity-100 shadow shadow-black/50 transition-opacity"
+                                    className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full opacity-0 group-hover:opacity-100 focus-visible:opacity-100 shadow shadow-black/50 transition-opacity z-10"
                                     style={{ left: `calc(${progress}% - 6px)` }}
                                 ></div>
                             </div>

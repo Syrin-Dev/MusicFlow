@@ -1,0 +1,3 @@
+## 2025-02-27 - Screen Reader Ligatures & Stateful Toggles
+**Learning:** When using icon fonts with ligatures (like material-icons where the text "play_arrow" creates the play icon), screen readers will read the literal text "play arrow" if not explicitly hidden. Additionally, interactive toggle buttons (like shuffle or repeat) must expose their state.
+**Action:** Always wrap ligature text in a `<span aria-hidden="true">` element inside the `<button>`, and supply a descriptive `aria-label` on the button itself. For toggle buttons, bind `aria-pressed={isActive}` on the button element to communicate the current state accurately.

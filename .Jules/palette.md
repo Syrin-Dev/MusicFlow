@@ -1,0 +1,3 @@
+## 2024-06-15 - Accessible Material Icons and Toggles
+**Learning:** Icon fonts with ligatures (like material-icons) are read literally by screen readers unless masked. Additionally, stateful toggle buttons (Like, Shuffle, Repeat) require `aria-pressed` for full accessibility. Focus rings may also need container styling considerations to prevent clipping, though we used standard focus rings directly on buttons.
+**Action:** Always wrap ligature text in `<span aria-hidden="true">` inside interactive buttons, provide descriptive `aria-label`s on the button, use `aria-pressed` for toggles, and use standard `focus-visible:ring-2` utility classes.

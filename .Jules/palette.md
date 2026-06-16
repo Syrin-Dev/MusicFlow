@@ -1,0 +1,3 @@
+## 2024-06-16 - Custom slider keyboard accessibility
+**Learning:** In Tailwind UI elements built using a generic `div` to simulate a slider, applying standard focus classes (`focus-visible:ring-2`) directly can lead to clipping if the parent container uses `overflow-hidden`. Also, simulating slider controls requires explicit tracking of `role="slider"`, bounds (`aria-valuemin`, `aria-valuemax`, `aria-valuenow`), `tabIndex={0}`, and binding an `onKeyDown` handler to manipulate the underlying state (e.g., current playback time) using Arrow keys.
+**Action:** Always verify if parent containers of newly focusable elements use `overflow-hidden` and remove it if it clips focus rings. Ensure all custom sliders have proper ARIA slider attributes and keyboard handlers.

@@ -57,6 +57,22 @@ export function PlayerBar() {
         setVolume(Number(e.target.value));
     };
 
+    const handleSeekKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+        if (!duration) return;
+
+        let newTime = currentTime;
+        if (e.key === 'ArrowRight') {
+            newTime = Math.min(duration, currentTime + 5);
+        } else if (e.key === 'ArrowLeft') {
+            newTime = Math.max(0, currentTime - 5);
+        } else {
+            return;
+        }
+
+        e.preventDefault();
+        seekTo(newTime);
+    };
+
     const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
         const img = e.currentTarget;
         if (currentTrack) {
@@ -167,8 +183,15 @@ export function PlayerBar() {
                         <div className="w-full flex items-center gap-3 text-xs font-medium text-gray-400">
                             <span>{formatTime(currentTime)}</span>
                             <div
-                                className="flex-1 h-1 bg-white/10 rounded-full cursor-pointer group relative overflow-hidden"
+                                role="slider"
+                                tabIndex={0}
+                                aria-label="Seek time"
+                                aria-valuemin={0}
+                                aria-valuemax={duration || 100}
+                                aria-valuenow={currentTime}
+                                className="flex-1 h-1 bg-white/10 rounded-full cursor-pointer group relative focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none"
                                 onClick={handleSeek}
+                                onKeyDown={handleSeekKeyDown}
                             >
                                 {/* Progress bar with Purple Glow */}
                                 <div

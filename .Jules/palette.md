@@ -1,0 +1,3 @@
+## 2025-05-18 - Accessible Custom Search Inputs with WebKit
+**Learning:** When using `<input type="search">` for semantic accuracy, WebKit browsers automatically append a native cancel/clear button (the "X"). If a custom clear button is provided in the component, it results in duplicate clear options, which is a confusing UX.
+**Action:** Always hide the native WebKit cancel button using `[&::-webkit-search-cancel-button]:hidden` (or equivalent CSS) when building a custom search component with its own clear button, ensuring both a single clear interaction point and proper `aria-label` accessibility on the custom button.

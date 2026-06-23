@@ -1,0 +1,3 @@
+## 2024-05-24 - Accessible Custom Sliders
+**Learning:** Custom UI sliders (like seek bars) built with standard `div`s lack native keyboard accessibility. Adding `tabIndex={0}` and ARIA attributes (`role="slider"`, `aria-valuenow`, etc.) is necessary, but the container must *also* handle `onKeyDown` events (ArrowLeft/ArrowRight) for users to actually interact with it via keyboard. Furthermore, when adding focus indicators (e.g., `focus-visible:ring-2`), ensuring the container does NOT use `overflow-hidden` is critical, otherwise the focus ring is visually clipped.
+**Action:** Always implement `onKeyDown` with ArrowKey support for custom `div`-based sliders, and avoid `overflow-hidden` on containers receiving focus rings.

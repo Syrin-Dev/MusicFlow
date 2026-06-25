@@ -1,0 +1,3 @@
+## 2025-02-26 - Accessible Search Components
+**Learning:** When using `<input type="search">` in Webkit environments alongside a custom clear button component, you should hide the browser's default cancel button using CSS (e.g., `[&::-webkit-search-cancel-button]:hidden` in Tailwind) to prevent duplicate 'X' clear options. Additionally, search forms require `role="search"` and a visually hidden `<label>` correctly associated via `htmlFor`. Purely decorative icons within interactive elements should have `aria-hidden="true"`.
+**Action:** Always apply `[&::-webkit-search-cancel-button]:hidden` to search inputs that provide their own custom clear UI, and enforce strict ARIA compliance (labels, hidden decorators, roles) for all newly created search components.

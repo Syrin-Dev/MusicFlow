@@ -108,8 +108,8 @@ export function PlayerBar() {
                                 >
                                     {currentTrack.title}
                                 </div>
-                                <button onClick={() => toggleLike(currentTrack)}>
-                                    <span className={`material-icons-round text-xs cursor-pointer hover:text-white ${liked ? 'text-[#8B5CF6]' : 'text-gray-400'}`}>favorite</span>
+                                <button aria-label={liked ? 'Unlike track' : 'Like track'} onClick={() => toggleLike(currentTrack)}>
+                                    <span aria-hidden="true" className={`material-icons-round text-xs cursor-pointer hover:text-white ${liked ? 'text-[#8B5CF6]' : 'text-gray-400'}`}>favorite</span>
                                 </button>
                             </div>
                             <span
@@ -125,20 +125,23 @@ export function PlayerBar() {
                     <div className="flex flex-col items-center flex-1 max-w-2xl px-8">
                         <div className="flex items-center gap-6 mb-1">
                             <button
+                                aria-label={shuffle ? 'Disable shuffle' : 'Enable shuffle'}
                                 className={`transition ${shuffle ? 'text-[#8B5CF6] drop-shadow-[0_0_5px_rgba(139,92,246,0.5)]' : 'text-gray-400 hover:text-white'}`}
                                 onClick={toggleShuffle}
                             >
-                                <span className="material-icons-round text-xl">shuffle</span>
+                                <span aria-hidden="true" className="material-icons-round text-xl">shuffle</span>
                             </button>
                             <button
+                                aria-label="Skip to previous track"
                                 className="text-gray-300 hover:text-white transition"
                                 onClick={playPrevious}
                             >
-                                <span className="material-icons-round text-2xl">skip_previous</span>
+                                <span aria-hidden="true" className="material-icons-round text-2xl">skip_previous</span>
                             </button>
 
                             {/* Primary Play Button - Vivid Purple */}
                             <button
+                                aria-label={isPlaying ? 'Pause track' : 'Play track'}
                                 className="w-10 h-10 bg-[#8B5CF6] rounded-full flex items-center justify-center text-white hover:scale-105 transition shadow-[0_0_15px_rgba(139,92,246,0.4)]"
                                 onClick={togglePlay}
                                 disabled={isLoading}
@@ -146,21 +149,23 @@ export function PlayerBar() {
                                 {isLoading ? (
                                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                                 ) : (
-                                    <span className="material-icons-round text-2xl">{isPlaying ? 'pause' : 'play_arrow'}</span>
+                                    <span aria-hidden="true" className="material-icons-round text-2xl">{isPlaying ? 'pause' : 'play_arrow'}</span>
                                 )}
                             </button>
 
                             <button
+                                aria-label="Skip to next track"
                                 className="text-gray-300 hover:text-white transition"
                                 onClick={playNext}
                             >
-                                <span className="material-icons-round text-2xl">skip_next</span>
+                                <span aria-hidden="true" className="material-icons-round text-2xl">skip_next</span>
                             </button>
                             <button
+                                aria-label={repeat === 'off' ? 'Enable repeat' : repeat === 'all' ? 'Enable repeat one' : 'Disable repeat'}
                                 className={`transition ${repeat !== 'off' ? 'text-[#8B5CF6] drop-shadow-[0_0_5px_rgba(139,92,246,0.5)]' : 'text-gray-400 hover:text-white'}`}
                                 onClick={toggleRepeat}
                             >
-                                <span className="material-icons-round text-xl">{repeat === 'one' ? 'repeat_one' : 'repeat'}</span>
+                                <span aria-hidden="true" className="material-icons-round text-xl">{repeat === 'one' ? 'repeat_one' : 'repeat'}</span>
                             </button>
                         </div>
 
@@ -187,18 +192,19 @@ export function PlayerBar() {
                     {/* Right: Actions */}
                     <div className="flex items-center justify-end gap-3 w-1/4 min-w-[200px]">
                         <button
+                            aria-label="Share track"
                             className="text-gray-400 hover:text-[#8B5CF6] transition p-2 hover:bg-white/5 rounded-full"
                             onClick={() => openConnect(currentTrack)}
                             title="Share to Friend"
                         >
-                            <span className="material-icons-round text-xl">send</span>
+                            <span aria-hidden="true" className="material-icons-round text-xl">send</span>
                         </button>
 
                         <AddToPlaylist track={currentTrack} />
 
                         <div className="flex items-center gap-2 group w-24">
-                            <button onClick={() => setVolume(volume === 0 ? 100 : 0)}>
-                                <span className="material-icons-round text-gray-400 text-xl hover:text-white">
+                            <button aria-label={volume === 0 ? 'Unmute' : volume < 50 ? 'Increase volume' : 'Decrease volume'} onClick={() => setVolume(volume === 0 ? 100 : 0)}>
+                                <span aria-hidden="true" className="material-icons-round text-gray-400 text-xl hover:text-white">
                                     {volume === 0 ? 'volume_off' : volume < 50 ? 'volume_down' : 'volume_up'}
                                 </span>
                             </button>
@@ -219,11 +225,12 @@ export function PlayerBar() {
                         </div>
 
                         <button
+                            aria-label="Expand player"
                             className="text-gray-400 hover:text-white transition ml-2"
                             onClick={togglePlayerExpansion}
                             title="Expand"
                         >
-                            <span className="material-icons-round text-3xl">keyboard_arrow_up</span>
+                            <span aria-hidden="true" className="material-icons-round text-3xl">keyboard_arrow_up</span>
                         </button>
                     </div>
                 </div>
@@ -259,15 +266,17 @@ export function PlayerBar() {
 
                     <div className="flex items-center gap-1">
                         <button
+                            aria-label="Share track"
                             className="p-2 text-zinc-400 hover:text-white"
                             onClick={(e) => {
                                 e.stopPropagation();
                                 openConnect(currentTrack);
                             }}
                         >
-                            <span className="material-icons-round text-xl">send</span>
+                            <span aria-hidden="true" className="material-icons-round text-xl">send</span>
                         </button>
                         <button
+                            aria-label={isPlaying ? 'Pause track' : 'Play track'}
                             className="w-10 h-10 flex items-center justify-center text-white"
                             onClick={(e) => {
                                 e.stopPropagation();
@@ -278,7 +287,7 @@ export function PlayerBar() {
                             {isLoading ? (
                                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                             ) : (
-                                <span className="material-icons-round text-2xl drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]">{isPlaying ? 'pause' : 'play_arrow'}</span>
+                                <span aria-hidden="true" className="material-icons-round text-2xl drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]">{isPlaying ? 'pause' : 'play_arrow'}</span>
                             )}
                         </button>
                     </div>

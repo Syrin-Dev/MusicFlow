@@ -1,0 +1,1 @@
+## 2024-06-28 - Missing ARIA Labels on Icon Buttons\n**Learning:** The `PlayerBar` component uses material icons for interactive controls (play, pause, shuffle, skip) but lacks `aria-label`s on the `<button>` tags, making them unreadable to screen readers.\n**Action:** Add descriptive `aria-label` attributes to all icon-only buttons to improve accessibility.

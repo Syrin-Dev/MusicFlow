@@ -125,42 +125,49 @@ export function PlayerBar() {
                     <div className="flex flex-col items-center flex-1 max-w-2xl px-8">
                         <div className="flex items-center gap-6 mb-1">
                             <button
-                                className={`transition ${shuffle ? 'text-[#8B5CF6] drop-shadow-[0_0_5px_rgba(139,92,246,0.5)]' : 'text-gray-400 hover:text-white'}`}
+                                aria-label="Toggle shuffle"
+                                aria-pressed={shuffle}
+                                className={`transition p-1 rounded-full focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none ${shuffle ? 'text-[#8B5CF6] drop-shadow-[0_0_5px_rgba(139,92,246,0.5)]' : 'text-gray-400 hover:text-white'}`}
                                 onClick={toggleShuffle}
                             >
-                                <span className="material-icons-round text-xl">shuffle</span>
+                                <span className="material-icons-round text-xl" aria-hidden="true">shuffle</span>
                             </button>
                             <button
-                                className="text-gray-300 hover:text-white transition"
+                                aria-label="Previous track"
+                                className="text-gray-300 hover:text-white transition p-1 rounded-full focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none"
                                 onClick={playPrevious}
                             >
-                                <span className="material-icons-round text-2xl">skip_previous</span>
+                                <span className="material-icons-round text-2xl" aria-hidden="true">skip_previous</span>
                             </button>
 
                             {/* Primary Play Button - Vivid Purple */}
                             <button
-                                className="w-10 h-10 bg-[#8B5CF6] rounded-full flex items-center justify-center text-white hover:scale-105 transition shadow-[0_0_15px_rgba(139,92,246,0.4)]"
+                                aria-label={isPlaying ? 'Pause' : 'Play'}
+                                className="w-10 h-10 bg-[#8B5CF6] rounded-full flex items-center justify-center text-white hover:scale-105 transition shadow-[0_0_15px_rgba(139,92,246,0.4)] focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black focus-visible:outline-none"
                                 onClick={togglePlay}
                                 disabled={isLoading}
                             >
                                 {isLoading ? (
-                                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" aria-hidden="true"></div>
                                 ) : (
-                                    <span className="material-icons-round text-2xl">{isPlaying ? 'pause' : 'play_arrow'}</span>
+                                    <span className="material-icons-round text-2xl" aria-hidden="true">{isPlaying ? 'pause' : 'play_arrow'}</span>
                                 )}
                             </button>
 
                             <button
-                                className="text-gray-300 hover:text-white transition"
+                                aria-label="Next track"
+                                className="text-gray-300 hover:text-white transition p-1 rounded-full focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none"
                                 onClick={playNext}
                             >
-                                <span className="material-icons-round text-2xl">skip_next</span>
+                                <span className="material-icons-round text-2xl" aria-hidden="true">skip_next</span>
                             </button>
                             <button
-                                className={`transition ${repeat !== 'off' ? 'text-[#8B5CF6] drop-shadow-[0_0_5px_rgba(139,92,246,0.5)]' : 'text-gray-400 hover:text-white'}`}
+                                aria-label={`Toggle repeat (Currently ${repeat})`}
+                                aria-pressed={repeat !== 'off'}
+                                className={`transition p-1 rounded-full focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none ${repeat !== 'off' ? 'text-[#8B5CF6] drop-shadow-[0_0_5px_rgba(139,92,246,0.5)]' : 'text-gray-400 hover:text-white'}`}
                                 onClick={toggleRepeat}
                             >
-                                <span className="material-icons-round text-xl">{repeat === 'one' ? 'repeat_one' : 'repeat'}</span>
+                                <span className="material-icons-round text-xl" aria-hidden="true">{repeat === 'one' ? 'repeat_one' : 'repeat'}</span>
                             </button>
                         </div>
 

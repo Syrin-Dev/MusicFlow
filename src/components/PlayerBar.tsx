@@ -53,6 +53,17 @@ export function PlayerBar() {
         seekTo(percentage * duration);
     };
 
+    const handleSeekKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+        if (!duration) return;
+        if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            seekTo(Math.min(currentTime + 5, duration));
+        } else if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            seekTo(Math.max(currentTime - 5, 0));
+        }
+    };
+
     const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setVolume(Number(e.target.value));
     };
@@ -167,16 +178,25 @@ export function PlayerBar() {
                         <div className="w-full flex items-center gap-3 text-xs font-medium text-gray-400">
                             <span>{formatTime(currentTime)}</span>
                             <div
-                                className="flex-1 h-1 bg-white/10 rounded-full cursor-pointer group relative overflow-hidden"
+                                className="flex-1 h-1 cursor-pointer group relative rounded-full focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none focus-visible:ring-offset-2 focus-visible:ring-offset-black/20"
                                 onClick={handleSeek}
+                                onKeyDown={handleSeekKeyDown}
+                                role="slider"
+                                aria-label="Seek time"
+                                aria-valuemin={0}
+                                aria-valuemax={Math.floor(duration || 0)}
+                                aria-valuenow={Math.floor(currentTime || 0)}
+                                tabIndex={0}
                             >
-                                {/* Progress bar with Purple Glow */}
+                                <div className="absolute inset-0 bg-white/10 rounded-full overflow-hidden">
+                                    {/* Progress bar with Purple Glow */}
+                                    <div
+                                        className="absolute top-0 left-0 h-full bg-[#8B5CF6] group-hover:bg-[#7c3aed] transition-colors shadow-[0_0_10px_#8B5CF6]"
+                                        style={{ width: `${progress}%` }}
+                                    ></div>
+                                </div>
                                 <div
-                                    className="absolute top-0 left-0 h-full bg-[#8B5CF6] rounded-full group-hover:bg-[#7c3aed] transition-colors shadow-[0_0_10px_#8B5CF6]"
-                                    style={{ width: `${progress}%` }}
-                                ></div>
-                                <div
-                                    className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full opacity-0 group-hover:opacity-100 shadow shadow-black/50 transition-opacity"
+                                    className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full opacity-0 group-hover:opacity-100 shadow shadow-black/50 transition-opacity z-10"
                                     style={{ left: `calc(${progress}% - 6px)` }}
                                 ></div>
                             </div>

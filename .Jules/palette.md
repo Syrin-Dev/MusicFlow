@@ -1,0 +1,3 @@
+## 2024-07-03 - Custom Slider Accessibility and Focus Rings
+**Learning:** When applying focus rings (e.g., `focus-visible:ring-2`) to custom UI elements like sliders in Tailwind, using `overflow-hidden` on the container will clip the focus indicator and inner elements, rendering the focus state invisible to keyboard users.
+**Action:** Remove `overflow-hidden` from custom slider containers (like the seek progress bar) and ensure focus states are clearly visible without being clipped. Ensure proper ARIA attributes (`role="slider"`, `aria-valuemin`, `aria-valuemax`, `aria-valuenow`, `aria-label`) and keyboard handlers (`onKeyDown`) are implemented for fully accessible custom sliders.

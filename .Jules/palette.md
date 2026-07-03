@@ -1,0 +1,3 @@
+## 2024-05-18 - Search Input Native Clear Button Regression
+**Learning:** Changing a generic text input to `type="search"` to improve accessibility semantics will trigger Webkit browsers (Chrome, Safari) to automatically render their own native "clear" ('x') button when text is entered. If the component already implements a custom clear button (e.g., using a Lucide `<X />` icon), this results in an awkward double-button UI regression.
+**Action:** When migrating text inputs to `type="search"` in Tailwind, always append the `[&::-webkit-search-cancel-button]:hidden` utility class to suppress the native browser styling and preserve the custom UI component behavior.

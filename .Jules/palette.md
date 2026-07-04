@@ -1,0 +1,2 @@
+## 2024-07-04 - Initial Setup\n**Learning:** Started tracking UX/a11y insights.\n**Action:** Will update when a critical pattern is discovered.
+## 2024-07-04 - Accessible Player Bar Controls\n**Learning:** The PlayerBar component uses custom `material-icons-round` spans inside buttons. Screen readers read ligature text (like "play_arrow") by default if not hidden. \n**Action:** Add `aria-hidden="true"` to the ligature text spans and `aria-label` to the parent buttons to ensure screen readers announce the action correctly instead of the icon text.

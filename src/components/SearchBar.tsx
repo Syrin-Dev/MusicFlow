@@ -62,10 +62,12 @@ export function SearchBar() {
 
     return (
         <div ref={wrapperRef} className="relative w-full z-40 max-w-2xl">
-            <form onSubmit={handleSearch} className="relative group">
+            <form onSubmit={handleSearch} className="relative group" role="search">
+                <label htmlFor="search-input" className="sr-only">Search</label>
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 group-hover:text-white transition-colors z-10" size={20} />
                 <input
-                    type="text"
+                    id="search-input"
+                    type="search"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     onFocus={() => query.length > 2 && setShowSuggestions(true)}
@@ -76,6 +78,7 @@ export function SearchBar() {
                     <button
                         type="button"
                         onClick={() => { setQuery(''); setSuggestions([]); }}
+                        aria-label="Clear search"
                         className="absolute right-4 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-white/10 text-zinc-400 hover:text-white transition-colors"
                     >
                         <X size={16} />

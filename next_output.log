@@ -1,0 +1,345 @@
+$ next dev
+▲ Next.js 16.1.6 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.0.2:3000
+
+✓ Starting...
+Attention: Next.js now collects completely anonymous telemetry regarding usage.
+This information is used to shape Next.js' roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://nextjs.org/telemetry
+
+✓ Ready in 1773ms
+○ Compiling / ...
+ GET / 200 in 4.2s (compile: 3.5s, proxy.ts: 270ms, render: 442ms)
+○ Compiling /api/playlists ...
+⨯ Error: Failed to load external module @prisma/client-dcc063df019991b5: Error: Cannot find module '.prisma/client/default'
+Require stack:
+- /app/node_modules/.pnpm/@prisma+client@5.22.0_prisma@5.22.0/node_modules/@prisma/client/default.js
+- /app/.next/dev/server/chunks/[root-of-the-server]__18979125._.js
+- /app/.next/dev/server/chunks/[turbopack]_runtime.js
+- /app/.next/dev/server/middleware.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/next-server.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/dev/next-dev-server.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/next.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/lib/start-server.js
+    at module evaluation (.next/dev/server/chunks/[root-of-the-server]__18979125._.js:4:35)
+    at module evaluation (src/lib/prismadb.ts:1:1)
+    at module evaluation (src/app/api/playlists/route.ts:2:1)
+    at Object.<anonymous> (.next/dev/server/app/api/playlists/route.js:9:3)
+> 1 | import { PrismaClient } from '@prisma/client';
+    | ^
+  2 |
+  3 | const globalForPrisma = global as unknown as { prisma: PrismaClient };
+  4 | {
+  page: '/api/playlists'
+}
+⨯ Error: Failed to load external module @prisma/client-dcc063df019991b5: Error: Cannot find module '.prisma/client/default'
+Require stack:
+- /app/node_modules/.pnpm/@prisma+client@5.22.0_prisma@5.22.0/node_modules/@prisma/client/default.js
+- /app/.next/dev/server/chunks/[root-of-the-server]__18979125._.js
+- /app/.next/dev/server/chunks/[turbopack]_runtime.js
+- /app/.next/dev/server/middleware.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/next-server.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/dev/next-dev-server.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/next.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/lib/start-server.js
+    at module evaluation (.next/dev/server/chunks/[root-of-the-server]__18979125._.js:4:35)
+    at module evaluation (src/lib/prismadb.ts:1:1)
+    at module evaluation (src/app/api/playlists/route.ts:2:1)
+    at Object.<anonymous> (.next/dev/server/app/api/playlists/route.js:9:3)
+> 1 | import { PrismaClient } from '@prisma/client';
+    | ^
+  2 |
+  3 | const globalForPrisma = global as unknown as { prisma: PrismaClient };
+  4 | {
+  page: '/api/notifications'
+}
+⨯ Error: Failed to load external module @prisma/client-dcc063df019991b5: Error: Cannot find module '.prisma/client/default'
+Require stack:
+- /app/node_modules/.pnpm/@prisma+client@5.22.0_prisma@5.22.0/node_modules/@prisma/client/default.js
+- /app/.next/dev/server/chunks/[root-of-the-server]__18979125._.js
+- /app/.next/dev/server/chunks/[turbopack]_runtime.js
+- /app/.next/dev/server/middleware.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/next-server.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/dev/next-dev-server.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/next.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/lib/start-server.js
+    at module evaluation (.next/dev/server/chunks/[root-of-the-server]__18979125._.js:4:35)
+    at module evaluation (src/lib/prismadb.ts:1:1)
+    at module evaluation (src/app/api/playlists/route.ts:2:1)
+    at Object.<anonymous> (.next/dev/server/app/api/playlists/route.js:9:3)
+> 1 | import { PrismaClient } from '@prisma/client';
+    | ^
+  2 |
+  3 | const globalForPrisma = global as unknown as { prisma: PrismaClient };
+  4 | {
+  page: '/api/search'
+}
+⨯ Error: Failed to load external module @prisma/client-dcc063df019991b5: Error: Cannot find module '.prisma/client/default'
+Require stack:
+- /app/node_modules/.pnpm/@prisma+client@5.22.0_prisma@5.22.0/node_modules/@prisma/client/default.js
+- /app/.next/dev/server/chunks/[root-of-the-server]__18979125._.js
+- /app/.next/dev/server/chunks/[turbopack]_runtime.js
+- /app/.next/dev/server/middleware.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/next-server.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/dev/next-dev-server.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/next.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/lib/start-server.js
+    at module evaluation (.next/dev/server/chunks/[root-of-the-server]__18979125._.js:4:35)
+    at module evaluation (src/lib/prismadb.ts:1:1)
+    at module evaluation (src/app/api/playlists/route.ts:2:1)
+    at Object.<anonymous> (.next/dev/server/app/api/playlists/route.js:9:3)
+> 1 | import { PrismaClient } from '@prisma/client';
+    | ^
+  2 |
+  3 | const globalForPrisma = global as unknown as { prisma: PrismaClient };
+  4 | {
+  page: '/api/search'
+}
+⨯ Error: Failed to load external module @prisma/client-dcc063df019991b5: Error: Cannot find module '.prisma/client/default'
+Require stack:
+- /app/node_modules/.pnpm/@prisma+client@5.22.0_prisma@5.22.0/node_modules/@prisma/client/default.js
+- /app/.next/dev/server/chunks/[root-of-the-server]__18979125._.js
+- /app/.next/dev/server/chunks/[turbopack]_runtime.js
+- /app/.next/dev/server/middleware.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/next-server.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/dev/next-dev-server.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/next.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/lib/start-server.js
+    at module evaluation (.next/dev/server/chunks/[root-of-the-server]__18979125._.js:4:35)
+    at module evaluation (src/lib/prismadb.ts:1:1)
+    at module evaluation (src/app/api/playlists/route.ts:2:1)
+    at Object.<anonymous> (.next/dev/server/app/api/playlists/route.js:9:3)
+> 1 | import { PrismaClient } from '@prisma/client';
+    | ^
+  2 |
+  3 | const globalForPrisma = global as unknown as { prisma: PrismaClient };
+  4 | {
+  page: '/api/search'
+}
+⨯ Error: Failed to load external module @prisma/client-dcc063df019991b5: Error: Cannot find module '.prisma/client/default'
+Require stack:
+- /app/node_modules/.pnpm/@prisma+client@5.22.0_prisma@5.22.0/node_modules/@prisma/client/default.js
+- /app/.next/dev/server/chunks/[root-of-the-server]__18979125._.js
+- /app/.next/dev/server/chunks/[turbopack]_runtime.js
+- /app/.next/dev/server/middleware.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/next-server.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/dev/next-dev-server.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/next.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/lib/start-server.js
+    at module evaluation (.next/dev/server/chunks/[root-of-the-server]__18979125._.js:4:35)
+    at module evaluation (src/lib/prismadb.ts:1:1)
+    at module evaluation (src/app/api/playlists/route.ts:2:1)
+    at Object.<anonymous> (.next/dev/server/app/api/playlists/route.js:9:3)
+> 1 | import { PrismaClient } from '@prisma/client';
+    | ^
+  2 |
+  3 | const globalForPrisma = global as unknown as { prisma: PrismaClient };
+  4 | {
+  page: '/api/search'
+}
+ GET /api/search?q=summer%20dance%20club%20hits%20remix%202025 500 in 7.7s (compile: 7.2s, proxy.ts: 56ms, render: 378ms)
+ GET /api/playlists?t=1783457133877 500 in 7.7s (compile: 7.5s, proxy.ts: 78ms, render: 142ms)
+ GET /api/search?q=ambient%20study%20music%20no%20lyrics%20deep%20focus 500 in 7.7s (compile: 7.5s, proxy.ts: 47ms, render: 118ms)
+ GET /api/search?q=gym%20phonk%20high%20energy%20workout%20music 500 in 7.7s (compile: 7.5s, proxy.ts: 52ms, render: 80ms)
+ GET /api/notifications 500 in 7.7s (compile: 7.6s, proxy.ts: 61ms, render: 43ms)
+ GET /api/search?q=lofi%20hip%20hop%20instrumental%20aesthetic 500 in 7.7s (compile: 7.6s, proxy.ts: 54ms, render: 18ms)
+⨯ Error: Failed to load external module @prisma/client-dcc063df019991b5: Error: Cannot find module '.prisma/client/default'
+Require stack:
+- /app/node_modules/.pnpm/@prisma+client@5.22.0_prisma@5.22.0/node_modules/@prisma/client/default.js
+- /app/.next/dev/server/chunks/[root-of-the-server]__18979125._.js
+- /app/.next/dev/server/chunks/[turbopack]_runtime.js
+- /app/.next/dev/server/middleware.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/next-server.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/dev/next-dev-server.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/next.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/lib/start-server.js
+    at module evaluation (.next/dev/server/chunks/[root-of-the-server]__18979125._.js:4:35)
+    at module evaluation (src/lib/prismadb.ts:1:1)
+    at module evaluation (src/app/api/playlists/route.ts:2:1)
+    at Object.<anonymous> (.next/dev/server/app/api/playlists/route.js:9:3)
+> 1 | import { PrismaClient } from '@prisma/client';
+    | ^
+  2 |
+  3 | const globalForPrisma = global as unknown as { prisma: PrismaClient };
+  4 | {
+  page: '/api/search'
+}
+⨯ Error: Failed to load external module @prisma/client-dcc063df019991b5: Error: Cannot find module '.prisma/client/default'
+Require stack:
+- /app/node_modules/.pnpm/@prisma+client@5.22.0_prisma@5.22.0/node_modules/@prisma/client/default.js
+- /app/.next/dev/server/chunks/[root-of-the-server]__18979125._.js
+- /app/.next/dev/server/chunks/[turbopack]_runtime.js
+- /app/.next/dev/server/middleware.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/next-server.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/dev/next-dev-server.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/next.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/lib/start-server.js
+    at module evaluation (.next/dev/server/chunks/[root-of-the-server]__18979125._.js:4:35)
+    at module evaluation (src/lib/prismadb.ts:1:1)
+    at module evaluation (src/app/api/playlists/route.ts:2:1)
+    at Object.<anonymous> (.next/dev/server/app/api/playlists/route.js:9:3)
+> 1 | import { PrismaClient } from '@prisma/client';
+    | ^
+  2 |
+  3 | const globalForPrisma = global as unknown as { prisma: PrismaClient };
+  4 | {
+  page: '/api/search'
+}
+⨯ Error: Failed to load external module @prisma/client-dcc063df019991b5: Error: Cannot find module '.prisma/client/default'
+Require stack:
+- /app/node_modules/.pnpm/@prisma+client@5.22.0_prisma@5.22.0/node_modules/@prisma/client/default.js
+- /app/.next/dev/server/chunks/[root-of-the-server]__18979125._.js
+- /app/.next/dev/server/chunks/[turbopack]_runtime.js
+- /app/.next/dev/server/middleware.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/next-server.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/dev/next-dev-server.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/next.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/lib/start-server.js
+    at module evaluation (.next/dev/server/chunks/[root-of-the-server]__18979125._.js:4:35)
+    at module evaluation (src/lib/prismadb.ts:1:1)
+    at module evaluation (src/app/api/playlists/route.ts:2:1)
+    at Object.<anonymous> (.next/dev/server/app/api/playlists/route.js:9:3)
+> 1 | import { PrismaClient } from '@prisma/client';
+    | ^
+  2 |
+  3 | const globalForPrisma = global as unknown as { prisma: PrismaClient };
+  4 | {
+  page: '/api/search'
+}
+⨯ Error: Failed to load external module @prisma/client-dcc063df019991b5: Error: Cannot find module '.prisma/client/default'
+Require stack:
+- /app/node_modules/.pnpm/@prisma+client@5.22.0_prisma@5.22.0/node_modules/@prisma/client/default.js
+- /app/.next/dev/server/chunks/[root-of-the-server]__18979125._.js
+- /app/.next/dev/server/chunks/[turbopack]_runtime.js
+- /app/.next/dev/server/middleware.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/next-server.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/dev/next-dev-server.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/next.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/lib/start-server.js
+    at module evaluation (.next/dev/server/chunks/[root-of-the-server]__18979125._.js:4:35)
+    at module evaluation (src/lib/prismadb.ts:1:1)
+    at module evaluation (src/app/api/playlists/route.ts:2:1)
+    at Object.<anonymous> (.next/dev/server/app/api/playlists/route.js:9:3)
+> 1 | import { PrismaClient } from '@prisma/client';
+    | ^
+  2 |
+  3 | const globalForPrisma = global as unknown as { prisma: PrismaClient };
+  4 | {
+  page: '/api/search'
+}
+⨯ Error: Failed to load external module @prisma/client-dcc063df019991b5: Error: Cannot find module '.prisma/client/default'
+Require stack:
+- /app/node_modules/.pnpm/@prisma+client@5.22.0_prisma@5.22.0/node_modules/@prisma/client/default.js
+- /app/.next/dev/server/chunks/[root-of-the-server]__18979125._.js
+- /app/.next/dev/server/chunks/[turbopack]_runtime.js
+- /app/.next/dev/server/middleware.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/next-server.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/dev/next-dev-server.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/next.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/lib/start-server.js
+    at module evaluation (.next/dev/server/chunks/[root-of-the-server]__18979125._.js:4:35)
+    at module evaluation (src/lib/prismadb.ts:1:1)
+    at module evaluation (src/app/api/playlists/route.ts:2:1)
+    at Object.<anonymous> (.next/dev/server/app/api/playlists/route.js:9:3)
+> 1 | import { PrismaClient } from '@prisma/client';
+    | ^
+  2 |
+  3 | const globalForPrisma = global as unknown as { prisma: PrismaClient };
+  4 | {
+  page: '/api/search'
+}
+ GET /api/search?q=evening%20chill%20music 500 in 423ms (compile: 332ms, proxy.ts: 17ms, render: 74ms)
+ GET /api/search?q=party%20music%20hits 500 in 422ms (compile: 349ms, proxy.ts: 20ms, render: 53ms)
+ GET /api/search?q=feel%20good%20music 500 in 421ms (compile: 359ms, proxy.ts: 21ms, render: 42ms)
+ GET /api/search?q=trending%20music%20videos 500 in 422ms (compile: 373ms, proxy.ts: 21ms, render: 28ms)
+ GET /api/search?q=discover%20weekly 500 in 421ms (compile: 384ms, proxy.ts: 22ms, render: 16ms)
+⨯ Error: Failed to load external module @prisma/client-dcc063df019991b5: Error: Cannot find module '.prisma/client/default'
+Require stack:
+- /app/node_modules/.pnpm/@prisma+client@5.22.0_prisma@5.22.0/node_modules/@prisma/client/default.js
+- /app/.next/dev/server/chunks/[root-of-the-server]__18979125._.js
+- /app/.next/dev/server/chunks/[turbopack]_runtime.js
+- /app/.next/dev/server/middleware.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/next-server.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/dev/next-dev-server.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/next.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/lib/start-server.js
+    at module evaluation (.next/dev/server/chunks/[root-of-the-server]__18979125._.js:4:35)
+    at module evaluation (src/lib/prismadb.ts:1:1)
+    at module evaluation (src/app/api/playlists/route.ts:2:1)
+    at Object.<anonymous> (.next/dev/server/app/api/playlists/route.js:9:3)
+> 1 | import { PrismaClient } from '@prisma/client';
+    | ^
+  2 |
+  3 | const globalForPrisma = global as unknown as { prisma: PrismaClient };
+  4 | {
+  page: '/api/search'
+}
+ GET /api/search?q=music%20similar%20to%20Mark%20Ronson%20Uptown%20Funk 500 in 198ms (compile: 146ms, proxy.ts: 18ms, render: 34ms)
+⨯ Error: Failed to load external module @prisma/client-dcc063df019991b5: Error: Cannot find module '.prisma/client/default'
+Require stack:
+- /app/node_modules/.pnpm/@prisma+client@5.22.0_prisma@5.22.0/node_modules/@prisma/client/default.js
+- /app/.next/dev/server/chunks/[root-of-the-server]__18979125._.js
+- /app/.next/dev/server/chunks/[turbopack]_runtime.js
+- /app/.next/dev/server/middleware.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/next-server.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/dev/next-dev-server.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/next.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/lib/start-server.js
+    at module evaluation (.next/dev/server/chunks/[root-of-the-server]__18979125._.js:4:35)
+    at module evaluation (src/lib/prismadb.ts:1:1)
+    at module evaluation (src/app/api/playlists/route.ts:2:1)
+    at Object.<anonymous> (.next/dev/server/app/api/playlists/route.js:9:3)
+> 1 | import { PrismaClient } from '@prisma/client';
+    | ^
+  2 |
+  3 | const globalForPrisma = global as unknown as { prisma: PrismaClient };
+  4 | {
+  page: '/api/auth/session'
+}
+⨯ Error: Failed to load external module @prisma/client-dcc063df019991b5: Error: Cannot find module '.prisma/client/default'
+Require stack:
+- /app/node_modules/.pnpm/@prisma+client@5.22.0_prisma@5.22.0/node_modules/@prisma/client/default.js
+- /app/.next/dev/server/chunks/[root-of-the-server]__18979125._.js
+- /app/.next/dev/server/chunks/[turbopack]_runtime.js
+- /app/.next/dev/server/middleware.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/next-server.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/dev/next-dev-server.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/next.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/lib/start-server.js
+    at module evaluation (.next/dev/server/chunks/[root-of-the-server]__18979125._.js:4:35)
+    at module evaluation (src/lib/prismadb.ts:1:1)
+    at module evaluation (src/app/api/playlists/route.ts:2:1)
+    at Object.<anonymous> (.next/dev/server/app/api/playlists/route.js:9:3)
+> 1 | import { PrismaClient } from '@prisma/client';
+    | ^
+  2 |
+  3 | const globalForPrisma = global as unknown as { prisma: PrismaClient };
+  4 | {
+  page: '/api/rooms'
+}
+ GET /api/auth/session 500 in 1141ms (compile: 693ms, proxy.ts: 314ms, render: 133ms)
+ POST /api/rooms 500 in 746ms (compile: 714ms, proxy.ts: 22ms, render: 10ms)
+⨯ Error: Failed to load external module @prisma/client-dcc063df019991b5: Error: Cannot find module '.prisma/client/default'
+Require stack:
+- /app/node_modules/.pnpm/@prisma+client@5.22.0_prisma@5.22.0/node_modules/@prisma/client/default.js
+- /app/.next/dev/server/chunks/[root-of-the-server]__18979125._.js
+- /app/.next/dev/server/chunks/[turbopack]_runtime.js
+- /app/.next/dev/server/middleware.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/next-server.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/dev/next-dev-server.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/next.js
+- /app/node_modules/.pnpm/next@16.1.6_@babel+core@7.29.7_react-dom@19.2.3_react@19.2.3__react@19.2.3/node_modules/next/dist/server/lib/start-server.js
+    at module evaluation (.next/dev/server/chunks/[root-of-the-server]__18979125._.js:4:35)
+    at module evaluation (src/lib/prismadb.ts:1:1)
+    at module evaluation (src/app/api/playlists/route.ts:2:1)
+    at Object.<anonymous> (.next/dev/server/app/api/playlists/route.js:9:3)
+> 1 | import { PrismaClient } from '@prisma/client';
+    | ^
+  2 |
+  3 | const globalForPrisma = global as unknown as { prisma: PrismaClient };
+  4 | {
+  page: '/api/auth/_log'
+}
+ POST /api/auth/_log 500 in 105ms (compile: 73ms, proxy.ts: 10ms, render: 22ms)

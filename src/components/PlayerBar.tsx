@@ -53,6 +53,19 @@ export function PlayerBar() {
         seekTo(percentage * duration);
     };
 
+    const handleSeekKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+        if (!duration) return;
+        // Seek by 5% increments or 5 seconds, whichever is smaller
+        const step = Math.min(duration * 0.05, 5);
+        if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            seekTo(Math.min(currentTime + step, duration));
+        } else if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            seekTo(Math.max(currentTime - step, 0));
+        }
+    };
+
     const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setVolume(Number(e.target.value));
     };
@@ -167,8 +180,16 @@ export function PlayerBar() {
                         <div className="w-full flex items-center gap-3 text-xs font-medium text-gray-400">
                             <span>{formatTime(currentTime)}</span>
                             <div
-                                className="flex-1 h-1 bg-white/10 rounded-full cursor-pointer group relative overflow-hidden"
+                                className="flex-1 h-1 bg-white/10 rounded-full cursor-pointer group relative focus-visible:ring-2 focus-visible:ring-[#8B5CF6] focus-visible:outline-none"
                                 onClick={handleSeek}
+                                onKeyDown={handleSeekKeyDown}
+                                tabIndex={0}
+                                role="slider"
+                                aria-label="Seek time"
+                                aria-valuemin={0}
+                                aria-valuemax={duration || 0}
+                                aria-valuenow={currentTime}
+                                aria-valuetext={`${formatTime(currentTime)} of ${formatTime(duration)}`}
                             >
                                 {/* Progress bar with Purple Glow */}
                                 <div
